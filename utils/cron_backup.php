@@ -16,7 +16,7 @@ date_default_timezone_set('America/Managua');
 
 /* == CONFIGURACIÓN BÁSICA ========================= */
 
-$dbHost = '172.17.0.3';
+$dbHost = 'pandas_bd';
 $dbPort = '5432';
 $dbName = 'pandas_estampados_y_kitsune';
 $dbUser = 'postgres';

@@ -10,7 +10,7 @@ function hacerRespaldo(
 ): array {
     date_default_timezone_set('America/Managua');
 
-    $DB_HOST    = '172.17.0.3';
+    $DB_HOST    = 'pandas_bd';
     $DB_PORT    = '5432';
     $DB_USER    = 'postgres';
     $DB_PASS    = "root";

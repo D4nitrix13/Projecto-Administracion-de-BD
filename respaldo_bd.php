@@ -69,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $error = "Archivo de respaldo no encontrado.";
         } else {
             // ⚠️ RESTAURAR PUEDE BORRAR TODOS LOS DATOS. HAZLO SOLO EN DESARROLLO.
-            $DB_HOST   = '172.17.0.3';
+            $DB_HOST   = 'pandas_bd';
             $DB_PORT   = '5432';
             $DB_USER   = 'postgres';
             $DB_PASS   = "root";

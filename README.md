@@ -80,3 +80,29 @@ Ejecutar cada día a medianoche (00:00)
 
 * **Significado:**
 El script `cron_backup.php` se ejecutará **cada minuto**, generando un respaldo automático según la lógica definida dentro del archivo.
+
+## Para levantarlo
+
+Desde la raíz del proyecto:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+Luego entras en:
+
+```bash
+http://localhost:8080
+```
+
+## Importá tu SQL manualmente
+
+```bash
+docker exec -i pandas_bd psql -U postgres -d pandas_estampados_y_kitsune < sql/query.sql
+```
+
+Luego verifica:
+
+```bash
+docker exec -it pandas_bd psql -U postgres -d pandas_estampados_y_kitsune -c '\dt'
+```
