@@ -270,4 +270,132 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .summary-card,
+    .chart-card,
+    .sales-card,
+    .table-card,
+    .quick-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .summary-card:hover,
+    .chart-card:hover,
+    .sales-card:hover,
+    .table-card:hover,
+    .quick-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.14);
+    }
+
+    table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+    table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .quick-card a {
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .quick-card a:hover {
+        transform: translateX(5px);
+    }
+
+    canvas {
+        max-height: 280px;
+    }
+
+
+    /** */
+    .dashboard-grid,
+    .bottom-grid {
+        display: grid;
+        gap: 28px;
+        margin-bottom: 28px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+    }
+
+    .bottom-grid {
+        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+    }
+
+    .table-card,
+    .quick-card,
+    .chart-card,
+    .sales-card {
+        min-height: 260px;
+    }
+
+    .clickable-row {
+        cursor: pointer;
+    }
+
+    .clickable-row:hover {
+        background: #eef2ff;
+    }
+
+    .card-header a {
+        font-weight: 600;
+    }
+
+    .chart-card,
+    .sales-card {
+        cursor: pointer;
+    }
+
+    .chart-card canvas,
+    .sales-card canvas {
+        height: 260px !important;
+    }
+
+    .dashboard-grid,
+    .bottom-grid {
+        gap: 32px;
+        margin-bottom: 32px;
+    }
+
+    .chart-box {
+        height: 260px;
+    }
+
+    .clickable-card {
+        cursor: pointer;
+    }
+
+    .clickable-row {
+        cursor: pointer;
+    }
+
+    .clickable-row:hover {
+        background: #eef2ff;
+    }
+
+    .empty-table {
+        text-align: center;
+        color: #6b7280;
+        padding: 40px 16px;
+    }
+
+    .summary-card,
+    .chart-card,
+    .sales-card,
+    .table-card,
+    .quick-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .summary-card:hover,
+    .chart-card:hover,
+    .sales-card:hover,
+    .table-card:hover,
+    .quick-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.14);
+    }
 </style>
