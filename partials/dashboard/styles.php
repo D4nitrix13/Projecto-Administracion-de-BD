@@ -398,4 +398,47 @@
         transform: translateY(-4px);
         box-shadow: 0 18px 35px rgba(15, 23, 42, 0.14);
     }
+
+    .topbar-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-name {
+        background: #f3f4f6;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .user-role {
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    /* Colores por rol */
+    .role-administrador {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .role-supervisor {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .role-facturador {
+        background: #ecfdf5;
+        color: #15803d;
+    }
+
+    .role-usuario {
+        background: #f3f4f6;
+        color: #374151;
+    }
 </style>
