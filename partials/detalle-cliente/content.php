@@ -57,6 +57,13 @@
                 <span>Tipo de cliente</span>
                 <strong><?= htmlspecialchars($cliente["tipo_cliente"] ?? "No definido") ?></strong>
             </div>
+
+            <div class="client-info-row">
+                <span>Fecha de registro</span>
+                <strong>
+                    <?= htmlspecialchars(formatearFechaExtendida($cliente["fecha_registro"])) ?>
+                </strong>
+            </div>
         </article>
 
         <article class="client-info-box">

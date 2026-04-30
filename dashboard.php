@@ -11,10 +11,12 @@ $user = $_SESSION["user"];
 $connection = require "./sql/db.php";
 
 require __DIR__ . "/partials/dashboard/queries.php";
+require_once __DIR__ . "/helpers/format.php";
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
+
 <?php require "partials/header.php"; ?>
 
 <body class="dashboard-body">
@@ -117,7 +119,7 @@ require __DIR__ . "/partials/dashboard/queries.php";
                                     <td><?= htmlspecialchars($item["nombre"]) ?></td>
                                     <td><?= htmlspecialchars((string)$item["cantidad"]) ?></td>
                                     <td>C$ <?= number_format((float)$item["subtotal"], 2) ?></td>
-                                    <td><?= htmlspecialchars(date("d/m/Y", strtotime($item["fecha"]))) ?></td>
+                                    <td><?= htmlspecialchars(formatearFechaExtendida($item["fecha"])) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -193,12 +195,13 @@ require __DIR__ . "/partials/dashboard/queries.php";
                         <tr>
                             <th>Cliente</th>
                             <th>Teléfono</th>
+                            <th>Registro</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($clientesRecientes)): ?>
                             <tr>
-                                <td colspan="2" class="empty-table">
+                                <td colspan="3" class="empty-table">
                                     Todavía no hay clientes registrados.
                                 </td>
                             </tr>
@@ -209,6 +212,7 @@ require __DIR__ . "/partials/dashboard/queries.php";
                                     onclick="window.location.href='detalle_cliente.php?id=<?= urlencode((string)$cliente["id_cliente"]) ?>'">
                                     <td><?= htmlspecialchars($cliente["nombre"]) ?></td>
                                     <td><?= htmlspecialchars($cliente["telefono"] ?? "No registrado") ?></td>
+                                    <td><?= htmlspecialchars(formatearFechaExtendida($cliente["fecha_registro"])) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -226,12 +230,10 @@ require __DIR__ . "/partials/dashboard/queries.php";
         const ventasSemanaData = <?= json_encode(array_map("floatval", array_column($ventasSemana, "total_dia"))) ?>;
 
         const ventasLabelsFinal = ventasSemanaLabels.length > 0 ?
-            ventasSemanaLabels :
-            ["Sin datos"];
+            ventasSemanaLabels : ["Sin datos"];
 
         const ventasDataFinal = ventasSemanaData.length > 0 ?
-            ventasSemanaData :
-            [0];
+            ventasSemanaData : [0];
 
         const ventasChart = new Chart(document.getElementById("ventasSemanaChart"), {
             type: "line",
@@ -286,12 +288,10 @@ require __DIR__ . "/partials/dashboard/queries.php";
         const productosIds = <?= json_encode(array_column($productosMasVendidos, "id_producto")) ?>;
 
         const productosLabelsFinal = productosLabels.length > 0 ?
-            productosLabels :
-            ["Sin ventas"];
+            productosLabels : ["Sin ventas"];
 
         const productosDataFinal = productosData.length > 0 ?
-            productosData :
-            [1];
+            productosData : [1];
 
         const productosChart = new Chart(document.getElementById("productosVendidosChart"), {
             type: "doughnut",

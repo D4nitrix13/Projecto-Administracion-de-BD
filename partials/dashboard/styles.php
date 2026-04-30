@@ -441,4 +441,30 @@
         background: #f3f4f6;
         color: #374151;
     }
+
+    .sidebar-group {
+        margin-top: 8px;
+    }
+
+    .sidebar-group-title {
+        display: block;
+        padding: 12px 16px 8px;
+        color: #e5e7eb;
+        font-weight: 600;
+    }
+
+    .sidebar-sublink {
+        display: block;
+        margin-left: 14px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        color: #cbd5e1;
+        text-decoration: none;
+        font-size: 0.92rem;
+    }
+
+    .sidebar-sublink:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+    }
 </style>

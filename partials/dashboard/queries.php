@@ -94,9 +94,10 @@ try {
         SELECT 
             id_cliente,
             CONCAT(nombres, ' ', apellidos) AS nombre,
-            telefono
+            telefono,
+            fecha_registro
         FROM Cliente
-        ORDER BY id_cliente DESC
+        ORDER BY fecha_registro DESC, id_cliente DESC
         LIMIT 5
     ");
     $clientesRecientes = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -8,8 +8,17 @@
 
     <nav class="sidebar-nav">
         <a class="active" href="dashboard.php">Dashboard</a>
-        <a href="nueva_factura.php">Facturación</a>
-        <a href="facturas.php">Órdenes</a>
+        <div class="sidebar-group">
+            <span class="sidebar-group-title">Facturación</span>
+
+            <a href="nueva_factura.php" class="sidebar-sublink">
+                Nueva factura
+            </a>
+
+            <a href="facturas.php" class="sidebar-sublink">
+                Ver facturas
+            </a>
+        </div>
         <a href="productos.php">Productos</a>
         <a href="categorias.php">Categorías</a>
         <a href="clientes.php">Clientes</a>
@@ -18,7 +27,17 @@
         <?php if (($user["rol"] ?? "") === "Administrador"): ?>
             <a href="usuarios.php">Trabajadores</a>
             <a href="compras.php">Reportes</a>
-            <a href="respaldo_bd.php">Sistema</a>
+
+            <div class="sidebar-group">
+                <span class="sidebar-group-title">Sistema</span>
+
+                <a href="cambiar_numero_de_whatsapp.php" class="sidebar-sublink">
+                    Cambiar número de WhatsApp
+                </a>
+
+                <a href="respaldo_bd.php" class="sidebar-sublink">Respaldo Base de Datos</a>
+
+            </div>
         <?php endif; ?>
     </nav>
 

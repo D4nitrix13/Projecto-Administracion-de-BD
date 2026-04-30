@@ -11,6 +11,7 @@ if (!isset($_SESSION["user"])) {
 $user = $_SESSION["user"];
 $connection = require "./sql/db.php";
 
+require_once __DIR__ . "/helpers/format.php";
 require __DIR__ . "/partials/detalle-cliente/queries.php";
 ?>
 

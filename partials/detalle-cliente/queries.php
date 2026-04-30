@@ -18,7 +18,8 @@ $stmt = $connection->prepare("
         telefono,
         direccion,
         identificacion,
-        tipo_cliente
+        tipo_cliente,
+        fecha_registro
     FROM Cliente
     WHERE id_cliente = :id_cliente
 ");
