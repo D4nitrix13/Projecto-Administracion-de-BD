@@ -235,7 +235,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <?php if (!empty($producto['imagen'])): ?>
                         <div style="margin-bottom:8px;">
                             <a
-                                href="ver_imagen.php?id=<?= (int)$producto['id_producto'] ?>"
+                                href="ver_imagen_producto.php?id=<?= (int)$producto['id_producto'] ?>"
                                 title="Ver imagen en grande">
                                 <img
                                     src="uploads/productos/<?= htmlspecialchars($producto['imagen']) ?>"

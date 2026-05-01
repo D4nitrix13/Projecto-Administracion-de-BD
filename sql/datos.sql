@@ -178,24 +178,25 @@ INSERT INTO Producto (
 
 ------------------------------------------------------------
 -- 7) CLIENTES (más clientes mixtos)
-------------------------------------------------------------
-INSERT INTO Cliente (nombres, apellidos, telefono, direccion, identificacion, tipo_cliente) VALUES
-('Cliente', 'Fugaz', NULL, NULL, 'FUGAZ', 'Detallista'),
-('Juan',        'Lopez',       '8888-2222', 'Managua', '001-110998-0001M', 'Detallista'),
-('Ana',         'Martínez',    '7777-3333', 'Masaya',  '002-210598-0044K', 'Detallista'),
-('Comercial',   'Ruiz S.A',    '2266-9877', 'Granada', 'J123456789',       'Mayorista'),
-('Karla',       'González',    '8855-1144', 'León',    '003-090599-0099L', 'Detallista'),
-('Jhossep',     'Ramos',       '8877-6655', 'Carazo',  '004-200800-0055P', 'Detallista'),
-('Impresiones','Del Norte',    '2250-7788', 'Estelí',  'J987654321',       'Mayorista'),
-('María',      'Sáenz',        '8666-3344', 'Managua', '005-101001-0003M', 'Detallista'),
-('Carlos',     'Blandón',      '8744-2233', 'Masaya',  '006-020202-0004H', 'Detallista'),
-('Studio',     'Creativo Luna','2225-6633', 'León',    'J112233445',       'Mayorista'),
-('Mario',      'Hernández',    '8787-1212', 'Granada', '007-030303-0005V', 'Detallista'),
-('Lucía',      'Pérez',        '8833-5599', 'Managua', '008-040404-0006P', 'Detallista'),
-('Tienda',     'Colores S.A',  '2233-8899', 'Managua', 'J556677889',       'Mayorista'),
-('Kevin',      'Castillo',     '8811-7722', 'Masaya',  '009-050505-0007C', 'Detallista'),
-('Paola',      'Mendoza',      '8822-9933', 'Carazo',  '010-060606-0008R', 'Detallista'),
-('Diseños',    'Urbanos',      '2277-4455', 'León',    'J667788990',       'Mayorista');
+INSERT INTO Cliente 
+(nombres, apellidos, telefono, direccion, identificacion, tipo_cliente, fecha_registro) 
+VALUES
+('Cliente','Fugaz',NULL,NULL,'FUGAZ','Detallista', CURRENT_DATE),
+('Juan','Lopez','8888-2222','Managua','001-110998-0001M','Detallista','2026-01-10'),
+('Ana','Martínez','7777-3333','Masaya','002-210598-0044K','Detallista','2026-01-15'),
+('Comercial','Ruiz S.A','2266-9877','Granada','J123456789','Mayorista','2025-12-20'),
+('Karla','González','8855-1144','León','003-090599-0099L','Detallista','2026-02-01'),
+('Jhossep','Ramos','8877-6655','Carazo','004-200800-0055P','Detallista','2026-02-05'),
+('Impresiones','Del Norte','2250-7788','Estelí','J987654321','Mayorista','2025-11-18'),
+('María','Sáenz','8666-3344','Managua','005-101001-0003M','Detallista','2026-03-01'),
+('Carlos','Blandón','8744-2233','Masaya','006-020202-0004H','Detallista','2026-03-05'),
+('Studio','Creativo Luna','2225-6633','León','J112233445','Mayorista','2025-10-10'),
+('Mario','Hernández','8787-1212','Granada','007-030303-0005V','Detallista','2026-03-10'),
+('Lucía','Pérez','8833-5599','Managua','008-040404-0006P','Detallista','2026-03-15'),
+('Tienda','Colores S.A','2233-8899','Managua','J556677889','Mayorista','2025-09-25'),
+('Kevin','Castillo','8811-7722','Masaya','009-050505-0007C','Detallista','2026-03-20'),
+('Paola','Mendoza','8822-9933','Carazo','010-060606-0008R','Detallista','2026-03-22'),
+('Diseños','Urbanos','2277-4455','León','J667788990','Mayorista','2025-08-15');
 
 ------------------------------------------------------------
 -- 8) FACTURAS (más movimiento de ventas)

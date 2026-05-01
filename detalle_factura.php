@@ -232,7 +232,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- AQUÍ REDIRIGES A LA PÁGINA QUE IMPRIME LA FACTURA -->
                 <a
-                    href="factura_imprimir.php?id=<?= (int)$factura['id_factura'] ?>"
+                    href="imprimir_factura.php?id=<?= (int)$factura['id_factura'] ?>"
                     class="btn-primary"
                     style="text-decoration:none; padding:8px 16px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center;">
                     Redirigir a imprimir factura

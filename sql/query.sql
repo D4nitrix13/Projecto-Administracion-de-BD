@@ -77,7 +77,10 @@ CREATE TABLE Cliente (
     direccion      VARCHAR(200),
     identificacion VARCHAR(40),
     tipo_cliente   VARCHAR(12) NOT NULL DEFAULT 'Detallista',
-    CONSTRAINT CK_Cliente_Tipo CHECK (tipo_cliente IN ('Mayorista','Detallista'))
+    fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
+
+    CONSTRAINT CK_Cliente_Tipo 
+        CHECK (tipo_cliente IN ('Mayorista','Detallista'))
 );
 
 
