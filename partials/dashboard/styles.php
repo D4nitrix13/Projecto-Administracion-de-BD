@@ -467,4 +467,16 @@
         background: rgba(255, 255, 255, 0.08);
         color: #ffffff;
     }
+
+    .brand-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .brand-icon img {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
 </style>

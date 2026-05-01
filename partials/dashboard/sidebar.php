@@ -1,7 +1,9 @@
 <aside class="sidebar">
     <div class="brand">
-        <span class="brand-icon">◎</span>
-        <strong>Panda <b>Px</b></strong>
+        <span class="brand-icon">
+            <img src="assets/img/icono.png" alt="Logo">
+        </span>
+        <strong>Pandas Estampados & Kitsune</strong>
     </div>
 
     <p class="sidebar-label">Principal</p>
