@@ -1,59 +1,66 @@
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="brand">
         <span class="brand-icon">
-            <span class="brand-icon">
-                <img
-                    src="assets/img/icono.png"
-                    alt="Logo Panda"
-                    width="36"
-                    height="36"
-                    class="brand-logo">
-            </span>
+            <img src="assets/img/icono.png" alt="Logo">
         </span>
-        <strong>Pandas Estampados & Kitsune</strong>
+
+        <strong class="brand-text">
+            Pandas Estampados & Kitsune
+        </strong>
     </div>
 
-    <p class="sidebar-label">Principal</p>
+    <div class="sidebar-scroll">
 
-    <nav class="sidebar-nav">
-        <a class="active" href="dashboard.php">Dashboard</a>
-        <div class="sidebar-group">
-            <span class="sidebar-group-title">Facturación</span>
+        <p class="sidebar-label">Principal</p>
 
-            <a href="nueva_factura.php" class="sidebar-sublink">
-                Nueva factura
-            </a>
-
-            <a href="facturas.php" class="sidebar-sublink">
-                Ver facturas
-            </a>
-        </div>
-        <a href="productos.php">Productos</a>
-        <a href="categorias.php">Categorías</a>
-        <a href="clientes.php">Clientes</a>
-        <a href="proveedores.php">Proveedores</a>
-
-        <?php if (($user["rol"] ?? "") === "Administrador"): ?>
-            <a href="usuarios.php">Trabajadores</a>
-            <a href="compras.php">Reportes</a>
+        <nav class="sidebar-nav">
+            <a class="active" href="dashboard.php">Dashboard</a>
 
             <div class="sidebar-group">
-                <span class="sidebar-group-title">Sistema</span>
+                <span class="sidebar-group-title">Facturación</span>
 
-                <a href="cambiar_numero_de_whatsapp.php" class="sidebar-sublink">
-                    Cambiar número de WhatsApp
+                <a href="nueva_factura.php" class="sidebar-sublink">
+                    Nueva factura
                 </a>
 
-                <a href="respaldo_bd.php" class="sidebar-sublink">Respaldo Base de Datos</a>
-
+                <a href="facturas.php" class="sidebar-sublink">
+                    Ver facturas
+                </a>
             </div>
-        <?php endif; ?>
-    </nav>
 
-    <p class="sidebar-label">Cuenta</p>
+            <a href="productos.php">Productos</a>
+            <a href="categorias.php">Categorías</a>
+            <a href="clientes.php">Clientes</a>
+            <a href="proveedores.php">Proveedores</a>
 
-    <nav class="sidebar-nav">
-        <a href="configurar_cuenta.php">Configuración</a>
-        <a href="logout.php">Cerrar sesión</a>
-    </nav>
+            <?php if (($user["rol"] ?? "") === "Administrador"): ?>
+                <a href="usuarios.php">Trabajadores</a>
+                <a href="compras.php">Reportes</a>
+
+                <div class="sidebar-group">
+                    <span class="sidebar-group-title">Sistema</span>
+
+                    <a href="cambiar_numero_de_whatsapp.php" class="sidebar-sublink">
+                        Cambiar número de WhatsApp
+                    </a>
+
+                    <a href="respaldo_bd.php" class="sidebar-sublink">
+                        Respaldo Base de Datos
+                    </a>
+                </div>
+            <?php endif; ?>
+        </nav>
+
+        <p class="sidebar-label">Cuenta</p>
+
+        <nav class="sidebar-nav">
+            <a href="configurar_cuenta.php">Configuración</a>
+            <a href="logout.php">Cerrar sesión</a>
+        </nav>
+
+    </div>
 </aside>
+
+<button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Ocultar o mostrar menú">
+    ☰
+</button>

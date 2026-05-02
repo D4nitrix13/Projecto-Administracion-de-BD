@@ -39,6 +39,7 @@ $seccionTextoActual  = $viewData["seccionTextoActual"];
     </main>
 
     <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
     <?php require __DIR__ . "/partials/usuarios/editar/styles.php"; ?>
     <?php require __DIR__ . "/partials/usuarios/editar/scripts.php"; ?>
 

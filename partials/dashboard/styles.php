@@ -490,4 +490,104 @@
         display: block;
         border-radius: 10px;
     }
+
+    /* ==============================
+   Sidebar con scroll y colapsado
+   ============================== */
+
+    .sidebar {
+        height: 100vh;
+        overflow: hidden;
+        transition: width 0.25s ease, transform 0.25s ease;
+    }
+
+    .sidebar-scroll {
+        height: calc(100vh - 96px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 24px;
+    }
+
+    /* Scroll visual del menú */
+    .sidebar-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.35);
+        border-radius: 999px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.55);
+    }
+
+    /* Botón flotante para ocultar/desplegar menú */
+    .sidebar-toggle {
+        position: fixed;
+        top: 18px;
+        left: 286px;
+        z-index: 1000;
+        width: 42px;
+        height: 42px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 1.2rem;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+        transition: left 0.25s ease, background 0.15s ease, color 0.15s ease;
+    }
+
+    .sidebar-toggle:hover {
+        background: #f8fafc;
+    }
+
+    /* Estado oculto */
+    body.sidebar-collapsed .sidebar {
+        transform: translateX(-100%);
+    }
+
+    body.sidebar-collapsed .dashboard-main {
+        margin-left: 0;
+    }
+
+    body.sidebar-collapsed .sidebar-toggle {
+        left: 18px;
+    }
+
+    /* Ajuste para que el contenido se mueva suavemente */
+    .dashboard-main {
+        transition: margin-left 0.25s ease;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .sidebar {
+            transform: translateX(-100%);
+            z-index: 999;
+        }
+
+        body.sidebar-open .sidebar {
+            transform: translateX(0);
+        }
+
+        .dashboard-main {
+            margin-left: 0;
+        }
+
+        .sidebar-toggle {
+            left: 18px;
+        }
+
+        body.sidebar-collapsed .sidebar {
+            transform: translateX(-100%);
+        }
+    }
 </style>
