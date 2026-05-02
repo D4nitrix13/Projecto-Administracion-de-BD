@@ -16,7 +16,7 @@ function requireAdmin(): void
     $idRol = (int)($user["id_rol"] ?? 0);
 
     if ($idRol !== 1) {
-        $_SESSION["flash_error"] = "No tienes permisos para modificar esta configuración.";
+        $_SESSION["flash_error"] = "No tienes permisos para acceder a esta sección.";
         header("Location: dashboard.php");
         exit();
     }
