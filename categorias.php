@@ -34,6 +34,7 @@ require __DIR__ . "/partials/categorias/queries.php";
     </main>
 
     <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
     <?php require __DIR__ . "/partials/categorias/styles.php"; ?>
 
 </body>

@@ -86,7 +86,7 @@
                         accept="image/*">
 
                     <small class="dashboard-muted">
-                        Formatos permitidos: JPG, PNG, GIF, WEBP. Tamaño máximo: 4MB.
+                        Formatos permitidos: JPG, PNG, GIF, WEBP. Tamaño máximo: 8MB.
                     </small>
                 </div>
             </div>

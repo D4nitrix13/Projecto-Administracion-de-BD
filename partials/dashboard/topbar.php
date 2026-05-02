@@ -1,28 +1,26 @@
-<header class="topbar">
-    <div>
-        <h1>Dashboard</h1>
-        <p>Resumen general de ventas, facturación e inventario.</p>
-    </div>
+<header class="dashboard-topbar">
+    <?php
+    $rolNombre = $user["rol"] ?? match ((int)($user["id_rol"] ?? 0)) {
+        1 => "Administrador",
+        2 => "Supervisor",
+        3 => "Facturador",
+        default => "Usuario"
+    };
 
-    <div class="topbar-user">
-        <span><?= date("d/m/Y") ?></span>
-        <?php
-        $rolNombre = $user["rol"] ?? match ((int)($user["id_rol"] ?? 0)) {
-            1 => "Administrador",
-            2 => "Supervisor",
-            3 => "Facturador",
-            default => "Usuario"
-        };
-        ?>
+    $rolClase = strtolower($rolNombre);
+    ?>
 
-        <div class="topbar-user">
-            <span class="user-name">
-                <?= htmlspecialchars($user["nombre"]) ?>
-            </span>
+    <div class="topbar-actions">
+        <span class="topbar-pill">
+            <?= date("d/m/Y") ?>
+        </span>
 
-            <span class="user-role role-<?= strtolower($rolNombre) ?>">
-                <?= htmlspecialchars($rolNombre) ?>
-            </span>
-        </div>
+        <span class="topbar-pill user-name">
+            <?= htmlspecialchars($user["nombre"] ?? "Usuario") ?>
+        </span>
+
+        <span class="topbar-pill role-pill role-<?= htmlspecialchars($rolClase) ?>">
+            <?= htmlspecialchars($rolNombre) ?>
+        </span>
     </div>
 </header>
