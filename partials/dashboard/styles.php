@@ -469,14 +469,25 @@
     }
 
     .brand-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        flex: 0 0 36px;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+        border-radius: 10px;
     }
 
+    .brand-logo,
     .brand-icon img {
         width: 36px;
         height: 36px;
+        max-width: 36px;
+        max-height: 36px;
+        object-fit: contain;
+        display: block;
         border-radius: 10px;
     }
 </style>

@@ -1,7 +1,14 @@
 <aside class="sidebar">
     <div class="brand">
         <span class="brand-icon">
-            <img src="assets/img/icono.png" alt="Logo">
+            <span class="brand-icon">
+                <img
+                    src="assets/img/icono.png"
+                    alt="Logo Panda"
+                    width="36"
+                    height="36"
+                    class="brand-logo">
+            </span>
         </span>
         <strong>Pandas Estampados & Kitsune</strong>
     </div>
