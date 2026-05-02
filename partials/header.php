@@ -16,5 +16,6 @@ if (!isset($pageTitle)) {
     <link rel="icon" type="image/png" href="/favicon.ico">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <?php require __DIR__ . "/dashboard/styles.php"; ?>
 
 </head>

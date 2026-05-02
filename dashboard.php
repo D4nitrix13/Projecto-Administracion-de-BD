@@ -333,8 +333,6 @@ require_once __DIR__ . "/helpers/format.php";
         });
     </script>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-
 </body>
 
 </html>
