@@ -1,6 +1,7 @@
 <script>
     (function() {
         const IVA_RATE = 0.15;
+        const LIMITE_CLIENTE_FUGAZ = 1000.00;
 
         const productos = JSON.parse(
             document.getElementById("productos-data").textContent
@@ -335,6 +336,8 @@
             document.getElementById("descuento-global-view").textContent = formatMoney(descuentoGlobalSafe);
             document.getElementById("impuesto-view").textContent = formatMoney(impuesto);
             document.getElementById("total-view").textContent = formatMoney(total);
+
+            return total;
         }
 
         function bloquearNumeroInvalido(event, permitirDecimal = false) {
@@ -502,16 +505,40 @@
                     return;
                 }
 
+                const totalFactura = recalcTotals();
+
+                if (
+                    selectTipoCliente &&
+                    selectTipoCliente.value === "<?= TIPO_CLIENTE_FUGAZ ?>" &&
+                    totalFactura > LIMITE_CLIENTE_FUGAZ
+                ) {
+                    event.preventDefault();
+
+                    alert(
+                        "Un cliente fugaz no puede realizar una compra mayor a C$ " +
+                        LIMITE_CLIENTE_FUGAZ.toFixed(2) +
+                        ".\n\nPara continuar con esta venta, registre al cliente como cliente habitual."
+                    );
+
+                    return;
+                }
+
                 let invalidFound = false;
 
                 filas.forEach(row => {
                     recalcRow(row, true);
 
                     const cantidad = row.querySelector(".cantidad");
+                    const descuentoLinea = row.querySelector(".desc-linea");
 
                     if (cantidad && !cantidad.checkValidity()) {
                         invalidFound = true;
                         cantidad.reportValidity();
+                    }
+
+                    if (descuentoLinea && !descuentoLinea.checkValidity()) {
+                        invalidFound = true;
+                        descuentoLinea.reportValidity();
                     }
                 });
 

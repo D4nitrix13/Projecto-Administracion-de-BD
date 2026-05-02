@@ -41,7 +41,24 @@ class FacturaService
 
             $this->validarProductosYStock($items, $productosMap);
 
-            $totales = $this->calcularTotales($items, $productosMap, (float)$descuentoGlobal);
+            $totales = $this->calcularTotales(
+                $items,
+                $productosMap,
+                (float)$descuentoGlobal
+            );
+
+            $errorClienteFugaz = $this->validarLimiteClienteFugaz(
+                $tipoClienteVenta,
+                $totales["total"]
+            );
+
+            if ($errorClienteFugaz !== null) {
+                return [
+                    "success" => false,
+                    "message" => $errorClienteFugaz,
+                    "id_factura" => null,
+                ];
+            }
 
             $this->connection->beginTransaction();
 
@@ -378,5 +395,21 @@ class FacturaService
                 ":id_producto" => $item["id_producto"],
             ]);
         }
+    }
+
+    private function validarLimiteClienteFugaz(string $tipoClienteVenta, float $total): ?string
+    {
+        $limiteClienteFugaz = 1000.00;
+
+        if (
+            $tipoClienteVenta === TIPO_CLIENTE_FUGAZ &&
+            $total > $limiteClienteFugaz
+        ) {
+            return "Un cliente fugaz no puede realizar una compra mayor a C$ "
+                . number_format($limiteClienteFugaz, 2)
+                . ". Para continuar con esta venta, registre al cliente como cliente habitual.";
+        }
+
+        return null;
     }
 }
