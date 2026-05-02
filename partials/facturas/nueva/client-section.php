@@ -1,7 +1,34 @@
+<?php
+
+$clienteSeleccionadoTexto = "";
+
+if (!empty($idCliente)) {
+    foreach ($clientes as $cliente) {
+        if ((int)$cliente["id_cliente"] === (int)$idCliente) {
+            $clienteSeleccionadoTexto = trim(
+                ($cliente["nombres"] ?? "") . " " .
+                    ($cliente["apellidos"] ?? "")
+            );
+
+            if (!empty($cliente["telefono"])) {
+                $clienteSeleccionadoTexto .= " - " . $cliente["telefono"];
+            }
+
+            if (!empty($cliente["identificacion"])) {
+                $clienteSeleccionadoTexto .= " - " . $cliente["identificacion"];
+            }
+
+            break;
+        }
+    }
+}
+
+?>
+
 <section class="invoice-form-section">
     <div class="invoice-form-section-header">
         <h3>Datos de la venta</h3>
-        <p>Seleccione cliente, sección y descuento general de la factura.</p>
+        <p>Seleccione el tipo de cliente, sección y descuento general de la factura.</p>
     </div>
 
     <div class="invoice-form-grid cols-2">
@@ -22,41 +49,62 @@
         <div class="form-group" id="grupo-cliente-habitual">
             <label class="label">Cliente habitual (*)</label>
 
-            <input
-                type="text"
-                id="cliente-search"
-                class="input"
-                placeholder="Filtrar por nombre, teléfono o identificación..."
-                style="margin-bottom:8px;">
+            <div class="client-picker">
+                <input
+                    type="text"
+                    id="cliente-picker-input"
+                    class="input"
+                    list="clientes-list"
+                    placeholder="Buscar por nombre, teléfono o identificación..."
+                    value="<?= htmlspecialchars($clienteSeleccionadoTexto) ?>">
 
-            <select name="id_cliente" class="input">
-                <option value="">Seleccione un cliente</option>
+                <input
+                    type="hidden"
+                    name="id_cliente"
+                    id="id_cliente"
+                    value="<?= htmlspecialchars((string)$idCliente) ?>">
 
-                <?php foreach ($clientes as $cliente): ?>
-                    <?php
-                    $searchParts = [
-                        $cliente["nombres"] ?? "",
-                        $cliente["apellidos"] ?? "",
-                        $cliente["telefono"] ?? "",
-                        $cliente["direccion"] ?? "",
-                        $cliente["identificacion"] ?? "",
-                        $cliente["tipo_cliente"] ?? "",
-                    ];
+                <datalist id="clientes-list">
+                    <?php foreach ($clientes as $cliente): ?>
+                        <?php
+                        $nombreCompleto = trim(
+                            ($cliente["nombres"] ?? "") . " " .
+                                ($cliente["apellidos"] ?? "")
+                        );
 
-                    $searchText = strtolower(implode(" ", array_filter($searchParts)));
-                    ?>
+                        $clienteTexto = $nombreCompleto;
 
-                    <option
-                        value="<?= (int)$cliente["id_cliente"] ?>"
-                        data-search="<?= htmlspecialchars($searchText) ?>"
-                        <?= ((string)$idCliente === (string)$cliente["id_cliente"] && $tipoClienteVenta === TIPO_CLIENTE_HABITUAL) ? "selected" : "" ?>>
-                        <?= htmlspecialchars($cliente["nombres"] . " " . $cliente["apellidos"]) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+                        if (!empty($cliente["telefono"])) {
+                            $clienteTexto .= " - " . $cliente["telefono"];
+                        }
+
+                        if (!empty($cliente["identificacion"])) {
+                            $clienteTexto .= " - " . $cliente["identificacion"];
+                        }
+                        ?>
+
+                        <option value="<?= htmlspecialchars($clienteTexto) ?>"></option>
+                    <?php endforeach; ?>
+                </datalist>
+            </div>
+
+            <div class="client-picker-actions">
+                <a
+                    href="nuevo_cliente.php?redirect=nueva_factura.php"
+                    class="btn-secondary-inline">
+                    + Registrar nuevo cliente
+                </a>
+            </div>
+
+            <small class="dashboard-muted client-picker-help">
+                Si el cliente no aparece, regístrelo antes de continuar con la factura.
+            </small>
         </div>
 
-        <div class="form-group" id="grupo-cliente-fugaz" style="display: <?= $tipoClienteVenta === TIPO_CLIENTE_FUGAZ ? "block" : "none" ?>;">
+        <div
+            class="form-group"
+            id="grupo-cliente-fugaz"
+            style="display: <?= $tipoClienteVenta === TIPO_CLIENTE_FUGAZ ? "block" : "none" ?>;">
             <label class="label">Nombre del cliente fugaz</label>
 
             <input
@@ -65,6 +113,10 @@
                 class="input"
                 placeholder="Ejemplo: Cliente de feria, visitante, etc."
                 value="<?= htmlspecialchars($nombreClienteFugaz) ?>">
+
+            <small class="dashboard-muted client-picker-help">
+                El cliente fugaz solo se permite para ventas menores o iguales a C$ 1,000.00.
+            </small>
         </div>
 
         <div class="form-group">
@@ -113,4 +165,15 @@
                 value="<?= htmlspecialchars($descuentoGlobal) ?>">
         </div>
     </div>
+
+    <script type="application/json" id="clientes-data">
+        <?= json_encode(
+            $clientes,
+            JSON_UNESCAPED_UNICODE |
+                JSON_HEX_TAG |
+                JSON_HEX_APOS |
+                JSON_HEX_QUOT |
+                JSON_HEX_AMP
+        ) ?>
+    </script>
 </section>

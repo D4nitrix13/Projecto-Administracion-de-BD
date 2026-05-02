@@ -226,6 +226,23 @@
         gap: 12px;
     }
 
+    .client-picker {
+        display: grid;
+        gap: 8px;
+    }
+
+    .client-picker-actions {
+        margin-top: 10px;
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .client-picker-help {
+        display: block;
+        margin-top: 8px;
+        font-size: 0.82rem;
+    }
+
     @media (max-width: 900px) {
         .invoice-form-grid.cols-2 {
             grid-template-columns: 1fr;

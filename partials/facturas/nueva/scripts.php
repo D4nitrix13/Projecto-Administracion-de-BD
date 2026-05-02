@@ -7,6 +7,10 @@
             document.getElementById("productos-data").textContent
         );
 
+        const clientes = JSON.parse(
+            document.getElementById("clientes-data").textContent
+        );
+
         const tbody = document.getElementById("items-body");
         const form = document.getElementById("form-factura");
         const inputProducto = document.getElementById("producto-picker-input");
@@ -16,56 +20,9 @@
         const selectTipoCliente = document.getElementById("tipo_cliente_venta");
         const grupoHabitual = document.getElementById("grupo-cliente-habitual");
         const grupoFugaz = document.getElementById("grupo-cliente-fugaz");
-        const selectCliente = document.querySelector('select[name="id_cliente"]');
 
-        if (selectTipoCliente) {
-            const toggleClienteGroups = () => {
-                if (selectTipoCliente.value === "<?= TIPO_CLIENTE_FUGAZ ?>") {
-                    grupoHabitual.style.display = "none";
-
-                    if (selectCliente) {
-                        selectCliente.removeAttribute("required");
-                        selectCliente.value = "";
-                    }
-
-                    grupoFugaz.style.display = "block";
-                } else {
-                    grupoHabitual.style.display = "block";
-
-                    if (selectCliente) {
-                        selectCliente.setAttribute("required", "required");
-                    }
-
-                    grupoFugaz.style.display = "none";
-                }
-            };
-
-            selectTipoCliente.addEventListener("change", toggleClienteGroups);
-            toggleClienteGroups();
-        }
-
-        const clienteSearch = document.getElementById("cliente-search");
-
-        if (clienteSearch && selectCliente) {
-            clienteSearch.addEventListener("input", function() {
-                const term = normalizarTexto(this.value);
-
-                Array.from(selectCliente.options).forEach(option => {
-                    if (!option.value) {
-                        option.style.display = "";
-                        return;
-                    }
-
-                    const searchText = normalizarTexto(
-                        option.dataset.search || option.textContent || ""
-                    );
-
-                    option.style.display = option.selected || searchText.includes(term) ?
-                        "" :
-                        "none";
-                });
-            });
-        }
+        const clientePickerInput = document.getElementById("cliente-picker-input");
+        const clienteHiddenInput = document.getElementById("id_cliente");
 
         function formatMoney(value) {
             return `C$ ${value.toFixed(2)}`;
@@ -83,6 +40,92 @@
             const div = document.createElement("div");
             div.textContent = texto;
             return div.innerHTML;
+        }
+
+        function obtenerTextoCliente(cliente) {
+            const nombreCompleto = `${cliente.nombres || ""} ${cliente.apellidos || ""}`.trim();
+
+            let texto = nombreCompleto;
+
+            if (cliente.telefono) {
+                texto += ` - ${cliente.telefono}`;
+            }
+
+            if (cliente.identificacion) {
+                texto += ` - ${cliente.identificacion}`;
+            }
+
+            return texto;
+        }
+
+        function obtenerClienteDesdeInput() {
+            if (!clientePickerInput) {
+                return null;
+            }
+
+            const valor = normalizarTexto(clientePickerInput.value);
+
+            return clientes.find(cliente => {
+                const textoCompleto = obtenerTextoCliente(cliente);
+                const nombreCompleto = `${cliente.nombres || ""} ${cliente.apellidos || ""}`;
+                const telefono = cliente.telefono || "";
+                const identificacion = cliente.identificacion || "";
+
+                return normalizarTexto(textoCompleto) === valor ||
+                    normalizarTexto(nombreCompleto) === valor ||
+                    normalizarTexto(telefono) === valor ||
+                    normalizarTexto(identificacion) === valor;
+            }) || null;
+        }
+
+        function actualizarClienteSeleccionado() {
+            if (!clientePickerInput || !clienteHiddenInput) {
+                return;
+            }
+
+            const cliente = obtenerClienteDesdeInput();
+
+            if (cliente) {
+                clienteHiddenInput.value = String(cliente.id_cliente);
+            } else {
+                clienteHiddenInput.value = "";
+            }
+        }
+
+        if (clientePickerInput) {
+            clientePickerInput.addEventListener("input", actualizarClienteSeleccionado);
+            clientePickerInput.addEventListener("change", actualizarClienteSeleccionado);
+            clientePickerInput.addEventListener("blur", actualizarClienteSeleccionado);
+        }
+
+        if (selectTipoCliente) {
+            const toggleClienteGroups = () => {
+                if (selectTipoCliente.value === "<?= TIPO_CLIENTE_FUGAZ ?>") {
+                    grupoHabitual.style.display = "none";
+
+                    if (clientePickerInput) {
+                        clientePickerInput.removeAttribute("required");
+                        clientePickerInput.value = "";
+                    }
+
+                    if (clienteHiddenInput) {
+                        clienteHiddenInput.value = "";
+                    }
+
+                    grupoFugaz.style.display = "block";
+                } else {
+                    grupoHabitual.style.display = "block";
+
+                    if (clientePickerInput) {
+                        clientePickerInput.setAttribute("required", "required");
+                    }
+
+                    grupoFugaz.style.display = "none";
+                }
+            };
+
+            selectTipoCliente.addEventListener("change", toggleClienteGroups);
+            toggleClienteGroups();
         }
 
         function obtenerProductoDesdeInput() {
@@ -505,6 +548,19 @@
                     return;
                 }
 
+                if (
+                    selectTipoCliente &&
+                    selectTipoCliente.value === "<?= TIPO_CLIENTE_HABITUAL ?>"
+                ) {
+                    actualizarClienteSeleccionado();
+
+                    if (!clienteHiddenInput || clienteHiddenInput.value.trim() === "") {
+                        event.preventDefault();
+                        alert("Debe seleccionar un cliente habitual válido de la lista.");
+                        return;
+                    }
+                }
+
                 const totalFactura = recalcTotals();
 
                 if (
@@ -548,6 +604,7 @@
             });
         }
 
+        actualizarClienteSeleccionado();
         actualizarMensajeVacio();
         recalcTotals();
     })();
