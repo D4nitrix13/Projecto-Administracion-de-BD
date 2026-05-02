@@ -28,14 +28,38 @@
                 </a>
             </div>
 
-            <a href="productos.php">Productos</a>
-            <a href="categorias.php">Categorías</a>
+            <div class="sidebar-group">
+                <span class="sidebar-group-title">Inventario</span>
+
+                <a href="productos.php" class="sidebar-sublink">
+                    Productos
+                </a>
+
+                <a href="categorias.php" class="sidebar-sublink">
+                    Categorías
+                </a>
+
+                <a href="proveedores.php" class="sidebar-sublink">
+                    Proveedores
+                </a>
+            </div>
+
             <a href="clientes.php">Clientes</a>
-            <a href="proveedores.php">Proveedores</a>
 
             <?php if (($user["rol"] ?? "") === "Administrador"): ?>
                 <a href="usuarios.php">Trabajadores</a>
-                <a href="compras.php">Reportes</a>
+
+                <div class="sidebar-group">
+                    <span class="sidebar-group-title">Análisis</span>
+
+                    <a href="compras.php" class="sidebar-sublink">
+                        Historial de compras
+                    </a>
+
+                    <a href="reportes.php" class="sidebar-sublink">
+                        Reportes
+                    </a>
+                </div>
 
                 <div class="sidebar-group">
                     <span class="sidebar-group-title">Sistema</span>
@@ -61,6 +85,10 @@
     </div>
 </aside>
 
-<button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Ocultar o mostrar menú">
+<button
+    type="button"
+    class="sidebar-toggle"
+    id="sidebarToggle"
+    aria-label="Ocultar o mostrar menú">
     ☰
 </button>
