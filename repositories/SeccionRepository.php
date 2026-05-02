@@ -58,4 +58,6 @@ class SeccionRepository
 
         return $seccion ?: null;
     }
+
+    
 }
