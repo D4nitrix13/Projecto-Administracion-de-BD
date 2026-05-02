@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $maxBytes = 4 * 1024 * 1024; // 4 MB
             if ($size > $maxBytes) {
-                $error = "La imagen excede el tamaño máximo permitido (4MB).";
+                $error = "La imagen excede el tamaño máximo permitido (8MB).";
             } else {
 
                 $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
@@ -214,7 +214,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         class="input"
                         accept="image/*"
                         required>
-                    <small class="dashboard-muted">Formatos permitidos: JPG, PNG, GIF, WEBP (máx 4MB)</small>
+                    <small class="dashboard-muted">Formatos permitidos: JPG, PNG, GIF, WEBP (máx 8MB)</small>
                 </div>
 
                 <div class="form-group">
