@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 $pageTitle = "Dashboard - Panda Estampados / Kitsune";
 
 if (!isset($_SESSION["user"])) {
@@ -8,7 +9,7 @@ if (!isset($_SESSION["user"])) {
 }
 
 $user = $_SESSION["user"];
-$connection = require "./sql/db.php";
+$connection = require __DIR__ . "/sql/db.php";
 
 require __DIR__ . "/partials/dashboard/queries.php";
 require_once __DIR__ . "/helpers/format.php";
@@ -17,7 +18,9 @@ require_once __DIR__ . "/helpers/format.php";
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require "partials/header.php"; ?>
+<?php require __DIR__ . "/partials/header.php"; ?>
+
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -27,32 +30,39 @@ require_once __DIR__ . "/helpers/format.php";
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
+        <section class="dashboard-page-heading">
+            <div>
+                <h1>Dashboard</h1>
+                <p>Resumen general de ventas, facturación e inventario.</p>
+            </div>
+        </section>
+
         <section class="summary-grid">
             <article class="summary-card clickable-card" onclick="window.location.href='clientes.php'">
                 <p>Clientes</p>
                 <h2><?= htmlspecialchars((string)$totalClientes) ?></h2>
-                <span class="positive">↑ Registrados</span>
+                <span class="positive">Registrados</span>
                 <small>Click para ver clientes</small>
             </article>
 
             <article class="summary-card clickable-card" onclick="window.location.href='facturas.php'">
                 <p>Facturas</p>
                 <h2><?= htmlspecialchars((string)$totalFacturas) ?></h2>
-                <span class="positive">↑ Emitidas</span>
+                <span class="positive">Emitidas</span>
                 <small>Click para ver facturas</small>
             </article>
 
             <article class="summary-card clickable-card" onclick="window.location.href='reportes.php?tipo=ventas'">
                 <p>Ventas totales</p>
                 <h2>C$ <?= number_format((float)$totalVentas, 2) ?></h2>
-                <span class="positive">↑ Ingresos acumulados</span>
+                <span class="positive">Ingresos acumulados</span>
                 <small>Click para revisar ventas</small>
             </article>
 
             <article class="summary-card clickable-card" onclick="window.location.href='productos.php?stock=bajo'">
                 <p>Stock bajo</p>
                 <h2><?= htmlspecialchars((string)$stockBajo) ?></h2>
-                <span class="negative">↓ Revisar inventario</span>
+                <span class="negative">Revisar inventario</span>
                 <small>Click para ver productos</small>
             </article>
         </section>
@@ -92,6 +102,7 @@ require_once __DIR__ . "/helpers/format.php";
                         <h3>Últimos productos vendidos</h3>
                         <span>Movimientos recientes de facturación</span>
                     </div>
+
                     <a href="facturas.php">Ver facturas</a>
                 </div>
 
@@ -104,6 +115,7 @@ require_once __DIR__ . "/helpers/format.php";
                             <th>Fecha</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         <?php if (empty($ultimosProductosVendidos)): ?>
                             <tr>
@@ -129,6 +141,7 @@ require_once __DIR__ . "/helpers/format.php";
 
             <article class="quick-card">
                 <h3>Acciones rápidas</h3>
+
                 <a href="nueva_factura.php">Nueva factura</a>
                 <a href="productos.php">Gestionar productos</a>
                 <a href="clientes.php">Gestionar clientes</a>
@@ -148,6 +161,7 @@ require_once __DIR__ . "/helpers/format.php";
                         <h3>Facturas recientes</h3>
                         <span>Últimas ventas registradas</span>
                     </div>
+
                     <a href="facturas.php">Ver todas</a>
                 </div>
 
@@ -159,6 +173,7 @@ require_once __DIR__ . "/helpers/format.php";
                             <th>Total</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         <?php if (empty($facturasRecientes)): ?>
                             <tr>
@@ -187,6 +202,7 @@ require_once __DIR__ . "/helpers/format.php";
                         <h3>Clientes recientes</h3>
                         <span>Últimos clientes agregados</span>
                     </div>
+
                     <a href="clientes.php">Ver clientes</a>
                 </div>
 
@@ -198,6 +214,7 @@ require_once __DIR__ . "/helpers/format.php";
                             <th>Registro</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         <?php if (empty($clientesRecientes)): ?>
                             <tr>
@@ -235,53 +252,62 @@ require_once __DIR__ . "/helpers/format.php";
         const ventasDataFinal = ventasSemanaData.length > 0 ?
             ventasSemanaData : [0];
 
-        const ventasChart = new Chart(document.getElementById("ventasSemanaChart"), {
-            type: "line",
-            data: {
-                labels: ventasLabelsFinal,
-                datasets: [{
-                    label: "Ingresos C$",
-                    data: ventasDataFinal,
-                    borderWidth: 3,
-                    tension: 0.35,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                interaction: {
-                    mode: "index",
-                    intersect: false
+        const ventasCanvas = document.getElementById("ventasSemanaChart");
+
+        if (ventasCanvas && typeof Chart !== "undefined") {
+            new Chart(ventasCanvas, {
+                type: "line",
+                data: {
+                    labels: ventasLabelsFinal,
+                    datasets: [{
+                        label: "Ingresos C$",
+                        data: ventasDataFinal,
+                        borderWidth: 3,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 7
+                    }]
                 },
-                onClick: function(event, elements) {
-                    if (elements.length > 0 && ventasSemanaLabels.length > 0) {
-                        const index = elements[0].index;
-                        const fecha = ventasSemanaLabels[index];
-                        window.location.href = "reportes.php?tipo=ventas&fecha=" + encodeURIComponent(fecha);
-                    } else {
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+                    onClick: function(event, elements) {
+                        if (elements.length > 0 && ventasSemanaLabels.length > 0) {
+                            const index = elements[0].index;
+                            const fecha = ventasSemanaLabels[index];
+
+                            window.location.href = "reportes.php?tipo=ventas&fecha=" + encodeURIComponent(fecha);
+                            return;
+                        }
+
                         window.location.href = "reportes.php?tipo=ventas";
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return "Ingresos: C$ " + Number(context.raw).toLocaleString();
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return "Ingresos: C$ " + Number(context.raw).toLocaleString("es-NI", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                }
                             }
                         }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         const productosLabels = <?= json_encode(array_column($productosMasVendidos, "producto")) ?>;
         const productosData = <?= json_encode(array_map("intval", array_column($productosMasVendidos, "cantidad_vendida"))) ?>;
@@ -293,45 +319,53 @@ require_once __DIR__ . "/helpers/format.php";
         const productosDataFinal = productosData.length > 0 ?
             productosData : [1];
 
-        const productosChart = new Chart(document.getElementById("productosVendidosChart"), {
-            type: "doughnut",
-            data: {
-                labels: productosLabelsFinal,
-                datasets: [{
-                    label: "Cantidad vendida",
-                    data: productosDataFinal,
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                onClick: function(event, elements) {
-                    if (elements.length > 0 && productosIds.length > 0) {
-                        const index = elements[0].index;
-                        const idProducto = productosIds[index];
-                        window.location.href = "productos.php?id=" + encodeURIComponent(idProducto);
-                    } else {
-                        window.location.href = "reportes.php?tipo=productos";
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                if (context.label === "Sin ventas") {
-                                    return "Todavía no hay ventas registradas";
-                                }
+        const productosCanvas = document.getElementById("productosVendidosChart");
 
-                                return context.label + ": " + context.raw + " unidades vendidas";
+        if (productosCanvas && typeof Chart !== "undefined") {
+            new Chart(productosCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: productosLabelsFinal,
+                    datasets: [{
+                        label: "Cantidad vendida",
+                        data: productosDataFinal,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    onClick: function(event, elements) {
+                        if (elements.length > 0 && productosIds.length > 0) {
+                            const index = elements[0].index;
+                            const idProducto = productosIds[index];
+
+                            window.location.href = "productos.php?id=" + encodeURIComponent(idProducto);
+                            return;
+                        }
+
+                        window.location.href = "reportes.php?tipo=productos";
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.label === "Sin ventas") {
+                                        return "Todavía no hay ventas registradas";
+                                    }
+
+                                    return context.label + ": " + context.raw + " unidades vendidas";
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     </script>
+
+    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
 
 </body>
 

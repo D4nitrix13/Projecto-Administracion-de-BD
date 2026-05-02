@@ -1,427 +1,292 @@
 <style>
-    .dashboard-body {
+    :root {
+        --sidebar-width: 260px;
+        --sidebar-bg: #243247;
+        --sidebar-bg-dark: #202b3d;
+        --primary: #ff2f63;
+        --primary-dark: #dc1f50;
+        --text-main: #111827;
+        --text-muted: #6b7280;
+        --page-bg: #f3f5f9;
+        --card-bg: #ffffff;
+        --border: #e5e7eb;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --info: #2563eb;
+        --shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        --shadow-hover: 0 18px 35px rgba(15, 23, 42, 0.14);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body.dashboard-body {
         margin: 0;
-        background: #f3f5f9;
-        color: #111827;
+        min-height: 100vh;
+        background: var(--page-bg);
+        color: var(--text-main);
         font-family: Arial, sans-serif;
     }
+
+    /* ==============================
+       Sidebar
+       ============================== */
 
     .sidebar {
         position: fixed;
         inset: 0 auto 0 0;
-        width: 250px;
-        background: #243044;
-        color: #fff;
-        padding: 32px 28px;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--sidebar-bg);
+        color: #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 900;
+        transition: transform 0.25s ease;
+    }
+
+    .sidebar-header {
+        min-height: 86px;
+        padding: 20px 18px 14px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16);
     }
 
     .brand {
         display: flex;
         align-items: center;
         gap: 12px;
-        font-size: 1.1rem;
-        margin-bottom: 60px;
-    }
-
-    .brand b {
-        color: #ff2f63;
+        min-width: 0;
     }
 
     .brand-icon {
-        color: #ff2f63;
-        font-size: 1.5rem;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        flex: 0 0 38px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #ffffff;
+        display: grid;
+        place-items: center;
+    }
+
+    .brand-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .brand-text {
+        color: #ffffff;
+        font-size: 0.92rem;
+        line-height: 1.25;
+        font-weight: 800;
+    }
+
+    .sidebar-toggle {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border: 1px solid rgba(226, 232, 240, 0.22);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .sidebar-toggle:hover {
+        background: rgba(255, 255, 255, 0.14);
+    }
+
+    .sidebar-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 16px 18px 14px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+        background: rgba(203, 213, 225, 0.35);
+        border-radius: 999px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(203, 213, 225, 0.55);
     }
 
     .sidebar-label {
-        color: #9ca3af;
-        margin: 28px 0 14px;
+        margin: 14px 0 10px;
+        color: #a8b3c5;
+        font-size: 0.82rem;
+        font-weight: 700;
     }
 
     .sidebar-nav {
         display: grid;
-        gap: 8px;
+        gap: 6px;
+    }
+
+    .sidebar-nav a,
+    .sidebar-group-title {
+        display: flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 9px 12px;
+        border-radius: 12px;
+        color: #e5e7eb;
+        text-decoration: none;
+        font-size: 0.9rem;
     }
 
     .sidebar-nav a {
-        color: #f9fafb;
-        text-decoration: none;
-        padding: 13px 16px;
-        border-radius: 12px;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     }
 
-    .sidebar-nav a:hover,
+    .sidebar-nav a:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+    }
+
     .sidebar-nav a.active {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .dashboard-main {
-        margin-left: 306px;
-        padding: 36px 42px;
-    }
-
-    .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 28px;
-    }
-
-    .topbar h1 {
-        margin: 0;
-        font-size: 1.9rem;
-    }
-
-    .topbar p {
-        color: #6b7280;
-        margin: 6px 0 0;
-    }
-
-    .topbar-user {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-    }
-
-    .topbar-user span,
-    .topbar-user strong {
-        background: #fff;
-        padding: 10px 18px;
-        border-radius: 999px;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-    }
-
-    .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 22px;
-        margin-bottom: 24px;
-    }
-
-    .summary-card,
-    .chart-card,
-    .sales-card,
-    .table-card,
-    .quick-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-    }
-
-    .summary-card p {
-        margin: 0 0 12px;
-        color: #6b7280;
-    }
-
-    .summary-card h2 {
-        margin: 0 0 22px;
-        font-size: 1.8rem;
-    }
-
-    .summary-card small {
-        display: block;
-        color: #6b7280;
-        margin-top: 10px;
-    }
-
-    .positive {
-        color: #22c55e;
+        background: rgba(148, 163, 184, 0.22);
+        color: #ffffff;
         font-weight: 700;
     }
 
-    .negative {
-        color: #ff2f63;
-        font-weight: 700;
-    }
-
-    .dashboard-grid {
+    .sidebar-group {
         display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 24px;
-        margin-bottom: 24px;
+        gap: 4px;
+        margin-top: 6px;
     }
 
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 22px;
+    .sidebar-group-title {
+        padding-left: 12px;
+        color: #ffffff;
+        font-weight: 800;
     }
 
-    .card-header h3 {
-        margin: 0;
+    .sidebar-sublink {
+        margin-left: 12px;
+        font-size: 0.84rem !important;
+        color: #dbe3ee !important;
     }
 
-    .card-header span,
-    .card-header a {
-        color: #6b7280;
-        text-decoration: none;
+    .sidebar-account {
+        padding: 12px 18px 18px;
+        border-top: 1px solid rgba(148, 163, 184, 0.16);
+        background: var(--sidebar-bg);
     }
 
-    .fake-chart {
-        height: 230px;
-        display: flex;
-        align-items: end;
-        gap: 22px;
-        border-bottom: 1px solid #e5e7eb;
-        padding: 20px;
-    }
-
-    .fake-chart div {
-        flex: 1;
-        background: linear-gradient(180deg, #ff2f63, #7c3aed);
-        border-radius: 999px 999px 0 0;
-    }
-
-    .chart-days {
-        display: flex;
-        justify-content: space-around;
-        color: #6b7280;
-        font-size: 0.85rem;
-        margin-top: 14px;
-    }
-
-    .donut {
-        width: 220px;
-        height: 220px;
-        margin: 20px auto;
-        border-radius: 50%;
-        background: conic-gradient(#ff2f63 0 45%, #7c3aed 45% 75%, #fb923c 75% 100%);
-        display: grid;
-        place-items: center;
-    }
-
-    .donut div {
-        width: 130px;
-        height: 130px;
-        border-radius: 50%;
-        background: #fff;
-        display: grid;
-        place-items: center;
-        text-align: center;
-    }
-
-    .donut strong,
-    .donut small {
-        display: block;
-    }
-
-    .bottom-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 24px;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th {
-        text-align: left;
-        color: #6b7280;
-        background: #f3f4f6;
-        padding: 14px;
-    }
-
-    td {
-        padding: 16px 14px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .quick-card {
-        display: grid;
-        gap: 12px;
-        align-content: start;
-    }
-
-    .quick-card h3 {
+    .sidebar-account .sidebar-label {
         margin-top: 0;
     }
 
-    .quick-card a {
-        display: block;
-        padding: 14px 16px;
-        background: #f3f5f9;
-        color: #111827;
-        text-decoration: none;
+    .logout-link {
+        background: rgba(239, 68, 68, 0.10);
+        color: #fecaca !important;
+    }
+
+    .logout-link:hover {
+        background: rgba(239, 68, 68, 0.18) !important;
+        color: #ffffff !important;
+    }
+
+    .sidebar-toggle-floating {
+        position: fixed;
+        top: 22px;
+        left: 22px;
+        z-index: 1000;
+        width: 42px;
+        height: 42px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
         border-radius: 12px;
-        font-weight: 600;
-    }
-
-    .quick-card a:hover {
-        background: #e0e7ff;
-        color: #1d4ed8;
-    }
-
-    @media (max-width: 1000px) {
-        .sidebar {
-            position: static;
-            width: auto;
-        }
-
-        .dashboard-main {
-            margin-left: 0;
-        }
-
-        .summary-grid,
-        .dashboard-grid,
-        .bottom-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .summary-card,
-    .chart-card,
-    .sales-card,
-    .table-card,
-    .quick-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .summary-card:hover,
-    .chart-card:hover,
-    .sales-card:hover,
-    .table-card:hover,
-    .quick-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.14);
-    }
-
-    table tbody tr {
-        transition: background 0.2s ease;
-    }
-
-    table tbody tr:hover {
-        background: #f8fafc;
-    }
-
-    .quick-card a {
-        transition: transform 0.2s ease, background 0.2s ease;
-    }
-
-    .quick-card a:hover {
-        transform: translateX(5px);
-    }
-
-    canvas {
-        max-height: 280px;
-    }
-
-
-    /** */
-    .dashboard-grid,
-    .bottom-grid {
-        display: grid;
-        gap: 28px;
-        margin-bottom: 28px;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
-    }
-
-    .bottom-grid {
-        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
-    }
-
-    .table-card,
-    .quick-card,
-    .chart-card,
-    .sales-card {
-        min-height: 260px;
-    }
-
-    .clickable-row {
+        background: #ffffff;
+        color: var(--text-main);
+        font-size: 1.1rem;
+        font-weight: 900;
         cursor: pointer;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
     }
 
-    .clickable-row:hover {
-        background: #eef2ff;
+    body.sidebar-collapsed .sidebar {
+        transform: translateX(-100%);
     }
 
-    .card-header a {
-        font-weight: 600;
+    body.sidebar-collapsed .sidebar-toggle-floating {
+        display: inline-flex;
     }
 
-    .chart-card,
-    .sales-card {
-        cursor: pointer;
+    body.sidebar-collapsed .dashboard-main {
+        margin-left: 0;
     }
 
-    .chart-card canvas,
-    .sales-card canvas {
-        height: 260px !important;
+    /* ==============================
+       Layout principal
+       ============================== */
+
+    .dashboard-main {
+        margin-left: var(--sidebar-width);
+        padding: 32px 36px;
+        transition: margin-left 0.25s ease;
     }
 
-    .dashboard-grid,
-    .bottom-grid {
-        gap: 32px;
-        margin-bottom: 32px;
+    .dashboard-topbar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 24px;
     }
 
-    .chart-box {
-        height: 260px;
-    }
-
-    .clickable-card {
-        cursor: pointer;
-    }
-
-    .clickable-row {
-        cursor: pointer;
-    }
-
-    .clickable-row:hover {
-        background: #eef2ff;
-    }
-
-    .empty-table {
-        text-align: center;
-        color: #6b7280;
-        padding: 40px 16px;
-    }
-
-    .summary-card,
-    .chart-card,
-    .sales-card,
-    .table-card,
-    .quick-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .summary-card:hover,
-    .chart-card:hover,
-    .sales-card:hover,
-    .table-card:hover,
-    .quick-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.14);
-    }
-
-    .topbar-user {
+    .topbar-actions {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .topbar-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--text-main);
+        font-weight: 700;
+        box-shadow: var(--shadow);
     }
 
     .user-name {
-        background: #f3f4f6;
-        padding: 10px 16px;
-        border-radius: 999px;
-        font-weight: 700;
-        color: #111827;
+        font-weight: 800;
     }
 
-    .user-role {
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 800;
+    .role-pill {
+        font-size: 0.82rem;
         text-transform: uppercase;
     }
 
-    /* Colores por rol */
     .role-administrador {
         background: #fee2e2;
         color: #b91c1c;
@@ -442,152 +307,288 @@
         color: #374151;
     }
 
-    .sidebar-group {
-        margin-top: 8px;
+    .dashboard-page-heading {
+        margin-bottom: 28px;
     }
 
-    .sidebar-group-title {
-        display: block;
-        padding: 12px 16px 8px;
-        color: #e5e7eb;
-        font-weight: 600;
+    .dashboard-page-heading h1 {
+        margin: 0 0 6px;
+        color: var(--text-main);
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
     }
 
-    .sidebar-sublink {
-        display: block;
-        margin-left: 14px;
-        padding: 10px 16px;
-        border-radius: 10px;
-        color: #cbd5e1;
-        text-decoration: none;
-        font-size: 0.92rem;
-    }
-
-    .sidebar-sublink:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #ffffff;
-    }
-
-    .brand-icon {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        flex: 0 0 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        border-radius: 10px;
-    }
-
-    .brand-logo,
-    .brand-icon img {
-        width: 36px;
-        height: 36px;
-        max-width: 36px;
-        max-height: 36px;
-        object-fit: contain;
-        display: block;
-        border-radius: 10px;
+    .dashboard-page-heading p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 1rem;
     }
 
     /* ==============================
-   Sidebar con scroll y colapsado
-   ============================== */
+       Cards
+       ============================== */
 
-    .sidebar {
-        height: 100vh;
-        overflow: hidden;
-        transition: width 0.25s ease, transform 0.25s ease;
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 22px;
+        margin-bottom: 24px;
     }
 
-    .sidebar-scroll {
-        height: calc(100vh - 96px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-bottom: 24px;
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+        gap: 28px;
+        margin-bottom: 28px;
     }
 
-    /* Scroll visual del menú */
-    .sidebar-scroll::-webkit-scrollbar {
-        width: 6px;
+    .bottom-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+        gap: 28px;
+        margin-bottom: 28px;
     }
 
-    .sidebar-scroll::-webkit-scrollbar-track {
-        background: transparent;
+    .summary-card,
+    .chart-card,
+    .sales-card,
+    .table-card,
+    .quick-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .sidebar-scroll::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.35);
-        border-radius: 999px;
+    .summary-card:hover,
+    .chart-card:hover,
+    .sales-card:hover,
+    .table-card:hover,
+    .quick-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
     }
 
-    .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-        background: rgba(148, 163, 184, 0.55);
-    }
-
-    /* Botón flotante para ocultar/desplegar menú */
-    .sidebar-toggle {
-        position: fixed;
-        top: 18px;
-        left: 286px;
-        z-index: 1000;
-        width: 42px;
-        height: 42px;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        background: #ffffff;
-        color: #111827;
-        font-size: 1.2rem;
-        font-weight: 800;
+    .clickable-card {
         cursor: pointer;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-        transition: left 0.25s ease, background 0.15s ease, color 0.15s ease;
     }
 
-    .sidebar-toggle:hover {
+    .summary-card p {
+        margin: 0 0 12px;
+        color: var(--text-muted);
+    }
+
+    .summary-card h2 {
+        margin: 0 0 18px;
+        font-size: 1.8rem;
+    }
+
+    .summary-card small {
+        display: block;
+        color: var(--text-muted);
+        margin-top: 10px;
+    }
+
+    .positive {
+        color: var(--success);
+        font-weight: 800;
+    }
+
+    .negative {
+        color: var(--danger);
+        font-weight: 800;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .card-header h3 {
+        margin: 0 0 5px;
+        color: var(--text-main);
+    }
+
+    .card-header span {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+    }
+
+    .card-header a {
+        color: var(--info);
+        text-decoration: none;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .card-header a:hover {
+        text-decoration: underline;
+    }
+
+    .chart-card,
+    .sales-card {
+        min-height: 320px;
+    }
+
+    .chart-box {
+        height: 260px;
+    }
+
+    canvas {
+        max-height: 280px;
+    }
+
+    /* ==============================
+       Tablas
+       ============================== */
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        color: var(--text-muted);
+        background: #f3f4f6;
+        padding: 14px;
+        font-size: 0.9rem;
+    }
+
+    td {
+        padding: 16px 14px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.94rem;
+    }
+
+    table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+    table tbody tr:hover {
         background: #f8fafc;
     }
 
-    /* Estado oculto */
-    body.sidebar-collapsed .sidebar {
-        transform: translateX(-100%);
+    .clickable-row {
+        cursor: pointer;
     }
 
-    body.sidebar-collapsed .dashboard-main {
-        margin-left: 0;
+    .clickable-row:hover {
+        background: #eef2ff;
     }
 
-    body.sidebar-collapsed .sidebar-toggle {
-        left: 18px;
+    .empty-table {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 40px 16px;
     }
 
-    /* Ajuste para que el contenido se mueva suavemente */
-    .dashboard-main {
-        transition: margin-left 0.25s ease;
+    /* ==============================
+       Acciones rápidas
+       ============================== */
+
+    .quick-card {
+        display: grid;
+        gap: 12px;
+        align-content: start;
     }
 
-    /* Responsive */
+    .quick-card h3 {
+        margin: 0 0 8px;
+    }
+
+    .quick-card a {
+        display: block;
+        padding: 14px 16px;
+        background: #f3f5f9;
+        color: var(--text-main);
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .quick-card a:hover {
+        transform: translateX(5px);
+        background: #e0e7ff;
+        color: #1d4ed8;
+    }
+
+    /* ==============================
+       Responsive
+       ============================== */
+
+    @media (max-width: 1100px) {
+        .summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dashboard-grid,
+        .bottom-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     @media (max-width: 900px) {
         .sidebar {
             transform: translateX(-100%);
-            z-index: 999;
         }
 
         body.sidebar-open .sidebar {
             transform: translateX(0);
         }
 
+        body.sidebar-open .sidebar-toggle-floating {
+            display: none;
+        }
+
+        .sidebar-toggle-floating {
+            display: inline-flex;
+        }
+
         .dashboard-main {
             margin-left: 0;
+            padding: 24px 18px;
         }
 
-        .sidebar-toggle {
-            left: 18px;
+        .dashboard-topbar {
+            justify-content: flex-start;
+            padding-left: 56px;
         }
 
-        body.sidebar-collapsed .sidebar {
-            transform: translateX(-100%);
+        .topbar-pill {
+            min-height: 36px;
+            padding: 0 12px;
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-page-heading h1 {
+            font-size: 1.7rem;
+        }
+
+        .summary-card,
+        .chart-card,
+        .sales-card,
+        .table-card,
+        .quick-card {
+            padding: 18px;
+        }
+
+        table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
         }
     }
 </style>
