@@ -33,6 +33,12 @@ function isActivePage(string $page, string $currentPage): string
 
         <nav class="sidebar-nav">
             <a
+                href="index.php"
+                class="<?= isActivePage("index.php", $currentPage) ?>">
+                Inicio público
+            </a>
+
+            <a
                 href="dashboard.php"
                 class="<?= isActivePage("dashboard.php", $currentPage) ?>">
                 Dashboard
