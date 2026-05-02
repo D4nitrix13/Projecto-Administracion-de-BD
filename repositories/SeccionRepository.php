@@ -39,4 +39,23 @@ class SeccionRepository
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function obtenerSeccionPorId(int $idSeccion): ?array
+    {
+        $statement = $this->connection->prepare("
+        SELECT 
+            id_seccion,
+            nombre
+        FROM Seccion
+        WHERE id_seccion = :id_seccion
+    ");
+
+        $statement->execute([
+            ":id_seccion" => $idSeccion,
+        ]);
+
+        $seccion = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $seccion ?: null;
+    }
 }

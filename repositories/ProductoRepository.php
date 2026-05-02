@@ -66,4 +66,20 @@ class ProductoRepository
             ":id_producto" => $idProducto,
         ]);
     }
+
+    public function obtenerProductosParaFactura(): array
+    {
+        $statement = $this->connection->query("
+        SELECT 
+            id_producto,
+            codigo,
+            nombre,
+            precio_venta,
+            stock
+        FROM Producto
+        ORDER BY nombre
+    ");
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

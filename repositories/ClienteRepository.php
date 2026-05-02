@@ -132,4 +132,23 @@ class ClienteRepository
             ":id_cliente" => $idCliente,
         ]);
     }
+
+    public function obtenerClientesHabituales(): array
+    {
+        $statement = $this->connection->query("
+        SELECT 
+            id_cliente,
+            nombres,
+            apellidos,
+            telefono,
+            direccion,
+            identificacion,
+            tipo_cliente
+        FROM Cliente
+        WHERE identificacion IS DISTINCT FROM 'FUGAZ'
+        ORDER BY nombres, apellidos
+    ");
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
