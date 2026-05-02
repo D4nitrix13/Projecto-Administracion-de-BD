@@ -201,46 +201,84 @@ VALUES
 ------------------------------------------------------------
 -- 8) FACTURAS (más movimiento de ventas)
 ------------------------------------------------------------
-INSERT INTO Factura (id_cliente, id_usuario, id_seccion, subtotal, descuento, impuesto, total) VALUES
--- Cliente 1 -> Detallista → puede facturar Andy (Facturador)
-(1, 4, 1,  500.00,   0.00,  75.00,  575.00),
+-- IMPORTANTE:
+-- La tabla Factura tiene la columna fecha con DEFAULT NOW().
+-- Si no se especifica la fecha en el INSERT, PostgreSQL asigna
+-- automáticamente la fecha y hora actual al momento de ejecutar el script.
+--
+-- Por eso aquí se incluye explícitamente la columna fecha, para que las
+-- facturas de prueba no aparezcan todas registradas en el mismo día y hora.
+------------------------------------------------------------
 
--- Cliente 2 -> Detallista → puede facturar Sofía (Facturador)
-(2, 5, 2,  840.00,  40.00, 120.00,  920.00),
+INSERT INTO Factura (
+    fecha,
+    id_cliente,
+    id_usuario,
+    id_seccion,
+    subtotal,
+    descuento,
+    impuesto,
+    total
+) VALUES
+-- Factura 1
+-- Cliente Fugaz / Detallista
+-- Sección: Panda Estampados
+('2026-01-12 09:15:00', 1, 4, 1,  500.00,   0.00,  75.00,  575.00),
 
--- Cliente 3 -> MAYORISTA → SOLO ADMIN
--- antes: (3, 4, 1, ...)
-(3, 1, 1, 1500.00, 150.00, 225.00, 1575.00),
+-- Factura 2
+-- Cliente Juan López / Detallista
+-- Sección: Kitsune
+('2026-01-18 14:30:00', 2, 5, 2,  840.00,  40.00, 120.00,  920.00),
 
--- Cliente 4 -> Detallista → puede facturar Sofía
-(4, 5, 2,  300.00,   0.00,  45.00,  345.00),
+-- Factura 3
+-- Cliente Ana Martínez / Detallista
+-- Sección: Panda Estampados
+('2026-02-03 10:45:00', 3, 1, 1, 1500.00, 150.00, 225.00, 1575.00),
 
--- Cliente 5 -> Detallista → puede facturar Lucía (Facturador)
-(5, 21, 2,  960.00,  60.00, 135.00, 1035.00),
+-- Factura 4
+-- Cliente Comercial Ruiz S.A / Mayorista
+-- Sección: Kitsune
+('2026-02-11 16:20:00', 4, 5, 2,  300.00,   0.00,  45.00,  345.00),
 
--- Cliente 6 -> MAYORISTA → SOLO ADMIN
--- antes: (6, 24, 1, ...)
-(6, 26, 1, 3200.00, 320.00, 432.00, 3312.00),
+-- Factura 5
+-- Cliente Karla González / Detallista
+-- Sección: Kitsune
+('2026-02-22 11:10:00', 5, 21, 2,  960.00,  60.00, 135.00, 1035.00),
 
--- Cliente 7 -> Detallista → puede facturar Brandon (Facturador)
-(7, 22, 2,  450.00,   0.00,  67.50,  517.50),
+-- Factura 6
+-- Cliente Jhossep Ramos / Detallista
+-- Sección: Panda Estampados
+('2026-03-02 13:25:00', 6, 26, 1, 3200.00, 320.00, 432.00, 3312.00),
 
--- Cliente 8 -> Detallista → puede facturar Andrea (Facturador)
-(8, 23, 1,  780.00,  30.00, 112.50,  862.50),
+-- Factura 7
+-- Cliente Impresiones Del Norte / Mayorista
+-- Sección: Kitsune
+('2026-03-09 15:40:00', 7, 22, 2,  450.00,   0.00,  67.50,  517.50),
 
--- Cliente 9 -> MAYORISTA → SOLO ADMIN
--- antes: (9, 25, 1, ...)
-(9, 27, 1, 2100.00, 210.00, 283.50, 2173.50),
+-- Factura 8
+-- Cliente María Sáenz / Detallista
+-- Sección: Panda Estampados
+('2026-03-16 09:50:00', 8, 23, 1,  780.00,  30.00, 112.50,  862.50),
 
--- Cliente 10 -> Detallista → puede facturar Carmen (Facturador)
-(10, 28, 2,  650.00,   0.00,  97.50,  747.50),
+-- Factura 9
+-- Cliente Carlos Blandón / Detallista
+-- Sección: Panda Estampados
+('2026-03-23 17:05:00', 9, 27, 1, 2100.00, 210.00, 283.50, 2173.50),
 
--- Cliente 11 -> Detallista → puede facturar Nidia (Facturador)
-(11, 29, 1,  920.00,  50.00, 130.50, 1000.50),
+-- Factura 10
+-- Cliente Studio Creativo Luna / Mayorista
+-- Sección: Kitsune
+('2026-04-05 10:30:00', 10, 28, 2,  650.00,   0.00,  97.50,  747.50),
 
--- Cliente 12 -> MAYORISTA → SOLO ADMIN
--- antes: (12, 30, 2, ...)
-(12, 1, 2, 1450.00,  80.00, 205.50, 1575.50);
+-- Factura 11
+-- Cliente Mario Hernández / Detallista
+-- Sección: Panda Estampados
+('2026-04-18 12:15:00', 11, 29, 1,  920.00,  50.00, 130.50, 1000.50),
+
+-- Factura 12
+-- Cliente Lucía Pérez / Detallista
+-- Sección: Kitsune
+('2026-04-30 18:45:00', 12, 1, 2, 1450.00,  80.00, 205.50, 1575.50);
 
 
 ------------------------------------------------------------
