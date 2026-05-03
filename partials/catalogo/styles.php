@@ -749,5 +749,126 @@
             max-width: 100%;
         }
     }
-    
+
+    .catalog-navbar {
+        width: 100%;
+        background: #1e2d45;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .catalog-navbar-inner {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 14px 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+    }
+
+    .catalog-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 1.05rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+
+    .catalog-brand-logo {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 6px;
+        flex-shrink: 0;
+    }
+
+    .catalog-brand-separator {
+        color: #cbd5e1;
+        font-weight: 900;
+    }
+
+    .catalog-navbar-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-left: auto;
+        min-width: 0;
+    }
+
+    .catalog-session-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        min-width: 170px;
+        max-width: none;
+        padding: 0 18px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: #f8fafc;
+        font-size: 0.95rem;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: visible;
+        text-overflow: unset;
+    }
+
+    .catalog-navbar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 22px;
+        border-radius: 999px;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 900;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+        transition:
+            background 0.15s ease,
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .catalog-navbar-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 760px) {
+        .catalog-navbar-inner {
+            padding: 14px 18px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .catalog-brand {
+            justify-content: center;
+            flex-wrap: wrap;
+            text-align: center;
+        }
+
+        .catalog-navbar-actions {
+            width: 100%;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .catalog-session-label,
+        .catalog-navbar-btn {
+            width: 100%;
+        }
+    }
 </style>
