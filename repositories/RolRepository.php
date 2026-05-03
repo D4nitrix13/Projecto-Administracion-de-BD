@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 class RolRepository
 {
@@ -12,11 +13,10 @@ class RolRepository
     public function obtenerRolesOrdenados(): array
     {
         $statement = $this->connection->query("
-            SELECT 
+            SELECT
                 id_rol,
                 nombre
-            FROM Rol
-            ORDER BY nombre
+            FROM listar_roles_ordenados()
         ");
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);

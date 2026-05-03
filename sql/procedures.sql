@@ -1452,3 +1452,24 @@ BEGIN
         p.nombre ASC;
 END;
 $$;
+
+-- ============================================================
+-- ROLES: Listar roles ordenados
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_roles_ordenados()
+RETURNS TABLE (
+    id_rol INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        r.id_rol,
+        r.nombre
+    FROM Rol r
+    ORDER BY r.nombre;
+END;
+$$;
