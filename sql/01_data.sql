@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict axiMUggbOKzce8AyZv953D8NfZ77f7m8iiLlPGu3mJzpRthKudvmliRAg0pggI1
+\restrict D0CfuX8mm70GbHyazDkRTtGJvhm6ykHYKGeCHPRRtw0T05fYlm4EmH4exJopE7q
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
--- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
+-- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg12+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -3073,7 +3073,7 @@ CREATE TABLE public.cliente (
     identificacion character varying(40),
     tipo_cliente character varying(12) DEFAULT 'Detallista'::character varying NOT NULL,
     fecha_registro date DEFAULT CURRENT_DATE NOT NULL,
-    CONSTRAINT ck_cliente_tipo CHECK (((tipo_cliente)::text = ANY ((ARRAY['Mayorista'::character varying, 'Detallista'::character varying])::text[])))
+    CONSTRAINT ck_cliente_tipo CHECK (((tipo_cliente)::text = ANY (ARRAY[('Mayorista'::character varying)::text, ('Detallista'::character varying)::text])))
 );
 
 
@@ -3235,7 +3235,7 @@ CREATE TABLE public.factura (
     total numeric(10,2) DEFAULT 0 NOT NULL,
     tipo_cliente_venta character varying(10) DEFAULT 'Habitual'::character varying NOT NULL,
     nombre_cliente_fugaz character varying(150),
-    CONSTRAINT factura_tipo_cliente_venta_check CHECK (((tipo_cliente_venta)::text = ANY ((ARRAY['Habitual'::character varying, 'Fugaz'::character varying])::text[])))
+    CONSTRAINT factura_tipo_cliente_venta_check CHECK (((tipo_cliente_venta)::text = ANY (ARRAY[('Habitual'::character varying)::text, ('Fugaz'::character varying)::text])))
 );
 
 
@@ -7927,5 +7927,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict axiMUggbOKzce8AyZv953D8NfZ77f7m8iiLlPGu3mJzpRthKudvmliRAg0pggI1
+\unrestrict D0CfuX8mm70GbHyazDkRTtGJvhm6ykHYKGeCHPRRtw0T05fYlm4EmH4exJopE7q
 
