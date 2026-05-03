@@ -98,7 +98,15 @@ http://localhost:8080
 ## Importá tu SQL manualmente
 
 ```bash
-docker exec -i pandas_bd psql -U postgres -d pandas_estampados_y_kitsune < sql/main.sql
+docker exec -i pandas_bd psql \
+  -U postgres \
+  -d pandas_estampados_y_kitsune_restore \
+  < sql/data.sql
+
+docker exec -i pandas_bd psql \
+  -U postgres \
+  -d pandas_estampados_y_kitsune_restore \
+  < sql/procedures.sql
 ```
 
 Luego verifica:

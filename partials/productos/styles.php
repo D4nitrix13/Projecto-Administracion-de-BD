@@ -98,7 +98,7 @@
 
     .productos-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(315px, 1fr));
         gap: 18px;
         margin-top: 16px;
     }
@@ -181,15 +181,23 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         margin-top: 14px;
+        flex-wrap: nowrap;
     }
 
     .producto-stock-badge {
-        padding: 5px 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 74px;
+        padding: 7px 12px;
         border-radius: 999px;
         font-size: 0.78rem;
         font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .stock-normal {
@@ -204,18 +212,27 @@
 
     .producto-card-actions {
         display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
+        align-items: center;
         justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: nowrap;
+        margin-left: auto;
+        min-width: 0;
     }
 
     .btn-accion-xs {
-        font-size: 0.76rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.74rem;
         padding: 6px 9px;
         border-radius: 999px;
         text-decoration: none;
         cursor: pointer;
         font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .btn-accion-editar-xs {
@@ -231,6 +248,20 @@
     .btn-accion-eliminar-xs {
         background: #fef2f2;
         color: #b91c1c;
+    }
+
+    .solo-lectura {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: #6b7280;
+        font-size: 0.74rem;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
     }
 
     .empty-products {
@@ -273,6 +304,17 @@
 
         .producto-precios {
             flex-direction: column;
+        }
+
+        .producto-card-footer {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .producto-card-actions {
+            justify-content: flex-start;
+            margin-left: 0;
+            flex-wrap: wrap;
         }
     }
 </style>
