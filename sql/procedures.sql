@@ -793,3 +793,71 @@ BEGIN
     SELECT v_filas_afectadas;
 END;
 $$;
+
+-- ============================================================
+-- AUTENTICACIÓN: Obtener usuario por email
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_usuario_login(
+    p_email VARCHAR
+)
+RETURNS TABLE (
+    id_usuario INT,
+    nombre VARCHAR,
+    email VARCHAR,
+    password TEXT,
+    id_rol INT,
+    id_seccion INT,
+    rol VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_email IS NULL OR TRIM(p_email) = '' THEN
+        RAISE EXCEPTION 'El correo electrónico no puede estar vacío';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        u.id_usuario,
+        u.nombre,
+        u.email,
+        u.password,
+        u.id_rol,
+        u.id_seccion,
+        r.nombre AS rol
+    FROM Usuario AS u
+    INNER JOIN Rol AS r ON r.id_rol = u.id_rol
+    WHERE u.email = TRIM(p_email)
+    LIMIT 1;
+END;
+$$;
+
+
+-- ============================================================
+-- AUTENTICACIÓN: Actualizar hash de contraseña
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION actualizar_password_usuario_login(
+    p_id_usuario INT,
+    p_password_hash TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    IF p_password_hash IS NULL OR TRIM(p_password_hash) = '' THEN
+        RAISE EXCEPTION 'El hash de contraseña no puede estar vacío';
+    END IF;
+
+    UPDATE Usuario
+    SET password = p_password_hash
+    WHERE Usuario.id_usuario = p_id_usuario;
+
+    RETURN FOUND;
+END;
+$$;
