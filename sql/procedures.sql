@@ -2504,3 +2504,215 @@ BEGIN
     ORDER BY c.fecha DESC;
 END;
 $$;
+
+-- ============================================================
+-- CLIENTES: Buscar clientes con filtros
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_clientes_filtrados(
+    p_busqueda TEXT DEFAULT NULL,
+    p_tipo_cliente VARCHAR DEFAULT NULL
+)
+RETURNS TABLE (
+    id_cliente INT,
+    nombres VARCHAR,
+    apellidos VARCHAR,
+    telefono VARCHAR,
+    direccion VARCHAR,
+    identificacion VARCHAR,
+    tipo_cliente VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_busqueda TEXT;
+    v_es_numerica BOOLEAN;
+    v_palabras TEXT[];
+BEGIN
+    v_busqueda := REGEXP_REPLACE(TRIM(COALESCE(p_busqueda, '')), '\s+', ' ', 'g');
+    v_es_numerica := v_busqueda ~ '^[0-9]+$';
+
+    IF p_tipo_cliente IS NOT NULL
+       AND TRIM(p_tipo_cliente) <> ''
+       AND p_tipo_cliente NOT IN ('Mayorista', 'Detallista') THEN
+        RAISE EXCEPTION 'Tipo de cliente no válido';
+    END IF;
+
+    IF v_busqueda <> '' AND NOT v_es_numerica THEN
+        v_palabras := REGEXP_SPLIT_TO_ARRAY(v_busqueda, '\s+');
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.id_cliente,
+        c.nombres,
+        c.apellidos,
+        c.telefono,
+        c.direccion,
+        c.identificacion,
+        c.tipo_cliente
+    FROM Cliente c
+    WHERE (
+            v_busqueda = ''
+            OR (
+                v_es_numerica
+                AND (
+                    c.id_cliente = v_busqueda::INT
+                    OR c.telefono ILIKE '%' || v_busqueda || '%'
+                    OR c.identificacion ILIKE '%' || v_busqueda || '%'
+                )
+            )
+            OR (
+                NOT v_es_numerica
+                AND (
+                    SELECT BOOL_AND(
+                        c.nombres ILIKE '%' || palabra || '%'
+                        OR c.apellidos ILIKE '%' || palabra || '%'
+                        OR c.telefono ILIKE '%' || palabra || '%'
+                        OR c.direccion ILIKE '%' || palabra || '%'
+                        OR c.identificacion ILIKE '%' || palabra || '%'
+                        OR c.tipo_cliente ILIKE '%' || palabra || '%'
+                        OR CONCAT_WS(' ', c.nombres, c.apellidos) ILIKE '%' || palabra || '%'
+                        OR CONCAT_WS(' ', c.apellidos, c.nombres) ILIKE '%' || palabra || '%'
+                        OR CONCAT_WS(
+                            ' ',
+                            c.nombres,
+                            c.apellidos,
+                            c.telefono,
+                            c.direccion,
+                            c.identificacion,
+                            c.tipo_cliente
+                        ) ILIKE '%' || palabra || '%'
+                    )
+                    FROM UNNEST(v_palabras) AS palabra
+                )
+            )
+        )
+      AND (
+            p_tipo_cliente IS NULL
+            OR TRIM(p_tipo_cliente) = ''
+            OR c.tipo_cliente = p_tipo_cliente
+        )
+    ORDER BY c.id_cliente DESC;
+END;
+$$;
+
+
+-- ============================================================
+-- CLIENTES: Obtener cliente por ID para edición
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_cliente_edicion_por_id(
+    p_id_cliente INT
+)
+RETURNS TABLE (
+    id_cliente INT,
+    nombres VARCHAR,
+    apellidos VARCHAR,
+    telefono VARCHAR,
+    direccion VARCHAR,
+    identificacion VARCHAR,
+    tipo_cliente VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
+        RAISE EXCEPTION 'ID de cliente no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.id_cliente,
+        c.nombres,
+        c.apellidos,
+        c.telefono,
+        c.direccion,
+        c.identificacion,
+        c.tipo_cliente
+    FROM Cliente c
+    WHERE c.id_cliente = p_id_cliente;
+END;
+$$;
+
+
+-- ============================================================
+-- CLIENTES: Actualizar cliente
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION actualizar_cliente_sistema(
+    p_id_cliente INT,
+    p_nombres VARCHAR,
+    p_apellidos VARCHAR,
+    p_telefono VARCHAR DEFAULT NULL,
+    p_direccion VARCHAR DEFAULT NULL,
+    p_identificacion VARCHAR DEFAULT NULL,
+    p_tipo_cliente VARCHAR DEFAULT 'Detallista'
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
+        RAISE EXCEPTION 'ID de cliente no válido';
+    END IF;
+
+    IF p_nombres IS NULL OR TRIM(p_nombres) = '' THEN
+        RAISE EXCEPTION 'Los nombres del cliente no pueden estar vacíos';
+    END IF;
+
+    IF p_apellidos IS NULL OR TRIM(p_apellidos) = '' THEN
+        RAISE EXCEPTION 'Los apellidos del cliente no pueden estar vacíos';
+    END IF;
+
+    IF p_tipo_cliente IS NULL
+       OR p_tipo_cliente NOT IN ('Mayorista', 'Detallista') THEN
+        RAISE EXCEPTION 'Tipo de cliente no válido';
+    END IF;
+
+    UPDATE Cliente
+    SET
+        nombres = TRIM(p_nombres),
+        apellidos = TRIM(p_apellidos),
+        telefono = NULLIF(TRIM(p_telefono), ''),
+        direccion = NULLIF(TRIM(p_direccion), ''),
+        identificacion = NULLIF(TRIM(p_identificacion), ''),
+        tipo_cliente = p_tipo_cliente
+    WHERE Cliente.id_cliente = p_id_cliente;
+
+    RETURN FOUND;
+END;
+$$;
+
+
+-- ============================================================
+-- CLIENTES: Listar clientes habituales
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_clientes_habituales()
+RETURNS TABLE (
+    id_cliente INT,
+    nombres VARCHAR,
+    apellidos VARCHAR,
+    telefono VARCHAR,
+    direccion VARCHAR,
+    identificacion VARCHAR,
+    tipo_cliente VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id_cliente,
+        c.nombres,
+        c.apellidos,
+        c.telefono,
+        c.direccion,
+        c.identificacion,
+        c.tipo_cliente
+    FROM Cliente c
+    WHERE c.identificacion IS DISTINCT FROM 'FUGAZ'
+    ORDER BY c.nombres, c.apellidos;
+END;
+$$;

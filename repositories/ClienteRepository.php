@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 class ClienteRepository
 {
@@ -11,75 +12,29 @@ class ClienteRepository
 
     public function obtenerClientesFiltrados(string $busqueda, string $tipoFiltro): array
     {
-        $sql = "
-        SELECT 
-            id_cliente,
-            nombres,
-            apellidos,
-            telefono,
-            direccion,
-            identificacion,
-            tipo_cliente
-        FROM Cliente
-        WHERE 1 = 1
-    ";
+        $tipoCliente = ($tipoFiltro === "Mayorista" || $tipoFiltro === "Detallista")
+            ? $tipoFiltro
+            : null;
 
-        $params = [];
+        $statement = $this->connection->prepare("
+            SELECT
+                id_cliente,
+                nombres,
+                apellidos,
+                telefono,
+                direccion,
+                identificacion,
+                tipo_cliente
+            FROM buscar_clientes_filtrados(
+                :busqueda,
+                :tipo_cliente
+            )
+        ");
 
-        if ($busqueda !== "") {
-            $busquedaLimpia = preg_replace('/\s+/', ' ', trim($busqueda));
-
-            if (ctype_digit($busquedaLimpia)) {
-                $sql .= "
-                AND (
-                    id_cliente = :id_cliente
-                    OR telefono ILIKE :q
-                    OR identificacion ILIKE :q
-                )
-            ";
-
-                $params[":id_cliente"] = (int)$busquedaLimpia;
-                $params[":q"] = "%" . $busquedaLimpia . "%";
-            } else {
-                $palabras = preg_split('/\s+/', $busquedaLimpia);
-
-                foreach ($palabras as $index => $palabra) {
-                    $palabra = trim($palabra);
-
-                    if ($palabra === "") {
-                        continue;
-                    }
-
-                    $param = ":q" . $index;
-
-                    $sql .= "
-                    AND (
-                        nombres ILIKE {$param}
-                        OR apellidos ILIKE {$param}
-                        OR telefono ILIKE {$param}
-                        OR direccion ILIKE {$param}
-                        OR identificacion ILIKE {$param}
-                        OR tipo_cliente ILIKE {$param}
-                        OR CONCAT_WS(' ', nombres, apellidos) ILIKE {$param}
-                        OR CONCAT_WS(' ', apellidos, nombres) ILIKE {$param}
-                        OR CONCAT_WS(' ', nombres, apellidos, telefono, direccion, identificacion, tipo_cliente) ILIKE {$param}
-                    )
-                ";
-
-                    $params[$param] = "%" . $palabra . "%";
-                }
-            }
-        }
-
-        if ($tipoFiltro === "Mayorista" || $tipoFiltro === "Detallista") {
-            $sql .= " AND tipo_cliente = :tipo";
-            $params[":tipo"] = $tipoFiltro;
-        }
-
-        $sql .= " ORDER BY id_cliente DESC";
-
-        $statement = $this->connection->prepare($sql);
-        $statement->execute($params);
+        $statement->execute([
+            ":busqueda" => $busqueda,
+            ":tipo_cliente" => $tipoCliente,
+        ]);
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -87,17 +42,16 @@ class ClienteRepository
     public function obtenerClientePorId(int $idCliente): ?array
     {
         $statement = $this->connection->prepare("
-        SELECT 
-            id_cliente,
-            nombres,
-            apellidos,
-            telefono,
-            direccion,
-            identificacion,
-            tipo_cliente
-        FROM Cliente
-        WHERE id_cliente = :id_cliente
-    ");
+            SELECT
+                id_cliente,
+                nombres,
+                apellidos,
+                telefono,
+                direccion,
+                identificacion,
+                tipo_cliente
+            FROM obtener_cliente_edicion_por_id(:id_cliente)
+        ");
 
         $statement->execute([
             ":id_cliente" => $idCliente,
@@ -111,43 +65,41 @@ class ClienteRepository
     public function actualizarCliente(int $idCliente, array $datos): void
     {
         $statement = $this->connection->prepare("
-        UPDATE Cliente
-        SET 
-            nombres = :nombres,
-            apellidos = :apellidos,
-            telefono = :telefono,
-            direccion = :direccion,
-            identificacion = :identificacion,
-            tipo_cliente = :tipo_cliente
-        WHERE id_cliente = :id_cliente
-    ");
+            SELECT actualizar_cliente_sistema(
+                :id_cliente,
+                :nombres,
+                :apellidos,
+                :telefono,
+                :direccion,
+                :identificacion,
+                :tipo_cliente
+            ) AS actualizado
+        ");
 
         $statement->execute([
+            ":id_cliente" => $idCliente,
             ":nombres" => $datos["nombres"],
             ":apellidos" => $datos["apellidos"],
             ":telefono" => $datos["telefono"],
             ":direccion" => $datos["direccion"],
             ":identificacion" => $datos["identificacion"],
             ":tipo_cliente" => $datos["tipo_cliente"],
-            ":id_cliente" => $idCliente,
         ]);
     }
 
     public function obtenerClientesHabituales(): array
     {
         $statement = $this->connection->query("
-        SELECT 
-            id_cliente,
-            nombres,
-            apellidos,
-            telefono,
-            direccion,
-            identificacion,
-            tipo_cliente
-        FROM Cliente
-        WHERE identificacion IS DISTINCT FROM 'FUGAZ'
-        ORDER BY nombres, apellidos
-    ");
+            SELECT
+                id_cliente,
+                nombres,
+                apellidos,
+                telefono,
+                direccion,
+                identificacion,
+                tipo_cliente
+            FROM listar_clientes_habituales()
+        ");
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
