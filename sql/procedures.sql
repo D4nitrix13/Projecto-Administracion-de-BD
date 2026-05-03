@@ -2716,3 +2716,53 @@ BEGIN
     ORDER BY c.nombres, c.apellidos;
 END;
 $$;
+
+-- ============================================================
+-- CLIENTES: Registrar nuevo cliente
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION registrar_cliente_sistema(
+    p_nombres VARCHAR,
+    p_apellidos VARCHAR,
+    p_telefono VARCHAR DEFAULT NULL,
+    p_direccion VARCHAR DEFAULT NULL,
+    p_identificacion VARCHAR DEFAULT NULL,
+    p_tipo_cliente VARCHAR DEFAULT 'Detallista'
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_nombres IS NULL OR TRIM(p_nombres) = '' THEN
+        RAISE EXCEPTION 'Los nombres del cliente no pueden estar vacíos';
+    END IF;
+
+    IF p_apellidos IS NULL OR TRIM(p_apellidos) = '' THEN
+        RAISE EXCEPTION 'Los apellidos del cliente no pueden estar vacíos';
+    END IF;
+
+    IF p_tipo_cliente IS NULL
+       OR p_tipo_cliente NOT IN ('Mayorista', 'Detallista') THEN
+        RAISE EXCEPTION 'Tipo de cliente no válido';
+    END IF;
+
+    INSERT INTO Cliente (
+        nombres,
+        apellidos,
+        telefono,
+        direccion,
+        identificacion,
+        tipo_cliente
+    )
+    VALUES (
+        TRIM(p_nombres),
+        TRIM(p_apellidos),
+        NULLIF(TRIM(p_telefono), ''),
+        NULLIF(TRIM(p_direccion), ''),
+        NULLIF(TRIM(p_identificacion), ''),
+        p_tipo_cliente
+    );
+
+    RETURN TRUE;
+END;
+$$;
