@@ -861,3 +861,80 @@ BEGIN
     RETURN FOUND;
 END;
 $$;
+
+-- ============================================================
+-- COMPRAS: Obtener datos generales de una compra
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_compra_por_id(
+    p_id_compra INT
+)
+RETURNS TABLE (
+    id_compra INT,
+    fecha TIMESTAMP,
+    total NUMERIC,
+    proveedor VARCHAR,
+    proveedor_telefono VARCHAR,
+    proveedor_email VARCHAR,
+    usuario VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_compra IS NULL OR p_id_compra <= 0 THEN
+        RAISE EXCEPTION 'ID de compra no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.id_compra,
+        c.fecha,
+        c.total,
+        p.nombre AS proveedor,
+        p.telefono AS proveedor_telefono,
+        p.email AS proveedor_email,
+        u.nombre AS usuario
+    FROM Compra c
+    INNER JOIN Proveedor p ON c.id_proveedor = p.id_proveedor
+    INNER JOIN Usuario u ON c.id_usuario = u.id_usuario
+    WHERE c.id_compra = p_id_compra;
+END;
+$$;
+
+
+-- ============================================================
+-- COMPRAS: Obtener detalles de productos de una compra
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_detalles_compra(
+    p_id_compra INT
+)
+RETURNS TABLE (
+    id_detalle INT,
+    cantidad INT,
+    costo_unitario NUMERIC,
+    total_linea NUMERIC,
+    producto_codigo VARCHAR,
+    producto_nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_compra IS NULL OR p_id_compra <= 0 THEN
+        RAISE EXCEPTION 'ID de compra no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        dc.id_detalle,
+        dc.cantidad,
+        dc.costo_unitario,
+        dc.total_linea,
+        pr.codigo AS producto_codigo,
+        pr.nombre AS producto_nombre
+    FROM DetalleCompra dc
+    INNER JOIN Producto pr ON dc.id_producto = pr.id_producto
+    WHERE dc.id_compra = p_id_compra
+    ORDER BY dc.id_detalle;
+END;
+$$;

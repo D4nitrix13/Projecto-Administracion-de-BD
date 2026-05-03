@@ -1,4 +1,6 @@
 <?php
+// * Stored function or procedure has been executed
+
 session_start();
 $pageTitle = "Detalle de compra - Panda Estampados / Kitsune";
 
@@ -8,6 +10,7 @@ if (!isset($_SESSION["user"])) {
 }
 
 $user = $_SESSION["user"];
+
 /** @var PDO $connection */
 $connection = require "./sql/db.php";
 
@@ -21,43 +24,45 @@ if ($id_compra <= 0) {
 } else {
     $error = null;
 
-    // 2) Datos generales de la compra
+    // 2) Datos generales de la compra usando función almacenada
     $stmtCompra = $connection->prepare("
-        SELECT 
-            c.id_compra,
-            c.fecha,
-            c.total,
-            p.nombre  AS proveedor,
-            p.telefono AS proveedor_telefono,
-            p.email    AS proveedor_email,
-            u.nombre   AS usuario
-        FROM Compra c
-        INNER JOIN Proveedor p ON c.id_proveedor = p.id_proveedor
-        INNER JOIN Usuario   u ON c.id_usuario   = u.id_usuario
-        WHERE c.id_compra = :id
+        SELECT
+            id_compra,
+            fecha,
+            total,
+            proveedor,
+            proveedor_telefono,
+            proveedor_email,
+            usuario
+        FROM obtener_compra_por_id(:id_compra)
     ");
-    $stmtCompra->execute([":id" => $id_compra]);
+
+    $stmtCompra->execute([
+        ":id_compra" => $id_compra,
+    ]);
+
     $compra = $stmtCompra->fetch(PDO::FETCH_ASSOC);
 
     if (!$compra) {
         $error    = "No se encontró la compra solicitada.";
         $detalles = [];
     } else {
-        // 3) Detalle de productos
+        // 3) Detalle de productos usando función almacenada
         $stmtDet = $connection->prepare("
-            SELECT 
-                dc.id_detalle,
-                dc.cantidad,
-                dc.costo_unitario,
-                dc.total_linea,
-                pr.codigo AS producto_codigo,
-                pr.nombre AS producto_nombre
-            FROM DetalleCompra dc
-            INNER JOIN Producto pr ON dc.id_producto = pr.id_producto
-            WHERE dc.id_compra = :id
-            ORDER BY dc.id_detalle
+            SELECT
+                id_detalle,
+                cantidad,
+                costo_unitario,
+                total_linea,
+                producto_codigo,
+                producto_nombre
+            FROM obtener_detalles_compra(:id_compra)
         ");
-        $stmtDet->execute([":id" => $id_compra]);
+
+        $stmtDet->execute([
+            ":id_compra" => $id_compra,
+        ]);
+
         $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
     }
 }
