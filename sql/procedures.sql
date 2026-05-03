@@ -938,3 +938,50 @@ BEGIN
     ORDER BY dc.id_detalle;
 END;
 $$;
+
+-- ============================================================
+-- FACTURAS: Eliminar factura y devolver stock
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION eliminar_factura_sistema(
+    p_id_factura INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_existe_factura BOOLEAN;
+BEGIN
+    IF p_id_factura IS NULL OR p_id_factura <= 0 THEN
+        RAISE EXCEPTION 'ID de factura no válido';
+    END IF;
+
+    SELECT EXISTS (
+        SELECT 1
+        FROM Factura
+        WHERE id_factura = p_id_factura
+    )
+    INTO v_existe_factura;
+
+    IF NOT v_existe_factura THEN
+        RAISE EXCEPTION 'La factura especificada no existe';
+    END IF;
+
+    -- 1) Devolver stock de los productos vendidos en la factura
+    UPDATE Producto p
+    SET stock = p.stock + df.cantidad
+    FROM DetalleFactura df
+    WHERE df.id_producto = p.id_producto
+      AND df.id_factura = p_id_factura;
+
+    -- 2) Eliminar detalles de la factura
+    DELETE FROM DetalleFactura
+    WHERE id_factura = p_id_factura;
+
+    -- 3) Eliminar factura principal
+    DELETE FROM Factura
+    WHERE id_factura = p_id_factura;
+
+    RETURN TRUE;
+END;
+$$;
