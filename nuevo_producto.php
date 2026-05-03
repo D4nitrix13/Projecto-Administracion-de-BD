@@ -1,4 +1,6 @@
 <?php
+// * Stored function or procedure has been executed
+
 session_start();
 $pageTitle = "Nuevo producto - Panda Estampados / Kitsune";
 
@@ -14,32 +16,44 @@ $connection = require "./sql/db.php";
 $error = null;
 
 // Cargar categorías y proveedores para los select
-$stmtCat = $connection->query("SELECT id_categoria, nombre FROM Categoria ORDER BY nombre");
+$stmtCat = $connection->query("
+    SELECT
+        id_categoria,
+        nombre
+    FROM listar_categorias_form_producto()
+");
+
 $categorias = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
 
-$stmtProv = $connection->query("SELECT id_proveedor, nombre FROM Proveedor ORDER BY nombre");
+$stmtProv = $connection->query("
+    SELECT
+        id_proveedor,
+        nombre
+    FROM listar_proveedores_form_producto()
+");
+
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
-// Valores por defecto (para rellenar el form si hay error)
-$codigo        = "";
-$nombre        = "";
-$descripcion   = "";
-$id_categoria  = "";
-$id_proveedor  = "";
+// Valores por defecto para rellenar el form si hay error
+$codigo = "";
+$nombre = "";
+$descripcion = "";
+$id_categoria = "";
+$id_proveedor = "";
 $precio_compra = "";
-$precio_venta  = "";
-$stock         = "0";
+$precio_venta = "";
+$stock = "0";
 
 // Procesar envío del formulario
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $codigo        = trim($_POST["codigo"] ?? "");
-    $nombre        = trim($_POST["nombre"] ?? "");
-    $descripcion   = trim($_POST["descripcion"] ?? "");
-    $id_categoria  = $_POST["id_categoria"] !== "" ? (int)$_POST["id_categoria"] : null;
-    $id_proveedor  = $_POST["id_proveedor"] !== "" ? (int)$_POST["id_proveedor"] : null;
+    $codigo = trim($_POST["codigo"] ?? "");
+    $nombre = trim($_POST["nombre"] ?? "");
+    $descripcion = trim($_POST["descripcion"] ?? "");
+    $id_categoria = $_POST["id_categoria"] !== "" ? (int) $_POST["id_categoria"] : null;
+    $id_proveedor = $_POST["id_proveedor"] !== "" ? (int) $_POST["id_proveedor"] : null;
     $precio_compra = trim($_POST["precio_compra"] ?? "");
-    $precio_venta  = trim($_POST["precio_venta"] ?? "");
-    $stock         = trim($_POST["stock"] ?? "0");
+    $precio_venta = trim($_POST["precio_venta"] ?? "");
+    $stock = trim($_POST["stock"] ?? "0");
 
     // Validaciones básicas
     if ($codigo === "" || $nombre === "" || $precio_compra === "" || $precio_venta === "") {
@@ -50,39 +64,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "El stock debe ser un número entero mayor o igual a 0.";
     }
 
-    // --- VALIDAR QUE LA IMAGEN SEA OBLIGATORIA ---
+    // Validar que la imagen sea obligatoria
     if (!$error && empty($_FILES["imagen"]["name"])) {
         $error = "Debe seleccionar una imagen para el producto.";
     }
 
-    // === MANEJO DE IMAGEN ===
+    // Manejo de imagen
     $nombreImagenBD = null;
 
     if (!$error && !empty($_FILES["imagen"]["name"])) {
-
-        $file      = $_FILES["imagen"];
-        $tmpName   = $file["tmp_name"];
-        $origName  = $file["name"];
-        $size      = $file["size"];
+        $file = $_FILES["imagen"];
+        $tmpName = $file["tmp_name"];
+        $origName = $file["name"];
+        $size = $file["size"];
         $errorFile = $file["error"];
 
         if ($errorFile === UPLOAD_ERR_OK) {
+            $maxBytes = 4 * 1024 * 1024;
 
-            $maxBytes = 4 * 1024 * 1024; // 4 MB
             if ($size > $maxBytes) {
-                $error = "La imagen excede el tamaño máximo permitido (8MB).";
+                $error = "La imagen excede el tamaño máximo permitido (4MB).";
             } else {
-
                 $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
                 $extPermitidas = ["jpg", "jpeg", "png", "gif", "webp"];
 
                 if (!in_array($ext, $extPermitidas, true)) {
                     $error = "Formato de imagen no permitido. Usa JPG, PNG, GIF o WEBP.";
                 } else {
-                    // Generar nombre único
                     $nombreImagenBD = uniqid("prod_", true) . "." . $ext;
 
-                    // Carpeta destino
                     $destinoCarpeta = __DIR__ . "/uploads/productos";
                     if (!is_dir($destinoCarpeta)) {
                         mkdir($destinoCarpeta, 0775, true);
@@ -100,33 +110,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 
-    // Si todo está bien, guardar en BD
+    // Si todo está bien, guardar en BD mediante función almacenada
     if (!$error) {
         try {
             $stmt = $connection->prepare("
-                INSERT INTO Producto
-                    (codigo, nombre, descripcion, imagen,
-                     id_categoria, id_proveedor,
-                     precio_compra, precio_venta, stock)
-                VALUES
-                    (:codigo, :nombre, :descripcion, :imagen,
-                     :id_categoria, :id_proveedor,
-                     :precio_compra, :precio_venta, :stock)
+                SELECT id_producto
+                FROM registrar_producto_formulario(
+                    :codigo,
+                    :nombre,
+                    :descripcion,
+                    :imagen,
+                    :id_categoria,
+                    :id_proveedor,
+                    :precio_compra,
+                    :precio_venta,
+                    :stock
+                )
             ");
 
             $stmt->execute([
-                ":codigo"        => $codigo,
-                ":nombre"        => $nombre,
-                ":descripcion"   => $descripcion,
-                ":imagen"        => $nombreImagenBD,
-                ":id_categoria"  => $id_categoria,
-                ":id_proveedor"  => $id_proveedor,
-                ":precio_compra" => (float)$precio_compra,
-                ":precio_venta"  => (float)$precio_venta,
-                ":stock"         => (int)$stock,
+                ":codigo" => $codigo,
+                ":nombre" => $nombre,
+                ":descripcion" => $descripcion,
+                ":imagen" => $nombreImagenBD,
+                ":id_categoria" => $id_categoria,
+                ":id_proveedor" => $id_proveedor,
+                ":precio_compra" => (float) $precio_compra,
+                ":precio_venta" => (float) $precio_venta,
+                ":stock" => (int) $stock,
             ]);
 
-            // ✅ Mensaje flash y redirección al listado
             $_SESSION["flash_success"] = "Producto registrado correctamente.";
             header("Location: productos.php");
             exit();
@@ -134,7 +147,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($e->getCode() === "23505") {
                 $error = "Ya existe un producto con ese código.";
             } else {
-                $error = "Error al guardar el producto: " . $e->getMessage();
+                error_log("crear producto error: " . $e->getMessage());
+                $error = "Error al guardar el producto.";
             }
         }
     }
@@ -172,7 +186,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
-            <!-- IMPORTANTE: enctype para archivos -->
             <form action="nuevo_producto.php" method="POST" enctype="multipart/form-data" class="form-grid">
 
                 <div class="form-group">
@@ -214,7 +227,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         class="input"
                         accept="image/*"
                         required>
-                    <small class="dashboard-muted">Formatos permitidos: JPG, PNG, GIF, WEBP (máx 8MB)</small>
+                    <small class="dashboard-muted">Formatos permitidos: JPG, PNG, GIF, WEBP (máx 4MB)</small>
                 </div>
 
                 <div class="form-group">
@@ -223,9 +236,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <option value="">(Sin categoría)</option>
                         <?php foreach ($categorias as $cat): ?>
                             <option
-                                value="<?= (int)$cat['id_categoria'] ?>"
-                                <?= ($id_categoria == $cat['id_categoria']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cat['nombre']) ?>
+                                value="<?= (int) $cat["id_categoria"] ?>"
+                                <?= ($id_categoria == $cat["id_categoria"]) ? "selected" : "" ?>>
+                                <?= htmlspecialchars($cat["nombre"]) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -237,9 +250,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <option value="">(Sin proveedor)</option>
                         <?php foreach ($proveedores as $prov): ?>
                             <option
-                                value="<?= (int)$prov['id_proveedor'] ?>"
-                                <?= ($id_proveedor == $prov['id_proveedor']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($prov['nombre']) ?>
+                                value="<?= (int) $prov["id_proveedor"] ?>"
+                                <?= ($id_proveedor == $prov["id_proveedor"]) ? "selected" : "" ?>>
+                                <?= htmlspecialchars($prov["nombre"]) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

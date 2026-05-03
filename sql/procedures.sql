@@ -636,3 +636,130 @@ BEGIN
     SELECT v_filas_afectadas;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Listar categorías para formulario de producto
+-- Uso: nuevo_producto.php
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_categorias_form_producto()
+RETURNS TABLE (
+    id_categoria INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id_categoria,
+        c.nombre
+    FROM Categoria c
+    ORDER BY c.nombre ASC;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Listar proveedores para formulario de producto
+-- Uso: nuevo_producto.php
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_proveedores_form_producto()
+RETURNS TABLE (
+    id_proveedor INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_proveedor,
+        p.nombre
+    FROM Proveedor p
+    ORDER BY p.nombre ASC;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Registrar nuevo producto
+-- Uso: nuevo_producto.php
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION registrar_producto_formulario(
+    p_codigo VARCHAR,
+    p_nombre VARCHAR,
+    p_descripcion TEXT,
+    p_imagen VARCHAR,
+    p_id_categoria INT,
+    p_id_proveedor INT,
+    p_precio_compra NUMERIC,
+    p_precio_venta NUMERIC,
+    p_stock INT
+)
+RETURNS TABLE (
+    id_producto INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_codigo IS NULL OR TRIM(p_codigo) = '' THEN
+        RAISE EXCEPTION 'El código del producto es obligatorio';
+    END IF;
+
+    IF LENGTH(TRIM(p_codigo)) > 50 THEN
+        RAISE EXCEPTION 'El código del producto no debe superar los 50 caracteres';
+    END IF;
+
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre del producto es obligatorio';
+    END IF;
+
+    IF LENGTH(TRIM(p_nombre)) > 120 THEN
+        RAISE EXCEPTION 'El nombre del producto no debe superar los 120 caracteres';
+    END IF;
+
+    IF p_imagen IS NULL OR TRIM(p_imagen) = '' THEN
+        RAISE EXCEPTION 'La imagen del producto es obligatoria';
+    END IF;
+
+    IF p_precio_compra IS NULL OR p_precio_compra < 0 THEN
+        RAISE EXCEPTION 'El precio de compra debe ser mayor o igual a cero';
+    END IF;
+
+    IF p_precio_venta IS NULL OR p_precio_venta < 0 THEN
+        RAISE EXCEPTION 'El precio de venta debe ser mayor o igual a cero';
+    END IF;
+
+    IF p_stock IS NULL OR p_stock < 0 THEN
+        RAISE EXCEPTION 'El stock debe ser mayor o igual a cero';
+    END IF;
+
+    RETURN QUERY
+    INSERT INTO Producto (
+        codigo,
+        nombre,
+        descripcion,
+        imagen,
+        id_categoria,
+        id_proveedor,
+        precio_compra,
+        precio_venta,
+        stock
+    )
+    VALUES (
+        TRIM(p_codigo),
+        TRIM(p_nombre),
+        COALESCE(NULLIF(TRIM(p_descripcion), ''), 'Sin descripción'),
+        TRIM(p_imagen),
+        p_id_categoria,
+        p_id_proveedor,
+        p_precio_compra,
+        p_precio_venta,
+        p_stock
+    )
+    RETURNING Producto.id_producto;
+END;
+$$;
