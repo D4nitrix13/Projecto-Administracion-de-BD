@@ -106,3 +106,11 @@ Luego verifica:
 ```bash
 docker exec -it pandas_bd psql -U postgres -d pandas_estampados_y_kitsune -c '\dt'
 ```
+
+## Configurar Permisos en el Host
+
+```bash
+sudo chown -R $USER:33 backups
+sudo chmod -R 775 backups
+sudo find backups -type d -exec chmod g+s {} \;
+```

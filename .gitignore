@@ -63,10 +63,7 @@ backup/
 *.tar
 *.tar.gz
 database/
-
-# OJO:
-# No ignoro sql/*.sql porque tus scripts SQL sirven como estructura,
-# seed y evidencia del proyecto.
+*.log
 
 # ==============================
 # Archivos generados por Docker / sistema local
