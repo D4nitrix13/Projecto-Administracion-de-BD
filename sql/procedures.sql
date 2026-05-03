@@ -151,3 +151,117 @@ BEGIN
     WHERE f.id_cliente = p_id_cliente;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Listar categorías para filtros de productos
+-- Uso: módulo de productos / filtros
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_categorias_producto()
+RETURNS TABLE (
+    id_categoria INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id_categoria,
+        c.nombre
+    FROM Categoria c
+    ORDER BY c.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Listar proveedores para filtros de productos
+-- Uso: módulo de productos / filtros
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_proveedores_producto()
+RETURNS TABLE (
+    id_proveedor INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_proveedor,
+        p.nombre
+    FROM Proveedor p
+    ORDER BY p.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Buscar productos del inventario
+-- Uso: módulo de productos con filtros
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_productos_inventario(
+    p_busqueda TEXT DEFAULT '',
+    p_id_categoria INT DEFAULT NULL,
+    p_id_proveedor INT DEFAULT NULL,
+    p_id_producto INT DEFAULT NULL,
+    p_stock_bajo BOOLEAN DEFAULT FALSE
+)
+RETURNS TABLE (
+    id_producto INT,
+    codigo VARCHAR,
+    nombre VARCHAR,
+    descripcion TEXT,
+    imagen VARCHAR,
+    categoria VARCHAR,
+    proveedor VARCHAR,
+    precio_compra NUMERIC,
+    precio_venta NUMERIC,
+    stock INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        prod.id_producto,
+        prod.codigo,
+        prod.nombre,
+        prod.descripcion,
+        prod.imagen,
+        cat.nombre AS categoria,
+        prov.nombre AS proveedor,
+        prod.precio_compra,
+        prod.precio_venta,
+        prod.stock
+    FROM Producto prod
+    LEFT JOIN Categoria cat ON prod.id_categoria = cat.id_categoria
+    LEFT JOIN Proveedor prov ON prod.id_proveedor = prov.id_proveedor
+    WHERE
+        (
+            p_id_producto IS NULL
+            OR prod.id_producto = p_id_producto
+        )
+        AND (
+            COALESCE(TRIM(p_busqueda), '') = ''
+            OR prod.codigo ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR prod.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+        AND (
+            p_id_categoria IS NULL
+            OR prod.id_categoria = p_id_categoria
+        )
+        AND (
+            p_id_proveedor IS NULL
+            OR prod.id_proveedor = p_id_proveedor
+        )
+        AND (
+            p_stock_bajo = FALSE
+            OR prod.stock <= 5
+        )
+    ORDER BY prod.nombre ASC;
+END;
+$$;

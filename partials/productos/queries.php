@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 $flash_success = $_SESSION["flash_success"] ?? null;
 $flash_error = $_SESSION["flash_error"] ?? null;
@@ -10,78 +11,83 @@ $filtroProveedorRaw = $_GET["proveedor"] ?? "";
 $filtroIdRaw = $_GET["id"] ?? "";
 $filtroStock = $_GET["stock"] ?? "";
 
-$filtroCategoria = ctype_digit((string)$filtroCategoriaRaw) ? (int)$filtroCategoriaRaw : null;
-$filtroProveedor = ctype_digit((string)$filtroProveedorRaw) ? (int)$filtroProveedorRaw : null;
-$filtroIdProducto = ctype_digit((string)$filtroIdRaw) ? (int)$filtroIdRaw : null;
+$filtroCategoria = ctype_digit((string) $filtroCategoriaRaw)
+    ? (int) $filtroCategoriaRaw
+    : null;
+
+$filtroProveedor = ctype_digit((string) $filtroProveedorRaw)
+    ? (int) $filtroProveedorRaw
+    : null;
+
+$filtroIdProducto = ctype_digit((string) $filtroIdRaw)
+    ? (int) $filtroIdRaw
+    : null;
+
 $filtroStockBajo = $filtroStock === "bajo";
 
 $stmtCat = $connection->query("
-    SELECT id_categoria, nombre
-    FROM Categoria
-    ORDER BY nombre
+    SELECT
+        id_categoria,
+        nombre
+    FROM listar_categorias_producto()
 ");
+
 $categorias = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
 
 $stmtProv = $connection->query("
-    SELECT id_proveedor, nombre
-    FROM Proveedor
-    ORDER BY nombre
+    SELECT
+        id_proveedor,
+        nombre
+    FROM listar_proveedores_producto()
 ");
+
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
-$sql = "
+$stmt = $connection->prepare("
     SELECT
-        p.id_producto,
-        p.codigo,
-        p.nombre,
-        p.descripcion,
-        p.imagen,
-        c.nombre AS categoria,
-        pr.nombre AS proveedor,
-        p.precio_compra,
-        p.precio_venta,
-        p.stock
-    FROM Producto p
-    LEFT JOIN Categoria c ON p.id_categoria = c.id_categoria
-    LEFT JOIN Proveedor pr ON p.id_proveedor = pr.id_proveedor
-    WHERE 1 = 1
-";
+        id_producto,
+        codigo,
+        nombre,
+        descripcion,
+        imagen,
+        categoria,
+        proveedor,
+        precio_compra,
+        precio_venta,
+        stock
+    FROM buscar_productos_inventario(
+        :busqueda,
+        :id_categoria,
+        :id_proveedor,
+        :id_producto,
+        :stock_bajo
+    )
+");
 
-$params = [];
-
-if ($filtroIdProducto !== null) {
-    $sql .= " AND p.id_producto = :id_producto";
-    $params[":id_producto"] = $filtroIdProducto;
-}
-
-if ($busquedaTexto !== "") {
-    $sql .= "
-        AND (
-            LOWER(p.codigo) LIKE LOWER(:q)
-            OR LOWER(p.nombre) LIKE LOWER(:q)
-        )
-    ";
-    $params[":q"] = "%" . $busquedaTexto . "%";
-}
+$stmt->bindValue(":busqueda", $busquedaTexto, PDO::PARAM_STR);
 
 if ($filtroCategoria !== null) {
-    $sql .= " AND p.id_categoria = :categoria";
-    $params[":categoria"] = $filtroCategoria;
+    $stmt->bindValue(":id_categoria", $filtroCategoria, PDO::PARAM_INT);
+} else {
+    $stmt->bindValue(":id_categoria", null, PDO::PARAM_NULL);
 }
 
 if ($filtroProveedor !== null) {
-    $sql .= " AND p.id_proveedor = :proveedor";
-    $params[":proveedor"] = $filtroProveedor;
+    $stmt->bindValue(":id_proveedor", $filtroProveedor, PDO::PARAM_INT);
+} else {
+    $stmt->bindValue(":id_proveedor", null, PDO::PARAM_NULL);
 }
 
-if ($filtroStockBajo) {
-    $sql .= " AND p.stock <= 5";
+if ($filtroIdProducto !== null) {
+    $stmt->bindValue(":id_producto", $filtroIdProducto, PDO::PARAM_INT);
+} else {
+    $stmt->bindValue(":id_producto", null, PDO::PARAM_NULL);
 }
 
-$sql .= " ORDER BY p.nombre ASC";
+$stmt->bindValue(":stock_bajo", $filtroStockBajo, PDO::PARAM_BOOL);
 
-$stmt = $connection->prepare($sql);
-$stmt->execute($params);
+$stmt->execute();
+
 $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($idRol === 1) {
