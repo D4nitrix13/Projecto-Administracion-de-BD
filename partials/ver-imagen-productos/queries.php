@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 $id = isset($_GET["id"]) && ctype_digit((string) $_GET["id"])
     ? (int) $_GET["id"]
@@ -10,7 +11,6 @@ if ($id <= 0) {
     exit();
 }
 
-// * Stored function or procedure has been executed
 $stmt = $connection->prepare("
     SELECT
         id_producto,

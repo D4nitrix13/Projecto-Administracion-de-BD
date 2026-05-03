@@ -36,3 +36,118 @@ BEGIN
     WHERE p.id_producto = p_id_producto;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Obtener cliente por ID
+-- Uso: detalle de cliente / vista de cliente
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_cliente_por_id(
+    p_id_cliente INT
+)
+RETURNS TABLE (
+    id_cliente INT,
+    nombres VARCHAR,
+    apellidos VARCHAR,
+    telefono VARCHAR,
+    direccion VARCHAR,
+    identificacion VARCHAR,
+    tipo_cliente VARCHAR,
+    fecha_registro DATE
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
+        RAISE EXCEPTION 'ID de cliente no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.id_cliente,
+        c.nombres,
+        c.apellidos,
+        c.telefono,
+        c.direccion,
+        c.identificacion,
+        c.tipo_cliente,
+        c.fecha_registro
+    FROM Cliente c
+    WHERE c.id_cliente = p_id_cliente;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Obtener últimas facturas de un cliente
+-- Uso: historial reciente de facturas del cliente
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_ultimas_facturas_cliente(
+    p_id_cliente INT,
+    p_limite INT DEFAULT 10
+)
+RETURNS TABLE (
+    id_factura INT,
+    fecha TIMESTAMP,
+    subtotal NUMERIC,
+    descuento NUMERIC,
+    impuesto NUMERIC,
+    total NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
+        RAISE EXCEPTION 'ID de cliente no válido';
+    END IF;
+
+    IF p_limite IS NULL OR p_limite <= 0 THEN
+        RAISE EXCEPTION 'El límite de facturas debe ser mayor que cero';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        f.id_factura,
+        f.fecha,
+        f.subtotal,
+        f.descuento,
+        f.impuesto,
+        f.total
+    FROM Factura f
+    WHERE f.id_cliente = p_id_cliente
+    ORDER BY f.fecha DESC, f.id_factura DESC
+    LIMIT p_limite;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Obtener resumen de compras de un cliente
+-- Uso: resumen estadístico del cliente
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_resumen_cliente(
+    p_id_cliente INT
+)
+RETURNS TABLE (
+    total_facturas BIGINT,
+    total_comprado NUMERIC,
+    promedio_compra NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
+        RAISE EXCEPTION 'ID de cliente no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        COUNT(*) AS total_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado,
+        COALESCE(AVG(f.total), 0) AS promedio_compra
+    FROM Factura f
+    WHERE f.id_cliente = p_id_cliente;
+END;
+$$;

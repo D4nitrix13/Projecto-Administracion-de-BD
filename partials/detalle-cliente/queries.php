@@ -1,7 +1,8 @@
 <?php
+// * Stored function or procedure has been executed
 
-$idCliente = isset($_GET["id"]) && ctype_digit((string)$_GET["id"])
-    ? (int)$_GET["id"]
+$idCliente = isset($_GET["id"]) && ctype_digit((string) $_GET["id"])
+    ? (int) $_GET["id"]
     : 0;
 
 if ($idCliente <= 0) {
@@ -20,11 +21,13 @@ $stmt = $connection->prepare("
         identificacion,
         tipo_cliente,
         fecha_registro
-    FROM Cliente
-    WHERE id_cliente = :id_cliente
+    FROM obtener_cliente_por_id(:id_cliente)
 ");
 
-$stmt->execute([":id_cliente" => $idCliente]);
+$stmt->execute([
+    ":id_cliente" => $idCliente
+]);
+
 $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$cliente) {
@@ -41,25 +44,28 @@ $stmtFacturas = $connection->prepare("
         descuento,
         impuesto,
         total
-    FROM Factura
-    WHERE id_cliente = :id_cliente
-    ORDER BY fecha DESC, id_factura DESC
-    LIMIT 10
+    FROM obtener_ultimas_facturas_cliente(:id_cliente, :limite)
 ");
 
-$stmtFacturas->execute([":id_cliente" => $idCliente]);
+$stmtFacturas->execute([
+    ":id_cliente" => $idCliente,
+    ":limite" => 10
+]);
+
 $facturasCliente = $stmtFacturas->fetchAll(PDO::FETCH_ASSOC);
 
 $stmtResumen = $connection->prepare("
     SELECT
-        COUNT(*) AS total_facturas,
-        COALESCE(SUM(total), 0) AS total_comprado,
-        COALESCE(AVG(total), 0) AS promedio_compra
-    FROM Factura
-    WHERE id_cliente = :id_cliente
+        total_facturas,
+        total_comprado,
+        promedio_compra
+    FROM obtener_resumen_cliente(:id_cliente)
 ");
 
-$stmtResumen->execute([":id_cliente" => $idCliente]);
+$stmtResumen->execute([
+    ":id_cliente" => $idCliente
+]);
+
 $resumenCliente = $stmtResumen->fetch(PDO::FETCH_ASSOC);
 
 $nombreCompleto = trim(($cliente["nombres"] ?? "") . " " . ($cliente["apellidos"] ?? ""));
