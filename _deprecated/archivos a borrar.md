@@ -1,0 +1,10 @@
+respaldo_bd.php
+controllers/respaldo_bd_controller.php
+services/BackupService.php
+partials/respaldo/
+lib/backup.php
+scripts/backup_full.sh
+scripts/backup_diff.sh
+scripts/backup_logs.sh
+scripts/mantenimiento_bd.sh
+utils/cron_backup.php

@@ -121,9 +121,39 @@ function isActivePage(string $page, string $currentPage): string
                     </a>
 
                     <a
-                        href="respaldo_bd.php"
-                        class="sidebar-sublink <?= isActivePage("respaldo_bd.php", $currentPage) ?>">
-                        Respaldo Base de Datos
+                        href="backups_manuales.php"
+                        class="sidebar-sublink <?= isActivePage("backups_manuales.php", $currentPage) ?>">
+                        Backups manuales
+                    </a>
+
+                    <a
+                        href="programar_backups.php"
+                        class="sidebar-sublink <?= isActivePage("programar_backups.php", $currentPage) ?>">
+                        Programar backups
+                    </a>
+
+                    <a
+                        href="restaurar_bd.php"
+                        class="sidebar-sublink <?= isActivePage("restaurar_bd.php", $currentPage) ?>">
+                        Restaurar base de datos
+                    </a>
+
+                    <a
+                        href="logs_sistema.php"
+                        class="sidebar-sublink <?= isActivePage("logs_sistema.php", $currentPage) ?>">
+                        Logs del sistema
+                    </a>
+
+                    <a
+                        href="archivos_wal.php"
+                        class="sidebar-sublink <?= isActivePage("archivos_wal.php", $currentPage) ?>">
+                        Archivos WAL
+                    </a>
+
+                    <a
+                        href="mantenimiento_bd.php"
+                        class="sidebar-sublink <?= isActivePage("mantenimiento_bd.php", $currentPage) ?>">
+                        Mantenimiento BD
                     </a>
                 </div>
             <?php endif; ?>

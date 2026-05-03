@@ -1,0 +1,8 @@
+{
+    "enabled": true,
+    "type": "full",
+    "interval_value": 1,
+    "interval_unit": "weeks",
+    "last_run_at": null,
+    "next_run_at": null
+}
