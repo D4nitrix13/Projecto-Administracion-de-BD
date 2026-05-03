@@ -1,4 +1,6 @@
 <?php
+// * Stored function or procedure has been executed
+
 session_start();
 
 if (!isset($_SESSION["user"])) {
@@ -15,6 +17,7 @@ if ($idRol !== 1) {
     exit();
 }
 
+/** @var PDO $connection */
 $connection = require "./sql/db.php";
 
 $id = isset($_GET["id"]) && ctype_digit((string)$_GET["id"])
@@ -29,15 +32,16 @@ if ($id <= 0) {
 
 try {
     $stmtDel = $connection->prepare("
-        DELETE FROM Categoria
-        WHERE id_categoria = :id
+        SELECT eliminar_categoria_sistema(:id_categoria) AS eliminado
     ");
 
     $stmtDel->execute([
-        ":id" => $id
+        ":id_categoria" => $id,
     ]);
 
-    $_SESSION["flash_success"] = $stmtDel->rowCount() > 0
+    $resultado = $stmtDel->fetch(PDO::FETCH_ASSOC);
+
+    $_SESSION["flash_success"] = !empty($resultado["eliminado"])
         ? "Categoría eliminada correctamente."
         : "La categoría especificada no existe.";
 } catch (PDOException $e) {

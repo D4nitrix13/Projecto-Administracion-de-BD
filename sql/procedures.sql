@@ -2995,3 +2995,25 @@ BEGIN
     RETURN FOUND;
 END;
 $$;
+
+-- ============================================================
+-- CATEGORÍAS: Eliminar categoría
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION eliminar_categoria_sistema(
+    p_id_categoria INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_categoria IS NULL OR p_id_categoria <= 0 THEN
+        RAISE EXCEPTION 'ID de categoría no válido';
+    END IF;
+
+    DELETE FROM Categoria
+    WHERE Categoria.id_categoria = p_id_categoria;
+
+    RETURN FOUND;
+END;
+$$;
