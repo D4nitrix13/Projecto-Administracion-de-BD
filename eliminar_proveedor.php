@@ -1,4 +1,6 @@
 <?php
+// * Stored function or procedure has been executed
+
 session_start();
 
 if (!isset($_SESSION["user"])) {
@@ -6,6 +8,7 @@ if (!isset($_SESSION["user"])) {
     exit();
 }
 
+/** @var PDO $connection */
 $connection = require "./sql/db.php";
 
 $id = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
@@ -18,12 +21,16 @@ if ($id <= 0) {
 
 try {
     $stmtDel = $connection->prepare("
-        DELETE FROM Proveedor
-        WHERE id_proveedor = :id
+        SELECT eliminar_proveedor_sistema(:id_proveedor) AS eliminado
     ");
-    $stmtDel->execute([":id" => $id]);
 
-    if ($stmtDel->rowCount() > 0) {
+    $stmtDel->execute([
+        ":id_proveedor" => $id,
+    ]);
+
+    $resultado = $stmtDel->fetch(PDO::FETCH_ASSOC);
+
+    if (!empty($resultado["eliminado"])) {
         $_SESSION["flash_success"] = "Proveedor eliminado correctamente.";
     } else {
         $_SESSION["flash_error"] = "El proveedor especificado no existe.";

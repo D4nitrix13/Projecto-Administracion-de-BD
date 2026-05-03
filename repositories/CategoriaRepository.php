@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 class CategoriaRepository
 {
@@ -12,11 +13,10 @@ class CategoriaRepository
     public function obtenerCategoriasOrdenadas(): array
     {
         $statement = $this->connection->query("
-            SELECT 
+            SELECT
                 id_categoria,
                 nombre
-            FROM Categoria
-            ORDER BY nombre
+            FROM listar_categorias_ordenadas()
         ");
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);

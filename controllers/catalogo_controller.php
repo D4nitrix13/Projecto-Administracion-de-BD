@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 function obtenerDatosCatalogo(): array
 {
@@ -63,11 +64,10 @@ function obtenerNumeroWhatsAppCatalogo(): string
 function obtenerCategoriasCatalogo(PDO $connection): array
 {
     $statement = $connection->query("
-        SELECT 
+        SELECT
             id_categoria,
             nombre
-        FROM Categoria
-        ORDER BY nombre
+        FROM listar_categorias_catalogo()
     ");
 
     return $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -79,61 +79,28 @@ function obtenerProductosCatalogo(
     ?int $filtroCategoria,
     string $filtroDisponibilidad
 ): array {
-    $sql = "
+    $statement = $connection->prepare("
         SELECT
-            p.id_producto,
-            p.codigo,
-            p.nombre,
-            p.descripcion,
-            p.imagen,
-            c.nombre AS categoria,
-            p.precio_venta,
-            p.stock
-        FROM Producto p
-        LEFT JOIN Categoria c ON p.id_categoria = c.id_categoria
-        WHERE 1 = 1
-    ";
+            id_producto,
+            codigo,
+            nombre,
+            descripcion,
+            imagen,
+            categoria,
+            precio_venta,
+            stock
+        FROM buscar_productos_catalogo(
+            :busqueda,
+            :id_categoria,
+            :disponibilidad
+        )
+    ");
 
-    $params = [];
-
-    if ($busquedaTexto !== "") {
-        $sql .= "
-            AND (
-                p.codigo ILIKE :q
-                OR p.nombre ILIKE :q
-                OR p.descripcion ILIKE :q
-                OR c.nombre ILIKE :q
-            )
-        ";
-
-        $params[":q"] = "%" . $busquedaTexto . "%";
-    }
-
-    if ($filtroCategoria !== null) {
-        $sql .= " AND p.id_categoria = :categoria";
-        $params[":categoria"] = $filtroCategoria;
-    }
-
-    if ($filtroDisponibilidad === "disponible") {
-        $sql .= " AND p.stock > 5";
-    } elseif ($filtroDisponibilidad === "stock_bajo") {
-        $sql .= " AND p.stock > 0 AND p.stock <= 5";
-    } elseif ($filtroDisponibilidad === "agotado") {
-        $sql .= " AND p.stock <= 0";
-    }
-
-    $sql .= "
-        ORDER BY 
-            CASE 
-                WHEN p.stock <= 0 THEN 2
-                WHEN p.stock <= 5 THEN 1
-                ELSE 0
-            END,
-            p.nombre ASC
-    ";
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":busqueda" => $busquedaTexto,
+        ":id_categoria" => $filtroCategoria,
+        ":disponibilidad" => $filtroDisponibilidad,
+    ]);
 
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }

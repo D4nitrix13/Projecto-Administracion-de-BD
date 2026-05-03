@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 class FacturaService
 {
@@ -68,10 +69,9 @@ class FacturaService
                 $user,
                 $tipoClienteVenta,
                 trim($post["nombre_cliente_fugaz"] ?? ""),
-                $totales
+                $totales,
+                $items
             );
-
-            $this->insertarDetallesYActualizarStock($idFactura, $items);
 
             $this->connection->commit();
 
@@ -111,14 +111,9 @@ class FacturaService
 
     private function obtenerIdClienteFugaz(): int
     {
-        $statement = $this->connection->prepare("
-            SELECT id_cliente
-            FROM Cliente
-            WHERE identificacion = 'FUGAZ'
-            LIMIT 1
+        $statement = $this->connection->query("
+            SELECT obtener_id_cliente_fugaz()
         ");
-
-        $statement->execute();
 
         $id = $statement->fetchColumn();
 
@@ -205,16 +200,22 @@ class FacturaService
     private function obtenerProductosMap(array $items): array
     {
         $idsProductos = array_unique(array_column($items, "id_producto"));
-
-        $placeholders = implode(",", array_fill(0, count($idsProductos), "?"));
+        $idsProductosPgArray = $this->convertirArrayPostgres($idsProductos);
 
         $statement = $this->connection->prepare("
-            SELECT id_producto, precio_venta, stock, nombre
-            FROM Producto
-            WHERE id_producto IN ($placeholders)
+            SELECT
+                id_producto,
+                precio_venta,
+                stock,
+                nombre
+            FROM obtener_productos_factura_por_ids(
+                CAST(:ids_productos AS INT[])
+            )
         ");
 
-        $statement->execute($idsProductos);
+        $statement->execute([
+            ":ids_productos" => $idsProductosPgArray,
+        ]);
 
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
 
@@ -259,8 +260,11 @@ class FacturaService
         }
     }
 
-    private function calcularTotales(array &$items, array $productosMap, float $descuentoGlobal): array
-    {
+    private function calcularTotales(
+        array &$items,
+        array $productosMap,
+        float $descuentoGlobal
+    ): array {
         $subtotal = 0.0;
         $descuentoTotalLineas = 0.0;
 
@@ -270,7 +274,10 @@ class FacturaService
             $cantidad = (int)$item["cantidad"];
 
             $lineaSubtotal = $precio * $cantidad;
-            $lineaDescuento = max(0.0, min((float)$item["descuento_linea"], $lineaSubtotal));
+            $lineaDescuento = max(
+                0.0,
+                min((float)$item["descuento_linea"], $lineaSubtotal)
+            );
             $lineaTotal = $lineaSubtotal - $lineaDescuento;
 
             $item["precio_unitario"] = $precio;
@@ -303,34 +310,22 @@ class FacturaService
         array $user,
         string $tipoClienteVenta,
         string $nombreClienteFugaz,
-        array $totales
+        array $totales,
+        array $items
     ): int {
         $statement = $this->connection->prepare("
-            INSERT INTO Factura
-                (
-                    id_cliente,
-                    id_usuario,
-                    id_seccion,
-                    subtotal,
-                    descuento,
-                    impuesto,
-                    total,
-                    tipo_cliente_venta,
-                    nombre_cliente_fugaz
-                )
-            VALUES
-                (
-                    :id_cliente,
-                    :id_usuario,
-                    :id_seccion,
-                    :subtotal,
-                    :descuento,
-                    :impuesto,
-                    :total,
-                    :tipo_cliente_venta,
-                    :nombre_cliente_fugaz
-                )
-            RETURNING id_factura
+            SELECT registrar_factura_sistema(
+                :id_cliente,
+                :id_usuario,
+                :id_seccion,
+                :subtotal,
+                :descuento,
+                :impuesto,
+                :total,
+                :tipo_cliente_venta,
+                :nombre_cliente_fugaz,
+                CAST(:items AS JSONB)
+            ) AS id_factura
         ");
 
         $statement->execute([
@@ -342,63 +337,17 @@ class FacturaService
             ":impuesto" => $totales["impuesto"],
             ":total" => $totales["total"],
             ":tipo_cliente_venta" => $tipoClienteVenta,
-            ":nombre_cliente_fugaz" => (
-                $tipoClienteVenta === TIPO_CLIENTE_FUGAZ &&
-                $nombreClienteFugaz !== ""
-            ) ? $nombreClienteFugaz : null,
+            ":nombre_cliente_fugaz" => $nombreClienteFugaz,
+            ":items" => json_encode($items, JSON_THROW_ON_ERROR),
         ]);
 
         return (int)$statement->fetchColumn();
     }
 
-    private function insertarDetallesYActualizarStock(int $idFactura, array $items): void
-    {
-        $statementDetalle = $this->connection->prepare("
-            INSERT INTO DetalleFactura
-                (
-                    id_factura,
-                    id_producto,
-                    cantidad,
-                    precio_unitario,
-                    descuento_linea,
-                    total_linea
-                )
-            VALUES
-                (
-                    :id_factura,
-                    :id_producto,
-                    :cantidad,
-                    :precio_unitario,
-                    :descuento_linea,
-                    :total_linea
-                )
-        ");
-
-        $statementStock = $this->connection->prepare("
-            UPDATE Producto
-            SET stock = stock - :cantidad
-            WHERE id_producto = :id_producto
-        ");
-
-        foreach ($items as $item) {
-            $statementDetalle->execute([
-                ":id_factura" => $idFactura,
-                ":id_producto" => $item["id_producto"],
-                ":cantidad" => $item["cantidad"],
-                ":precio_unitario" => $item["precio_unitario"],
-                ":descuento_linea" => $item["descuento_linea"],
-                ":total_linea" => $item["total_linea"],
-            ]);
-
-            $statementStock->execute([
-                ":cantidad" => $item["cantidad"],
-                ":id_producto" => $item["id_producto"],
-            ]);
-        }
-    }
-
-    private function validarLimiteClienteFugaz(string $tipoClienteVenta, float $total): ?string
-    {
+    private function validarLimiteClienteFugaz(
+        string $tipoClienteVenta,
+        float $total
+    ): ?string {
         $limiteClienteFugaz = 1000.00;
 
         if (
@@ -411,5 +360,16 @@ class FacturaService
         }
 
         return null;
+    }
+
+    private function convertirArrayPostgres(array $valores): string
+    {
+        $valores = array_map("intval", $valores);
+        $valores = array_filter(
+            $valores,
+            fn(int $valor): bool => $valor > 0
+        );
+
+        return "{" . implode(",", $valores) . "}";
     }
 }

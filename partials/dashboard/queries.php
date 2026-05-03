@@ -1,33 +1,49 @@
 <?php
-
-function fetchValue(PDO $connection, string $sql): mixed
-{
-    try {
-        $value = $connection->query($sql)->fetchColumn();
-        return $value !== false ? $value : 0;
-    } catch (PDOException $e) {
-        error_log("Dashboard query error: " . $e->getMessage());
-        return 0;
-    }
-}
-
-$totalClientes = fetchValue($connection, "SELECT COUNT(*) FROM Cliente");
-$totalProductos = fetchValue($connection, "SELECT COUNT(*) FROM Producto");
-$totalFacturas = fetchValue($connection, "SELECT COUNT(*) FROM Factura");
-$totalVentas = fetchValue($connection, "SELECT COALESCE(SUM(total), 0) FROM Factura");
-$ventasHoy = fetchValue($connection, "SELECT COALESCE(SUM(total), 0) FROM Factura WHERE DATE(fecha) = CURRENT_DATE");
-$stockBajo = fetchValue($connection, "SELECT COUNT(*) FROM Producto WHERE stock <= 5");
+// * Stored function or procedure has been executed
 
 try {
-    $stmt = $connection->query("
-        SELECT 
-            DATE(fecha) AS dia,
-            COALESCE(SUM(total), 0) AS total_dia
-        FROM Factura
-        WHERE fecha >= CURRENT_DATE - INTERVAL '30 days'
-        GROUP BY DATE(fecha)
-        ORDER BY dia ASC
+    $stmtMetricas = $connection->query("
+        SELECT
+            total_clientes,
+            total_productos,
+            total_facturas,
+            total_ventas,
+            ventas_hoy,
+            stock_bajo
+        FROM obtener_metricas_dashboard()
     ");
+
+    $metricas = $stmtMetricas->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    $totalClientes = $metricas["total_clientes"] ?? 0;
+    $totalProductos = $metricas["total_productos"] ?? 0;
+    $totalFacturas = $metricas["total_facturas"] ?? 0;
+    $totalVentas = $metricas["total_ventas"] ?? 0;
+    $ventasHoy = $metricas["ventas_hoy"] ?? 0;
+    $stockBajo = $metricas["stock_bajo"] ?? 0;
+} catch (PDOException $e) {
+    error_log("metricasDashboard error: " . $e->getMessage());
+
+    $totalClientes = 0;
+    $totalProductos = 0;
+    $totalFacturas = 0;
+    $totalVentas = 0;
+    $ventasHoy = 0;
+    $stockBajo = 0;
+}
+
+try {
+    $stmt = $connection->prepare("
+        SELECT
+            dia,
+            total_dia
+        FROM obtener_ventas_dashboard(:dias)
+    ");
+
+    $stmt->execute([
+        ":dias" => 30
+    ]);
+
     $ventasSemana = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("ventasSemana error: " . $e->getMessage());
@@ -35,17 +51,18 @@ try {
 }
 
 try {
-    $stmt = $connection->query("
-        SELECT 
-            p.id_producto,
-            p.nombre AS producto,
-            COALESCE(SUM(df.cantidad), 0) AS cantidad_vendida
-        FROM DetalleFactura df
-        INNER JOIN Producto p ON p.id_producto = df.id_producto
-        GROUP BY p.id_producto, p.nombre
-        ORDER BY cantidad_vendida DESC
-        LIMIT 5
+    $stmt = $connection->prepare("
+        SELECT
+            id_producto,
+            producto,
+            cantidad_vendida
+        FROM obtener_productos_mas_vendidos_dashboard(:limite)
     ");
+
+    $stmt->execute([
+        ":limite" => 5
+    ]);
+
     $productosMasVendidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("productosMasVendidos error: " . $e->getMessage());
@@ -53,20 +70,21 @@ try {
 }
 
 try {
-    $stmt = $connection->query("
-        SELECT 
-            f.id_factura,
-            p.id_producto,
-            p.nombre,
-            df.cantidad,
-            df.total_linea AS subtotal,
-            f.fecha
-        FROM DetalleFactura df
-        INNER JOIN Producto p ON p.id_producto = df.id_producto
-        INNER JOIN Factura f ON f.id_factura = df.id_factura
-        ORDER BY f.fecha DESC, f.id_factura DESC
-        LIMIT 6
+    $stmt = $connection->prepare("
+        SELECT
+            id_factura,
+            id_producto,
+            nombre,
+            cantidad,
+            subtotal,
+            fecha
+        FROM obtener_ultimos_productos_vendidos_dashboard(:limite)
     ");
+
+    $stmt->execute([
+        ":limite" => 6
+    ]);
+
     $ultimosProductosVendidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("ultimosProductosVendidos error: " . $e->getMessage());
@@ -74,15 +92,18 @@ try {
 }
 
 try {
-    $stmt = $connection->query("
-        SELECT 
+    $stmt = $connection->prepare("
+        SELECT
             id_factura,
             fecha,
             total
-        FROM Factura
-        ORDER BY fecha DESC, id_factura DESC
-        LIMIT 5
+        FROM obtener_facturas_recientes_dashboard(:limite)
     ");
+
+    $stmt->execute([
+        ":limite" => 5
+    ]);
+
     $facturasRecientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("facturasRecientes error: " . $e->getMessage());
@@ -90,16 +111,19 @@ try {
 }
 
 try {
-    $stmt = $connection->query("
-        SELECT 
+    $stmt = $connection->prepare("
+        SELECT
             id_cliente,
-            CONCAT(nombres, ' ', apellidos) AS nombre,
+            nombre,
             telefono,
             fecha_registro
-        FROM Cliente
-        ORDER BY fecha_registro DESC, id_cliente DESC
-        LIMIT 5
+        FROM obtener_clientes_recientes_dashboard(:limite)
     ");
+
+    $stmt->execute([
+        ":limite" => 5
+    ]);
+
     $clientesRecientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("clientesRecientes error: " . $e->getMessage());

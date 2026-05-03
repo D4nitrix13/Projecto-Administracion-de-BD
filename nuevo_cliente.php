@@ -1,4 +1,6 @@
 <?php
+// * Stored function or procedure has been executed
+
 session_start();
 $pageTitle = "Nuevo cliente - Panda Estampados / Kitsune";
 
@@ -47,10 +49,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         try {
             $stmt = $connection->prepare("
-                INSERT INTO Cliente
-                    (nombres, apellidos, telefono, direccion, identificacion, tipo_cliente)
-                VALUES
-                    (:nombres, :apellidos, :telefono, :direccion, :identificacion, :tipo_cliente)
+                SELECT registrar_cliente_sistema(
+                    :nombres,
+                    :apellidos,
+                    :telefono,
+                    :direccion,
+                    :identificacion,
+                    :tipo_cliente
+                ) AS registrado
             ");
 
             $stmt->execute([
@@ -62,9 +68,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ":tipo_cliente"   => $tipo_cliente,
             ]);
 
-            $_SESSION["flash_success"] = "Cliente registrado correctamente.";
-            header("Location: clientes.php");
-            exit();
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!empty($resultado["registrado"])) {
+                $_SESSION["flash_success"] = "Cliente registrado correctamente.";
+                header("Location: clientes.php");
+                exit();
+            }
+
+            $error = "No se pudo registrar el cliente.";
         } catch (PDOException $e) {
             $error = "Error al guardar el cliente: " . $e->getMessage();
         }

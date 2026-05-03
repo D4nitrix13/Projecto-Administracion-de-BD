@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 class ProductoRepository
 {
@@ -12,7 +13,7 @@ class ProductoRepository
     public function obtenerProductoPorId(int $idProducto): ?array
     {
         $statement = $this->connection->prepare("
-            SELECT 
+            SELECT
                 id_producto,
                 codigo,
                 nombre,
@@ -23,8 +24,7 @@ class ProductoRepository
                 precio_compra,
                 precio_venta,
                 stock
-            FROM Producto
-            WHERE id_producto = :id_producto
+            FROM obtener_producto_edicion_por_id(:id_producto)
         ");
 
         $statement->execute([
@@ -39,21 +39,22 @@ class ProductoRepository
     public function actualizarProducto(int $idProducto, array $datos): void
     {
         $statement = $this->connection->prepare("
-            UPDATE Producto
-            SET 
-                codigo = :codigo,
-                nombre = :nombre,
-                descripcion = :descripcion,
-                imagen = :imagen,
-                id_categoria = :id_categoria,
-                id_proveedor = :id_proveedor,
-                precio_compra = :precio_compra,
-                precio_venta = :precio_venta,
-                stock = :stock
-            WHERE id_producto = :id_producto
+            SELECT actualizar_producto_edicion(
+                :id_producto,
+                :codigo,
+                :nombre,
+                :descripcion,
+                :imagen,
+                :id_categoria,
+                :id_proveedor,
+                :precio_compra,
+                :precio_venta,
+                :stock
+            ) AS actualizado
         ");
 
         $statement->execute([
+            ":id_producto" => $idProducto,
             ":codigo" => $datos["codigo"],
             ":nombre" => $datos["nombre"],
             ":descripcion" => $datos["descripcion"],
@@ -63,22 +64,20 @@ class ProductoRepository
             ":precio_compra" => (float)$datos["precio_compra"],
             ":precio_venta" => (float)$datos["precio_venta"],
             ":stock" => (int)$datos["stock"],
-            ":id_producto" => $idProducto,
         ]);
     }
 
     public function obtenerProductosParaFactura(): array
     {
         $statement = $this->connection->query("
-        SELECT 
-            id_producto,
-            codigo,
-            nombre,
-            precio_venta,
-            stock
-        FROM Producto
-        ORDER BY nombre
-    ");
+            SELECT
+                id_producto,
+                codigo,
+                nombre,
+                precio_venta,
+                stock
+            FROM listar_productos_para_factura()
+        ");
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }

@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 final class CompraRepository
 {
@@ -6,26 +7,24 @@ final class CompraRepository
 
     public function obtenerProveedores(): array
     {
-        $sql = "
-            SELECT id_proveedor, nombre
-            FROM Proveedor
-            ORDER BY nombre
-        ";
-
-        $statement = $this->connection->query($sql);
+        $statement = $this->connection->query("
+            SELECT
+                id_proveedor,
+                nombre
+            FROM listar_proveedores_para_compras()
+        ");
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerUsuarios(): array
     {
-        $sql = "
-            SELECT id_usuario, nombre
-            FROM Usuario
-            ORDER BY nombre
-        ";
-
-        $statement = $this->connection->query($sql);
+        $statement = $this->connection->query("
+            SELECT
+                id_usuario,
+                nombre
+            FROM listar_usuarios_para_compras()
+        ");
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -37,57 +36,37 @@ final class CompraRepository
         string $fechaDesde,
         string $fechaHasta
     ): array {
-        $sql = "
+        $fechaDesdeSql = $fechaDesde !== ""
+            ? $fechaDesde . " 00:00:00"
+            : null;
+
+        $fechaHastaSql = $fechaHasta !== ""
+            ? $fechaHasta . " 23:59:59"
+            : null;
+
+        $statement = $this->connection->prepare("
             SELECT
-                c.id_compra,
-                c.fecha,
-                c.total,
-                p.nombre AS proveedor,
-                u.nombre AS usuario
-            FROM Compra c
-            INNER JOIN Proveedor p ON c.id_proveedor = p.id_proveedor
-            INNER JOIN Usuario u ON c.id_usuario = u.id_usuario
-            WHERE 1 = 1
-        ";
+                id_compra,
+                fecha,
+                total,
+                proveedor,
+                usuario
+            FROM buscar_compras_filtradas(
+                :busqueda,
+                :id_proveedor,
+                :id_usuario,
+                :fecha_desde,
+                :fecha_hasta
+            )
+        ");
 
-        $params = [];
-
-        if ($busqueda !== "") {
-            $sql .= "
-                AND (
-                    p.nombre ILIKE :busqueda
-                    OR u.nombre ILIKE :busqueda
-                    OR CAST(c.id_compra AS TEXT) ILIKE :busqueda
-                )
-            ";
-
-            $params[":busqueda"] = "%" . $busqueda . "%";
-        }
-
-        if ($proveedorId !== null) {
-            $sql .= " AND c.id_proveedor = :proveedor_id";
-            $params[":proveedor_id"] = $proveedorId;
-        }
-
-        if ($usuarioId !== null) {
-            $sql .= " AND c.id_usuario = :usuario_id";
-            $params[":usuario_id"] = $usuarioId;
-        }
-
-        if ($fechaDesde !== "") {
-            $sql .= " AND c.fecha >= :fecha_desde";
-            $params[":fecha_desde"] = $fechaDesde . " 00:00:00";
-        }
-
-        if ($fechaHasta !== "") {
-            $sql .= " AND c.fecha <= :fecha_hasta";
-            $params[":fecha_hasta"] = $fechaHasta . " 23:59:59";
-        }
-
-        $sql .= " ORDER BY c.fecha DESC";
-
-        $statement = $this->connection->prepare($sql);
-        $statement->execute($params);
+        $statement->execute([
+            ":busqueda" => trim($busqueda),
+            ":id_proveedor" => $proveedorId,
+            ":id_usuario" => $usuarioId,
+            ":fecha_desde" => $fechaDesdeSql,
+            ":fecha_hasta" => $fechaHastaSql,
+        ]);
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }

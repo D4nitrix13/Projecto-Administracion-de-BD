@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 function obtenerDatosReportes(): array
 {
@@ -57,24 +58,10 @@ function normalizarRangoFechasReportes(string $fechaDesde, string $fechaHasta): 
     ];
 }
 
-function aplicarFiltroFechas(string &$sql, array &$params, ?string $fechaDesdeSql, ?string $fechaHastaSql, string $campo = "f.fecha"): void
-{
-    if ($fechaDesdeSql !== null) {
-        $sql .= " AND {$campo} >= :fecha_desde";
-        $params[":fecha_desde"] = $fechaDesdeSql;
-    }
-
-    if ($fechaHastaSql !== null) {
-        $sql .= " AND {$campo} <= :fecha_hasta";
-        $params[":fecha_hasta"] = $fechaHastaSql;
-    }
-}
-
 function obtenerTotalClientesReportes(PDO $connection): int
 {
     $statement = $connection->query("
-        SELECT COUNT(*) 
-        FROM Cliente
+        SELECT obtener_total_clientes_reportes()
     ");
 
     return (int)$statement->fetchColumn();
@@ -82,34 +69,34 @@ function obtenerTotalClientesReportes(PDO $connection): int
 
 function obtenerTotalFacturasReportes(PDO $connection, ?string $fechaDesdeSql, ?string $fechaHastaSql): int
 {
-    $sql = "
-        SELECT COUNT(*)
-        FROM Factura f
-        WHERE 1 = 1
-    ";
+    $statement = $connection->prepare("
+        SELECT obtener_total_facturas_reportes(
+            :fecha_desde,
+            :fecha_hasta
+        )
+    ");
 
-    $params = [];
-    aplicarFiltroFechas($sql, $params, $fechaDesdeSql, $fechaHastaSql);
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":fecha_desde" => $fechaDesdeSql,
+        ":fecha_hasta" => $fechaHastaSql,
+    ]);
 
     return (int)$statement->fetchColumn();
 }
 
 function obtenerTotalVentasReportes(PDO $connection, ?string $fechaDesdeSql, ?string $fechaHastaSql): float
 {
-    $sql = "
-        SELECT COALESCE(SUM(f.total), 0)
-        FROM Factura f
-        WHERE 1 = 1
-    ";
+    $statement = $connection->prepare("
+        SELECT obtener_total_ventas_reportes(
+            :fecha_desde,
+            :fecha_hasta
+        )
+    ");
 
-    $params = [];
-    aplicarFiltroFechas($sql, $params, $fechaDesdeSql, $fechaHastaSql);
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":fecha_desde" => $fechaDesdeSql,
+        ":fecha_hasta" => $fechaHastaSql,
+    ]);
 
     return (float)$statement->fetchColumn();
 }
@@ -117,9 +104,7 @@ function obtenerTotalVentasReportes(PDO $connection, ?string $fechaDesdeSql, ?st
 function obtenerStockBajoReportes(PDO $connection): int
 {
     $statement = $connection->query("
-        SELECT COUNT(*)
-        FROM Producto
-        WHERE stock <= 5
+        SELECT obtener_stock_bajo_reportes()
     ");
 
     return (int)$statement->fetchColumn();
@@ -127,169 +112,119 @@ function obtenerStockBajoReportes(PDO $connection): int
 
 function obtenerVentasPorDiaReportes(PDO $connection, ?string $fechaDesdeSql, ?string $fechaHastaSql): array
 {
-    $sql = "
+    $statement = $connection->prepare("
         SELECT
-            TO_CHAR(f.fecha::date, 'YYYY-MM-DD') AS dia,
-            COALESCE(SUM(f.total), 0) AS total_dia,
-            COUNT(*) AS cantidad_facturas
-        FROM Factura f
-        WHERE 1 = 1
-    ";
+            dia,
+            total_dia,
+            cantidad_facturas
+        FROM obtener_ventas_por_dia_reportes(
+            :fecha_desde,
+            :fecha_hasta
+        )
+    ");
 
-    $params = [];
-    aplicarFiltroFechas($sql, $params, $fechaDesdeSql, $fechaHastaSql);
-
-    $sql .= "
-        GROUP BY f.fecha::date
-        ORDER BY f.fecha::date ASC
-        LIMIT 30
-    ";
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":fecha_desde" => $fechaDesdeSql,
+        ":fecha_hasta" => $fechaHastaSql,
+    ]);
 
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function obtenerProductosMasVendidosReportes(PDO $connection, ?string $fechaDesdeSql, ?string $fechaHastaSql): array
 {
-    $sql = "
+    $statement = $connection->prepare("
         SELECT
-            p.id_producto,
-            p.nombre AS producto,
-            p.codigo,
-            SUM(df.cantidad) AS cantidad_vendida,
-            SUM(df.total_linea) AS total_vendido
-        FROM DetalleFactura df
-        INNER JOIN Factura f ON f.id_factura = df.id_factura
-        INNER JOIN Producto p ON p.id_producto = df.id_producto
-        WHERE 1 = 1
-    ";
+            id_producto,
+            producto,
+            codigo,
+            cantidad_vendida,
+            total_vendido
+        FROM obtener_productos_mas_vendidos_reportes(
+            :fecha_desde,
+            :fecha_hasta
+        )
+    ");
 
-    $params = [];
-    aplicarFiltroFechas($sql, $params, $fechaDesdeSql, $fechaHastaSql);
-
-    $sql .= "
-        GROUP BY p.id_producto, p.nombre, p.codigo
-        ORDER BY cantidad_vendida DESC, total_vendido DESC
-        LIMIT 10
-    ";
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":fecha_desde" => $fechaDesdeSql,
+        ":fecha_hasta" => $fechaHastaSql,
+    ]);
 
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function obtenerVentasDetalladasReportes(PDO $connection, ?string $fechaDesdeSql, ?string $fechaHastaSql): array
 {
-    $sql = "
+    $statement = $connection->prepare("
         SELECT
-            f.id_factura,
-            f.fecha,
-            f.subtotal,
-            f.descuento,
-            f.impuesto,
-            f.total,
-            COALESCE(NULLIF(f.nombre_cliente_fugaz, ''), c.nombres || ' ' || c.apellidos) AS cliente,
-            u.nombre AS usuario,
-            s.nombre AS seccion
-        FROM Factura f
-        INNER JOIN Cliente c ON c.id_cliente = f.id_cliente
-        INNER JOIN Usuario u ON u.id_usuario = f.id_usuario
-        INNER JOIN Seccion s ON s.id_seccion = f.id_seccion
-        WHERE 1 = 1
-    ";
+            id_factura,
+            fecha,
+            subtotal,
+            descuento,
+            impuesto,
+            total,
+            cliente,
+            usuario,
+            seccion
+        FROM obtener_ventas_detalladas_reportes(
+            :fecha_desde,
+            :fecha_hasta
+        )
+    ");
 
-    $params = [];
-    aplicarFiltroFechas($sql, $params, $fechaDesdeSql, $fechaHastaSql);
-
-    $sql .= "
-        ORDER BY f.fecha DESC, f.id_factura DESC
-        LIMIT 50
-    ";
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":fecha_desde" => $fechaDesdeSql,
+        ":fecha_hasta" => $fechaHastaSql,
+    ]);
 
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function obtenerProductosReporte(PDO $connection, ?string $fechaDesdeSql, ?string $fechaHastaSql): array
 {
-    $sql = "
+    $statement = $connection->prepare("
         SELECT
-            p.id_producto,
-            p.codigo,
-            p.nombre,
-            p.stock,
-            COALESCE(SUM(df.cantidad), 0) AS cantidad_vendida,
-            COALESCE(SUM(df.total_linea), 0) AS total_vendido
-        FROM Producto p
-        LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
-        LEFT JOIN Factura f ON f.id_factura = df.id_factura
-        WHERE 1 = 1
-    ";
+            id_producto,
+            codigo,
+            nombre,
+            stock,
+            cantidad_vendida,
+            total_vendido
+        FROM obtener_productos_reporte(
+            :fecha_desde,
+            :fecha_hasta
+        )
+    ");
 
-    $params = [];
-
-    if ($fechaDesdeSql !== null) {
-        $sql .= " AND (f.fecha IS NULL OR f.fecha >= :fecha_desde)";
-        $params[":fecha_desde"] = $fechaDesdeSql;
-    }
-
-    if ($fechaHastaSql !== null) {
-        $sql .= " AND (f.fecha IS NULL OR f.fecha <= :fecha_hasta)";
-        $params[":fecha_hasta"] = $fechaHastaSql;
-    }
-
-    $sql .= "
-        GROUP BY p.id_producto, p.codigo, p.nombre, p.stock
-        ORDER BY cantidad_vendida DESC, total_vendido DESC, p.nombre ASC
-        LIMIT 50
-    ";
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":fecha_desde" => $fechaDesdeSql,
+        ":fecha_hasta" => $fechaHastaSql,
+    ]);
 
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function obtenerClientesReporte(PDO $connection, ?string $fechaDesdeSql, ?string $fechaHastaSql): array
 {
-    $sql = "
+    $statement = $connection->prepare("
         SELECT
-            c.id_cliente,
-            c.nombres || ' ' || c.apellidos AS cliente,
-            c.telefono,
-            c.tipo_cliente,
-            COUNT(f.id_factura) AS cantidad_facturas,
-            COALESCE(SUM(f.total), 0) AS total_comprado
-        FROM Cliente c
-        LEFT JOIN Factura f ON f.id_cliente = c.id_cliente
-        WHERE 1 = 1
-    ";
+            id_cliente,
+            cliente,
+            telefono,
+            tipo_cliente,
+            cantidad_facturas,
+            total_comprado
+        FROM obtener_clientes_reporte(
+            :fecha_desde,
+            :fecha_hasta
+        )
+    ");
 
-    $params = [];
-
-    if ($fechaDesdeSql !== null) {
-        $sql .= " AND (f.fecha IS NULL OR f.fecha >= :fecha_desde)";
-        $params[":fecha_desde"] = $fechaDesdeSql;
-    }
-
-    if ($fechaHastaSql !== null) {
-        $sql .= " AND (f.fecha IS NULL OR f.fecha <= :fecha_hasta)";
-        $params[":fecha_hasta"] = $fechaHastaSql;
-    }
-
-    $sql .= "
-        GROUP BY c.id_cliente, c.nombres, c.apellidos, c.telefono, c.tipo_cliente
-        ORDER BY total_comprado DESC, cantidad_facturas DESC, cliente ASC
-        LIMIT 50
-    ";
-
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
+    $statement->execute([
+        ":fecha_desde" => $fechaDesdeSql,
+        ":fecha_hasta" => $fechaHastaSql,
+    ]);
 
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }

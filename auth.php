@@ -1,4 +1,6 @@
 <?php
+// * Stored function or procedure has been executed
+
 session_start();
 
 // limpiar mensajes anteriores
@@ -7,13 +9,13 @@ unset($_SESSION["error"], $_SESSION["success"]);
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // 1) Leer y normalizar datos
-    $email    = trim($_POST["email"]    ?? '');
-    $password = $_POST["password"]      ?? '';
+    $email    = trim($_POST["email"] ?? "");
+    $password = $_POST["password"] ?? "";
 
     // 2) Validación básica de formulario
     if (
-        $email === '' ||
-        $password === '' ||
+        $email === "" ||
+        $password === "" ||
         !filter_var($email, FILTER_VALIDATE_EMAIL) ||
         strlen($password) < 6
     ) {
@@ -26,23 +28,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     /** @var PDO $connection */
     $connection = require "./sql/db.php";
 
-    // 4) Buscar usuario por email
+    // 4) Buscar usuario por email usando función almacenada
     $statement = $connection->prepare("
-        SELECT 
-            u.id_usuario,
-            u.nombre,
-            u.email,
-            u.password,
-            u.id_rol,
-            u.id_seccion,
-            r.nombre AS rol
-        FROM Usuario AS u
-        INNER JOIN Rol AS r ON r.id_rol = u.id_rol
-        WHERE u.email = :email
-        LIMIT 1
+        SELECT
+            id_usuario,
+            nombre,
+            email,
+            password,
+            id_rol,
+            id_seccion,
+            rol
+        FROM obtener_usuario_login(:email)
     ");
-    $statement->bindParam(":email", $email, PDO::PARAM_STR);
+
+    $statement->bindValue(":email", $email, PDO::PARAM_STR);
     $statement->execute();
+
     $user = $statement->fetch(PDO::FETCH_ASSOC);
 
     $loginValido  = false;
@@ -55,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (password_verify($password, $hashBD)) {
             $loginValido = true;
 
-            // opcional: rehash si cambiaste el coste
+            // Rehash si cambia el algoritmo o el coste de PASSWORD_DEFAULT
             if (password_needs_rehash($hashBD, PASSWORD_DEFAULT)) {
                 $rehashNeeded = true;
             }
@@ -63,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // 2) Caso legacy: contraseña guardada en texto plano
         } elseif (hash_equals($hashBD, $password)) {
             $loginValido  = true;
-            $rehashNeeded = true; // queremos pasarla a hash
+            $rehashNeeded = true;
         }
     }
 
@@ -73,23 +74,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // 5) Si hace falta rehashear, actualizamos la BD
+    // 5) Si hace falta rehashear, actualizar la contraseña con función almacenada
     if ($rehashNeeded) {
         $nuevoHash = password_hash($password, PASSWORD_DEFAULT);
 
         $upd = $connection->prepare("
-            UPDATE Usuario
-            SET password = :password
-            WHERE id_usuario = :id
+            SELECT actualizar_password_usuario_login(
+                :id_usuario,
+                :password_hash
+            ) AS actualizado
         ");
+
         $upd->execute([
-            ":password" => $nuevoHash,
-            ":id"       => $user["id_usuario"],
+            ":id_usuario"    => $user["id_usuario"],
+            ":password_hash" => $nuevoHash,
         ]);
     }
 
     // 6) Guardar usuario en sesión sin el hash
     unset($user["password"]);
+
     $_SESSION["user"] = $user;
     $_SESSION["success"] = "Inicio de sesión exitoso.";
 

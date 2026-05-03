@@ -98,13 +98,27 @@ http://localhost:8080
 ## Importá tu SQL manualmente
 
 ```bash
-docker exec -i pandas_bd psql -U postgres -d pandas_estampados_y_kitsune < sql/query.sql
-docker exec -i pandas_bd psql -U postgres -d pandas_estampados_y_kitsune < sql/datos.sql
-docker exec -i pandas_bd psql -U postgres -d pandas_estampados_y_kitsune <  sql/seed_extra_movimiento.sql
+docker exec -i pandas_bd psql \
+  -U postgres \
+  -d pandas_estampados_y_kitsune_restore \
+  < sql/data.sql
+
+docker exec -i pandas_bd psql \
+  -U postgres \
+  -d pandas_estampados_y_kitsune_restore \
+  < sql/procedures.sql
 ```
 
 Luego verifica:
 
 ```bash
 docker exec -it pandas_bd psql -U postgres -d pandas_estampados_y_kitsune -c '\dt'
+```
+
+## Configurar Permisos en el Host
+
+```bash
+sudo chown -R $USER:33 backups
+sudo chmod -R 775 backups
+sudo find backups -type d -exec chmod g+s {} \;
 ```

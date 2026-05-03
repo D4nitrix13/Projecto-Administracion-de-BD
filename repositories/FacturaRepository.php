@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 class FacturaRepository
 {
@@ -18,69 +19,40 @@ class FacturaRepository
         $fechaDesde = $filtros["fechaDesde"] ?? "";
         $fechaHasta = $filtros["fechaHasta"] ?? "";
 
-        $sql = "
-            SELECT 
-                f.id_factura,
-                f.fecha,
-                f.total,
-                c.nombres || ' ' || c.apellidos AS cliente,
-                u.nombre AS usuario,
-                s.nombre AS seccion
-            FROM Factura f
-            JOIN Cliente c ON f.id_cliente = c.id_cliente
-            JOIN Usuario u ON f.id_usuario = u.id_usuario
-            JOIN Seccion s ON f.id_seccion = s.id_seccion
-            WHERE 1 = 1
-        ";
+        $fechaDesdeSql = $fechaDesde !== ""
+            ? $fechaDesde . " 00:00:00"
+            : null;
 
-        $params = [];
+        $fechaHastaSql = $fechaHasta !== ""
+            ? $fechaHasta . " 23:59:59"
+            : null;
 
-        if (in_array($idRol, [2, 3], true)) {
-            $sql .= "
-                AND c.tipo_cliente = 'Detallista'
-                AND s.nombre = 'Kitsune'
-            ";
-        }
+        $statement = $this->connection->prepare("
+            SELECT
+                id_factura,
+                fecha,
+                total,
+                cliente,
+                usuario,
+                seccion
+            FROM buscar_facturas_filtradas(
+                :id_rol,
+                :busqueda,
+                :id_seccion,
+                :id_usuario,
+                :fecha_desde,
+                :fecha_hasta
+            )
+        ");
 
-        if ($busqueda !== "") {
-            $sql .= "
-                AND (
-                    CAST(f.id_factura AS TEXT) ILIKE :q
-                    OR c.nombres ILIKE :q
-                    OR c.apellidos ILIKE :q
-                    OR c.nombres || ' ' || c.apellidos ILIKE :q
-                    OR u.nombre ILIKE :q
-                    OR s.nombre ILIKE :q
-                )
-            ";
-
-            $params[":q"] = "%" . $busqueda . "%";
-        }
-
-        if ($seccionFiltroInt !== null) {
-            $sql .= " AND f.id_seccion = :seccion";
-            $params[":seccion"] = $seccionFiltroInt;
-        }
-
-        if ($usuarioFiltroInt !== null) {
-            $sql .= " AND f.id_usuario = :usuario";
-            $params[":usuario"] = $usuarioFiltroInt;
-        }
-
-        if ($fechaDesde !== "") {
-            $sql .= " AND f.fecha >= :fecha_desde";
-            $params[":fecha_desde"] = $fechaDesde . " 00:00:00";
-        }
-
-        if ($fechaHasta !== "") {
-            $sql .= " AND f.fecha <= :fecha_hasta";
-            $params[":fecha_hasta"] = $fechaHasta . " 23:59:59";
-        }
-
-        $sql .= " ORDER BY f.fecha DESC, f.id_factura DESC";
-
-        $statement = $this->connection->prepare($sql);
-        $statement->execute($params);
+        $statement->execute([
+            ":id_rol" => $idRol,
+            ":busqueda" => $busqueda,
+            ":id_seccion" => $seccionFiltroInt,
+            ":id_usuario" => $usuarioFiltroInt,
+            ":fecha_desde" => $fechaDesdeSql,
+            ":fecha_hasta" => $fechaHastaSql,
+        ]);
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -88,24 +60,20 @@ class FacturaRepository
     public function obtenerFacturaPorId(int $idFactura): ?array
     {
         $statement = $this->connection->prepare("
-        SELECT 
-            f.id_factura,
-            f.fecha,
-            f.subtotal,
-            f.descuento,
-            f.impuesto,
-            f.total,
-            c.nombres || ' ' || c.apellidos AS cliente,
-            c.telefono,
-            c.direccion,
-            u.nombre AS usuario,
-            s.nombre AS seccion
-        FROM Factura f
-        JOIN Cliente c ON f.id_cliente = c.id_cliente
-        JOIN Usuario u ON f.id_usuario = u.id_usuario
-        JOIN Seccion s ON f.id_seccion = s.id_seccion
-        WHERE f.id_factura = :id_factura
-    ");
+            SELECT
+                id_factura,
+                fecha,
+                subtotal,
+                descuento,
+                impuesto,
+                total,
+                cliente,
+                telefono,
+                direccion,
+                usuario,
+                seccion
+            FROM obtener_factura_detalle_por_id(:id_factura)
+        ");
 
         $statement->execute([
             ":id_factura" => $idFactura,
@@ -119,19 +87,16 @@ class FacturaRepository
     public function obtenerDetalleFactura(int $idFactura): array
     {
         $statement = $this->connection->prepare("
-        SELECT 
-            df.id_detalle,
-            p.codigo,
-            p.nombre,
-            df.cantidad,
-            df.precio_unitario,
-            df.descuento_linea,
-            df.total_linea
-        FROM DetalleFactura df
-        JOIN Producto p ON df.id_producto = p.id_producto
-        WHERE df.id_factura = :id_factura
-        ORDER BY df.id_detalle ASC
-    ");
+            SELECT
+                id_detalle,
+                codigo,
+                nombre,
+                cantidad,
+                precio_unitario,
+                descuento_linea,
+                total_linea
+            FROM obtener_lineas_detalle_factura(:id_factura)
+        ");
 
         $statement->execute([
             ":id_factura" => $idFactura,
@@ -143,21 +108,27 @@ class FacturaRepository
     public function obtenerFacturaParaImpresion(int $idFactura): ?array
     {
         $statement = $this->connection->prepare("
-        SELECT 
-            f.*,
-            c.nombres AS cli_nombres,
-            c.apellidos AS cli_apellidos,
-            c.telefono AS cli_telefono,
-            c.direccion AS cli_direccion,
-            c.identificacion AS cli_identificacion,
-            u.nombre AS usuario_nombre,
-            s.nombre AS seccion_nombre
-        FROM Factura f
-        JOIN Cliente c ON f.id_cliente = c.id_cliente
-        JOIN Usuario u ON f.id_usuario = u.id_usuario
-        JOIN Seccion s ON f.id_seccion = s.id_seccion
-        WHERE f.id_factura = :id_factura
-    ");
+            SELECT
+                id_factura,
+                fecha,
+                id_cliente,
+                id_usuario,
+                id_seccion,
+                subtotal,
+                descuento,
+                impuesto,
+                total,
+                tipo_cliente_venta,
+                nombre_cliente_fugaz,
+                cli_nombres,
+                cli_apellidos,
+                cli_telefono,
+                cli_direccion,
+                cli_identificacion,
+                usuario_nombre,
+                seccion_nombre
+            FROM obtener_factura_para_impresion(:id_factura)
+        ");
 
         $statement->execute([
             ":id_factura" => $idFactura,
@@ -171,19 +142,16 @@ class FacturaRepository
     public function obtenerDetalleFacturaParaImpresion(int $idFactura): array
     {
         $statement = $this->connection->prepare("
-        SELECT 
-            df.id_detalle,
-            df.cantidad,
-            df.precio_unitario,
-            df.descuento_linea,
-            df.total_linea,
-            p.nombre AS producto_nombre,
-            p.codigo AS producto_codigo
-        FROM DetalleFactura df
-        JOIN Producto p ON df.id_producto = p.id_producto
-        WHERE df.id_factura = :id_factura
-        ORDER BY df.id_detalle ASC
-    ");
+            SELECT
+                id_detalle,
+                cantidad,
+                precio_unitario,
+                descuento_linea,
+                total_linea,
+                producto_nombre,
+                producto_codigo
+            FROM obtener_lineas_factura_para_impresion(:id_factura)
+        ");
 
         $statement->execute([
             ":id_factura" => $idFactura,

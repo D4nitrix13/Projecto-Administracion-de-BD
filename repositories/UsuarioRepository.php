@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 class UsuarioRepository
 {
@@ -12,20 +13,13 @@ class UsuarioRepository
     public function crearUsuario(array $datos): void
     {
         $statement = $this->connection->prepare("
-            INSERT INTO Usuario (
-                nombre,
-                email,
-                password,
-                id_rol,
-                id_seccion
-            )
-            VALUES (
+            SELECT crear_usuario_sistema(
                 :nombre,
                 :email,
                 :password,
                 :id_rol,
                 :id_seccion
-            )
+            ) AS creado
         ");
 
         $statement->execute([
@@ -43,52 +37,27 @@ class UsuarioRepository
         $rolFiltroInt = $filtros["rolFiltroInt"] ?? null;
         $seccionFiltro = $filtros["seccionFiltro"] ?? "";
 
-        $sql = "
-            SELECT 
-                u.id_usuario,
-                u.nombre,
-                u.email,
-                u.id_rol,
-                u.id_seccion,
-                r.nombre AS rol,
-                s.nombre AS seccion
-            FROM Usuario u
-            INNER JOIN Rol r ON u.id_rol = r.id_rol
-            LEFT JOIN Seccion s ON u.id_seccion = s.id_seccion
-            WHERE u.id_usuario <> 1
-        ";
+        $statement = $this->connection->prepare("
+            SELECT
+                id_usuario,
+                nombre,
+                email,
+                id_rol,
+                id_seccion,
+                rol,
+                seccion
+            FROM buscar_usuarios_filtrados(
+                :busqueda,
+                :id_rol,
+                :seccion_filtro
+            )
+        ");
 
-        $params = [];
-
-        if ($busqueda !== "") {
-            $sql .= "
-                AND (
-                    u.nombre ILIKE :q
-                    OR u.email ILIKE :q
-                    OR r.nombre ILIKE :q
-                    OR COALESCE(s.nombre, 'Todas las secciones') ILIKE :q
-                )
-            ";
-
-            $params[":q"] = "%" . $busqueda . "%";
-        }
-
-        if ($rolFiltroInt !== null) {
-            $sql .= " AND u.id_rol = :rol";
-            $params[":rol"] = $rolFiltroInt;
-        }
-
-        if ($seccionFiltro === "none") {
-            $sql .= " AND u.id_seccion IS NULL";
-        } elseif (ctype_digit($seccionFiltro)) {
-            $sql .= " AND u.id_seccion = :seccion";
-            $params[":seccion"] = (int)$seccionFiltro;
-        }
-
-        $sql .= " ORDER BY u.nombre ASC";
-
-        $statement = $this->connection->prepare($sql);
-        $statement->execute($params);
+        $statement->execute([
+            ":busqueda" => $busqueda,
+            ":id_rol" => $rolFiltroInt,
+            ":seccion_filtro" => $seccionFiltro,
+        ]);
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -96,11 +65,10 @@ class UsuarioRepository
     public function obtenerUsuariosOrdenados(): array
     {
         $statement = $this->connection->query("
-            SELECT 
+            SELECT
                 id_usuario,
                 nombre
-            FROM Usuario
-            ORDER BY nombre
+            FROM listar_usuarios_ordenados()
         ");
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -109,15 +77,14 @@ class UsuarioRepository
     public function obtenerUsuarioPorId(int $idUsuario): ?array
     {
         $statement = $this->connection->prepare("
-        SELECT 
-            id_usuario,
-            nombre,
-            email,
-            id_rol,
-            id_seccion
-        FROM Usuario
-        WHERE id_usuario = :id_usuario
-    ");
+            SELECT
+                id_usuario,
+                nombre,
+                email,
+                id_rol,
+                id_seccion
+            FROM obtener_usuario_edicion_por_id(:id_usuario)
+        ");
 
         $statement->execute([
             ":id_usuario" => $idUsuario,
@@ -130,33 +97,24 @@ class UsuarioRepository
 
     public function actualizarUsuario(array $datos): void
     {
-        $sql = "
-        UPDATE Usuario
-        SET 
-            nombre = :nombre,
-            email = :email,
-            id_rol = :id_rol,
-            id_seccion = :id_seccion
-    ";
+        $statement = $this->connection->prepare("
+            SELECT actualizar_usuario_sistema(
+                :id_usuario,
+                :nombre,
+                :email,
+                :id_rol,
+                :id_seccion,
+                :password
+            ) AS actualizado
+        ");
 
-        $params = [
+        $statement->execute([
+            ":id_usuario" => $datos["id_usuario"],
             ":nombre" => $datos["nombre"],
             ":email" => $datos["email"],
             ":id_rol" => $datos["id_rol"],
             ":id_seccion" => $datos["id_seccion"],
-            ":id_usuario" => $datos["id_usuario"],
-        ];
-
-        if (!empty($datos["password"])) {
-            $sql .= ", password = :password";
-            $params[":password"] = $datos["password"];
-        }
-
-        $sql .= "
-        WHERE id_usuario = :id_usuario
-    ";
-
-        $statement = $this->connection->prepare($sql);
-        $statement->execute($params);
+            ":password" => $datos["password"] ?? null,
+        ]);
     }
 }

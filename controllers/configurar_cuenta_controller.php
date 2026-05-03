@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 function obtenerDatosConfigurarCuenta(): array
 {
@@ -54,19 +55,16 @@ function obtenerDatosConfigurarCuenta(): array
 function obtenerUsuarioCuentaActual(PDO $connection, int $idUsuario): ?array
 {
     $statement = $connection->prepare("
-        SELECT 
-            u.id_usuario,
-            u.nombre,
-            u.email,
-            u.password,
-            u.id_rol,
-            u.id_seccion,
-            r.nombre AS rol_nombre,
-            s.nombre AS seccion_nombre
-        FROM Usuario u
-        INNER JOIN Rol r ON r.id_rol = u.id_rol
-        LEFT JOIN Seccion s ON s.id_seccion = u.id_seccion
-        WHERE u.id_usuario = :id_usuario
+        SELECT
+            id_usuario,
+            nombre,
+            email,
+            password,
+            id_rol,
+            id_seccion,
+            rol_nombre,
+            seccion_nombre
+        FROM obtener_usuario_configurar_cuenta(:id_usuario)
     ");
 
     $statement->execute([
@@ -135,20 +133,31 @@ function actualizarCuentaDesdePost(
 
     try {
         $statement = $connection->prepare("
-            UPDATE Usuario
-            SET 
-                nombre = :nombre,
-                email = :email,
-                password = :password
-            WHERE id_usuario = :id_usuario
+            SELECT actualizar_usuario_configurar_cuenta(
+                :id_usuario,
+                :nombre,
+                :email,
+                :password
+            ) AS actualizado
         ");
 
         $statement->execute([
+            ":id_usuario" => (int)$dbUser["id_usuario"],
             ":nombre" => $nombre,
             ":email" => $email,
             ":password" => $passwordHashFinal,
-            ":id_usuario" => (int)$dbUser["id_usuario"],
         ]);
+
+        $resultado = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if (empty($resultado["actualizado"])) {
+            return [
+                "success" => false,
+                "message" => "No se pudo actualizar la cuenta.",
+                "nombre" => $nombre,
+                "email" => $email,
+            ];
+        }
 
         return [
             "success" => true,

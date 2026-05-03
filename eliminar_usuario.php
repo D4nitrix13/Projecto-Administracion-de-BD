@@ -1,4 +1,6 @@
 <?php
+// * Stored function or procedure has been executed
+
 session_start();
 
 if (!isset($_SESSION["user"])) {
@@ -17,7 +19,7 @@ if (($user["rol"] ?? "") !== "Administrador") {
 
 $connection = require "./sql/db.php";
 
-$id = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
+$id = isset($_GET["id"]) ? (int) $_GET["id"] : 0;
 
 if ($id <= 0) {
     $_SESSION["flash_error"] = "Trabajador no válido.";
@@ -25,28 +27,21 @@ if ($id <= 0) {
     exit();
 }
 
-// No permitir borrar al jefe (id 1)
-if ($id === 1) {
-    $_SESSION["flash_error"] = "No se puede eliminar la cuenta del jefe.";
-    header("Location: usuarios.php");
-    exit();
-}
-
-// Evitar que un admin se borre a sí mismo (opcional)
-if ($id === (int)$user["id_usuario"]) {
-    $_SESSION["flash_error"] = "No puede eliminar su propia cuenta.";
-    header("Location: usuarios.php");
-    exit();
-}
-
 try {
     $stmtDel = $connection->prepare("
-        DELETE FROM Usuario
-        WHERE id_usuario = :id
+        SELECT filas_afectadas
+        FROM eliminar_usuario_sistema(:id_usuario, :id_usuario_actual)
     ");
-    $stmtDel->execute([":id" => $id]);
 
-    if ($stmtDel->rowCount() > 0) {
+    $stmtDel->execute([
+        ":id_usuario" => $id,
+        ":id_usuario_actual" => (int) $user["id_usuario"]
+    ]);
+
+    $resultado = $stmtDel->fetch(PDO::FETCH_ASSOC);
+    $filasAfectadas = (int) ($resultado["filas_afectadas"] ?? 0);
+
+    if ($filasAfectadas > 0) {
         $_SESSION["flash_success"] = "Trabajador eliminado correctamente.";
     } else {
         $_SESSION["flash_error"] = "El trabajador especificado no existe.";

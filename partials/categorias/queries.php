@@ -1,4 +1,5 @@
 <?php
+// * Stored function or procedure has been executed
 
 $flash_success = $_SESSION["flash_success"] ?? null;
 $flash_error = $_SESSION["flash_error"] ?? null;
@@ -22,8 +23,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             try {
                 $stmtIns = $connection->prepare("
-                    INSERT INTO Categoria (nombre)
-                    VALUES (:nombre)
+                    SELECT
+                        id_categoria,
+                        nombre
+                    FROM registrar_categoria(:nombre)
                 ");
 
                 $stmtIns->execute([
@@ -43,23 +46,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-$sqlCat = "
-    SELECT 
-        id_categoria, 
+$stmtCat = $connection->prepare("
+    SELECT
+        id_categoria,
         nombre
-    FROM Categoria
-    WHERE 1 = 1
-";
+    FROM buscar_categorias(:busqueda)
+");
 
-$params = [];
+$stmtCat->execute([
+    ":busqueda" => $busqueda
+]);
 
-if ($busqueda !== "") {
-    $sqlCat .= " AND LOWER(nombre) LIKE LOWER(:q)";
-    $params[":q"] = "%" . $busqueda . "%";
-}
-
-$sqlCat .= " ORDER BY nombre ASC";
-
-$stmtCat = $connection->prepare($sqlCat);
-$stmtCat->execute($params);
 $categorias = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
