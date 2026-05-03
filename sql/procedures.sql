@@ -1627,3 +1627,226 @@ BEGIN
     ORDER BY p.nombre;
 END;
 $$;
+
+-- ============================================================
+-- USUARIOS: Crear usuario
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION crear_usuario_sistema(
+    p_nombre VARCHAR,
+    p_email VARCHAR,
+    p_password TEXT,
+    p_id_rol INT,
+    p_id_seccion INT DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre del usuario no puede estar vacío';
+    END IF;
+
+    IF p_email IS NULL OR TRIM(p_email) = '' THEN
+        RAISE EXCEPTION 'El correo electrónico no puede estar vacío';
+    END IF;
+
+    IF p_password IS NULL OR TRIM(p_password) = '' THEN
+        RAISE EXCEPTION 'La contraseña no puede estar vacía';
+    END IF;
+
+    IF p_id_rol IS NULL OR p_id_rol <= 0 THEN
+        RAISE EXCEPTION 'El rol del usuario no es válido';
+    END IF;
+
+    INSERT INTO Usuario (
+        nombre,
+        email,
+        password,
+        id_rol,
+        id_seccion
+    )
+    VALUES (
+        TRIM(p_nombre),
+        TRIM(p_email),
+        p_password,
+        p_id_rol,
+        p_id_seccion
+    );
+
+    RETURN TRUE;
+END;
+$$;
+
+
+-- ============================================================
+-- USUARIOS: Buscar usuarios con filtros
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_usuarios_filtrados(
+    p_busqueda TEXT DEFAULT NULL,
+    p_id_rol INT DEFAULT NULL,
+    p_seccion_filtro TEXT DEFAULT NULL
+)
+RETURNS TABLE (
+    id_usuario INT,
+    nombre VARCHAR,
+    email VARCHAR,
+    id_rol INT,
+    id_seccion INT,
+    rol VARCHAR,
+    seccion VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_rol IS NOT NULL AND p_id_rol <= 0 THEN
+        RAISE EXCEPTION 'ID de rol no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        u.id_usuario,
+        u.nombre,
+        u.email,
+        u.id_rol,
+        u.id_seccion,
+        r.nombre AS rol,
+        s.nombre AS seccion
+    FROM Usuario u
+    INNER JOIN Rol r ON u.id_rol = r.id_rol
+    LEFT JOIN Seccion s ON u.id_seccion = s.id_seccion
+    WHERE u.id_usuario <> 1
+      AND (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR u.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR u.email ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR r.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR COALESCE(s.nombre, 'Todas las secciones') ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+      AND (
+            p_id_rol IS NULL
+            OR u.id_rol = p_id_rol
+        )
+      AND (
+            p_seccion_filtro IS NULL
+            OR TRIM(p_seccion_filtro) = ''
+            OR (
+                p_seccion_filtro = 'none'
+                AND u.id_seccion IS NULL
+            )
+            OR (
+                p_seccion_filtro ~ '^[0-9]+$'
+                AND u.id_seccion = p_seccion_filtro::INT
+            )
+        )
+    ORDER BY u.nombre ASC;
+END;
+$$;
+
+
+-- ============================================================
+-- USUARIOS: Listar usuarios ordenados
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_usuarios_ordenados()
+RETURNS TABLE (
+    id_usuario INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        u.id_usuario,
+        u.nombre
+    FROM Usuario u
+    ORDER BY u.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- USUARIOS: Obtener usuario por ID para edición
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_usuario_edicion_por_id(
+    p_id_usuario INT
+)
+RETURNS TABLE (
+    id_usuario INT,
+    nombre VARCHAR,
+    email VARCHAR,
+    id_rol INT,
+    id_seccion INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        u.id_usuario,
+        u.nombre,
+        u.email,
+        u.id_rol,
+        u.id_seccion
+    FROM Usuario u
+    WHERE u.id_usuario = p_id_usuario;
+END;
+$$;
+
+
+-- ============================================================
+-- USUARIOS: Actualizar usuario
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION actualizar_usuario_sistema(
+    p_id_usuario INT,
+    p_nombre VARCHAR,
+    p_email VARCHAR,
+    p_id_rol INT,
+    p_id_seccion INT DEFAULT NULL,
+    p_password TEXT DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre del usuario no puede estar vacío';
+    END IF;
+
+    IF p_email IS NULL OR TRIM(p_email) = '' THEN
+        RAISE EXCEPTION 'El correo electrónico no puede estar vacío';
+    END IF;
+
+    IF p_id_rol IS NULL OR p_id_rol <= 0 THEN
+        RAISE EXCEPTION 'El rol del usuario no es válido';
+    END IF;
+
+    UPDATE Usuario
+    SET
+        nombre = TRIM(p_nombre),
+        email = TRIM(p_email),
+        id_rol = p_id_rol,
+        id_seccion = p_id_seccion,
+        password = CASE
+            WHEN p_password IS NULL OR TRIM(p_password) = ''
+                THEN Usuario.password
+            ELSE p_password
+        END
+    WHERE Usuario.id_usuario = p_id_usuario;
+
+    RETURN FOUND;
+END;
+$$;
