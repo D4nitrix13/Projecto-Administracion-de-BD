@@ -1473,3 +1473,24 @@ BEGIN
     ORDER BY r.nombre;
 END;
 $$;
+
+-- ============================================================
+-- CATEGORÍAS: Listar categorías ordenadas
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_categorias_ordenadas()
+RETURNS TABLE (
+    id_categoria INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id_categoria,
+        c.nombre
+    FROM Categoria c
+    ORDER BY c.nombre;
+END;
+$$;
