@@ -985,3 +985,86 @@ BEGIN
     RETURN TRUE;
 END;
 $$;
+
+-- ============================================================
+-- CUENTA: Obtener datos de la cuenta actual
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_usuario_configurar_cuenta(
+    p_id_usuario INT
+)
+RETURNS TABLE (
+    id_usuario INT,
+    nombre VARCHAR,
+    email VARCHAR,
+    password TEXT,
+    id_rol INT,
+    id_seccion INT,
+    rol_nombre VARCHAR,
+    seccion_nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        u.id_usuario,
+        u.nombre,
+        u.email,
+        u.password,
+        u.id_rol,
+        u.id_seccion,
+        r.nombre AS rol_nombre,
+        s.nombre AS seccion_nombre
+    FROM Usuario u
+    INNER JOIN Rol r ON r.id_rol = u.id_rol
+    LEFT JOIN Seccion s ON s.id_seccion = u.id_seccion
+    WHERE u.id_usuario = p_id_usuario;
+END;
+$$;
+
+
+-- ============================================================
+-- CUENTA: Actualizar datos de la cuenta actual
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION actualizar_usuario_configurar_cuenta(
+    p_id_usuario INT,
+    p_nombre VARCHAR,
+    p_email VARCHAR,
+    p_password TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre no puede estar vacío';
+    END IF;
+
+    IF p_email IS NULL OR TRIM(p_email) = '' THEN
+        RAISE EXCEPTION 'El correo electrónico no puede estar vacío';
+    END IF;
+
+    IF p_password IS NULL OR TRIM(p_password) = '' THEN
+        RAISE EXCEPTION 'La contraseña no puede estar vacía';
+    END IF;
+
+    UPDATE Usuario
+    SET
+        nombre = TRIM(p_nombre),
+        email = TRIM(p_email),
+        password = p_password
+    WHERE Usuario.id_usuario = p_id_usuario;
+
+    RETURN FOUND;
+END;
+$$;
