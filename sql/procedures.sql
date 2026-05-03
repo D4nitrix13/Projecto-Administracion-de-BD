@@ -2394,3 +2394,113 @@ BEGIN
     WHERE s.id_seccion = p_id_seccion;
 END;
 $$;
+
+-- ============================================================
+-- COMPRAS: Listar proveedores para filtros/formularios
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_proveedores_para_compras()
+RETURNS TABLE (
+    id_proveedor INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_proveedor,
+        p.nombre
+    FROM Proveedor p
+    ORDER BY p.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- COMPRAS: Listar usuarios para filtros/formularios
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_usuarios_para_compras()
+RETURNS TABLE (
+    id_usuario INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        u.id_usuario,
+        u.nombre
+    FROM Usuario u
+    ORDER BY u.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- COMPRAS: Buscar compras con filtros
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_compras_filtradas(
+    p_busqueda TEXT DEFAULT NULL,
+    p_id_proveedor INT DEFAULT NULL,
+    p_id_usuario INT DEFAULT NULL,
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS TABLE (
+    id_compra INT,
+    fecha TIMESTAMP,
+    total NUMERIC,
+    proveedor VARCHAR,
+    usuario VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_proveedor IS NOT NULL AND p_id_proveedor <= 0 THEN
+        RAISE EXCEPTION 'ID de proveedor no válido';
+    END IF;
+
+    IF p_id_usuario IS NOT NULL AND p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.id_compra,
+        c.fecha,
+        c.total,
+        p.nombre AS proveedor,
+        u.nombre AS usuario
+    FROM Compra c
+    INNER JOIN Proveedor p ON c.id_proveedor = p.id_proveedor
+    INNER JOIN Usuario u ON c.id_usuario = u.id_usuario
+    WHERE (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR p.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR u.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR CAST(c.id_compra AS TEXT) ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+      AND (
+            p_id_proveedor IS NULL
+            OR c.id_proveedor = p_id_proveedor
+        )
+      AND (
+            p_id_usuario IS NULL
+            OR c.id_usuario = p_id_usuario
+        )
+      AND (
+            p_fecha_desde IS NULL
+            OR c.fecha >= p_fecha_desde
+        )
+      AND (
+            p_fecha_hasta IS NULL
+            OR c.fecha <= p_fecha_hasta
+        )
+    ORDER BY c.fecha DESC;
+END;
+$$;
