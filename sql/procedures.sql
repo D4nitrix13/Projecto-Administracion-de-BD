@@ -329,3 +329,72 @@ BEGIN
     ORDER BY c.nombre ASC;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Obtener categoría por ID
+-- Uso: módulo editar categoría
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_categoria_por_id(
+    p_id_categoria INT
+)
+RETURNS TABLE (
+    id_categoria INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_categoria IS NULL OR p_id_categoria <= 0 THEN
+        RAISE EXCEPTION 'ID de categoría no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.id_categoria,
+        c.nombre
+    FROM Categoria c
+    WHERE c.id_categoria = p_id_categoria;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Actualizar categoría
+-- Uso: módulo editar categoría
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION actualizar_categoria(
+    p_id_categoria INT,
+    p_nombre VARCHAR
+)
+RETURNS TABLE (
+    filas_afectadas INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_filas_afectadas INT;
+BEGIN
+    IF p_id_categoria IS NULL OR p_id_categoria <= 0 THEN
+        RAISE EXCEPTION 'ID de categoría no válido';
+    END IF;
+
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre de la categoría es obligatorio';
+    END IF;
+
+    IF LENGTH(TRIM(p_nombre)) > 80 THEN
+        RAISE EXCEPTION 'El nombre de la categoría no debe superar los 80 caracteres';
+    END IF;
+
+    UPDATE Categoria
+    SET nombre = TRIM(p_nombre)
+    WHERE id_categoria = p_id_categoria;
+
+    GET DIAGNOSTICS v_filas_afectadas = ROW_COUNT;
+
+    RETURN QUERY
+    SELECT v_filas_afectadas;
+END;
+$$;

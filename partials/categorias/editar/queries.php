@@ -1,10 +1,11 @@
 <?php
+// * Stored function or procedure has been executed
 
 $error = null;
 
 $id = $_SERVER["REQUEST_METHOD"] === "POST"
-    ? (int)($_POST["id_categoria"] ?? 0)
-    : (int)($_GET["id"] ?? 0);
+    ? (int) ($_POST["id_categoria"] ?? 0)
+    : (int) ($_GET["id"] ?? 0);
 
 if ($id <= 0) {
     $_SESSION["flash_error"] = "Categoría no válida.";
@@ -22,17 +23,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         try {
             $stmtUpd = $connection->prepare("
-                UPDATE Categoria
-                SET nombre = :nombre
-                WHERE id_categoria = :id
+                SELECT filas_afectadas
+                FROM actualizar_categoria(:id, :nombre)
             ");
 
             $stmtUpd->execute([
-                ":nombre" => $nombre,
-                ":id" => $id
+                ":id" => $id,
+                ":nombre" => $nombre
             ]);
 
-            $_SESSION["flash_success"] = $stmtUpd->rowCount() > 0
+            $resultado = $stmtUpd->fetch(PDO::FETCH_ASSOC);
+            $filasAfectadas = (int) ($resultado["filas_afectadas"] ?? 0);
+
+            $_SESSION["flash_success"] = $filasAfectadas > 0
                 ? "Categoría actualizada correctamente."
                 : "No se realizaron cambios.";
 
@@ -50,11 +53,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $stmtCat = $connection->prepare("
-    SELECT 
-        id_categoria, 
+    SELECT
+        id_categoria,
         nombre
-    FROM Categoria
-    WHERE id_categoria = :id
+    FROM obtener_categoria_por_id(:id)
 ");
 
 $stmtCat->execute([
