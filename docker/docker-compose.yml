@@ -15,9 +15,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_DATABASE: pandas_kitsune_db
+      DB_DATABASE: pandas_estampados_y_kitsune
       DB_USERNAME: postgres
-      DB_PASSWORD: postgres
+      DB_PASSWORD: root
     restart: unless-stopped
 
   postgres:
@@ -30,9 +30,23 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - ../database/postgresql:/var/lib/postgresql
+      - ../database/logs:/var/log/postgresql
+      - ../database/wal_archive:/wal_archive
       - ../sql:/docker-entrypoint-initdb.d
+      - ../backups:/backups
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "archive_mode=on"
+      - "-c"
+      - "archive_command=cp %p /wal_archive/%f"
+      - "-c"
+      - "logging_collector=on"
+      - "-c"
+      - "log_directory=/var/log/postgresql"
+      - "-c"
+      - "log_filename=postgresql-%Y-%m-%d.log"
     restart: unless-stopped
-
-volumes:
-  postgres_data:

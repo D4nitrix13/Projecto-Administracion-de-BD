@@ -1,7 +1,7 @@
 <?php
 
-$id = isset($_GET["id"]) && ctype_digit((string)$_GET["id"])
-    ? (int)$_GET["id"]
+$id = isset($_GET["id"]) && ctype_digit((string) $_GET["id"])
+    ? (int) $_GET["id"]
     : 0;
 
 if ($id <= 0) {
@@ -11,7 +11,7 @@ if ($id <= 0) {
 }
 
 $stmt = $connection->prepare("
-    SELECT 
+    SELECT
         id_producto,
         codigo,
         nombre,
@@ -19,11 +19,13 @@ $stmt = $connection->prepare("
         imagen,
         precio_venta,
         stock
-    FROM Producto
-    WHERE id_producto = :id
+    FROM obtener_producto_imagen(:id)
 ");
 
-$stmt->execute([":id" => $id]);
+$stmt->execute([
+    ":id" => $id
+]);
+
 $prod = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$prod) {
@@ -33,6 +35,7 @@ if (!$prod) {
 }
 
 $imagen = trim($prod["imagen"] ?? "");
+
 $rutaImagen = $imagen !== ""
     ? "uploads/productos/" . $imagen
     : "assets/img/no-product.png";
