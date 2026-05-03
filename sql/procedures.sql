@@ -1068,3 +1068,283 @@ BEGIN
     RETURN FOUND;
 END;
 $$;
+
+-- ============================================================
+-- REPORTES: Total de clientes
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_total_clientes_reportes()
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_total INT;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_total
+    FROM Cliente;
+
+    RETURN v_total;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Total de facturas por rango de fechas
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_total_facturas_reportes(
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_total INT;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_total
+    FROM Factura f
+    WHERE (p_fecha_desde IS NULL OR f.fecha >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR f.fecha <= p_fecha_hasta);
+
+    RETURN v_total;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Total de ventas por rango de fechas
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_total_ventas_reportes(
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(f.total), 0)
+    INTO v_total
+    FROM Factura f
+    WHERE (p_fecha_desde IS NULL OR f.fecha >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR f.fecha <= p_fecha_hasta);
+
+    RETURN v_total;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Productos con stock bajo
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_stock_bajo_reportes()
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_total INT;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_total
+    FROM Producto
+    WHERE stock <= 5;
+
+    RETURN v_total;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Ventas por día
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_ventas_por_dia_reportes(
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS TABLE (
+    dia TEXT,
+    total_dia NUMERIC,
+    cantidad_facturas BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        TO_CHAR(f.fecha::date, 'YYYY-MM-DD') AS dia,
+        COALESCE(SUM(f.total), 0) AS total_dia,
+        COUNT(*) AS cantidad_facturas
+    FROM Factura f
+    WHERE (p_fecha_desde IS NULL OR f.fecha >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR f.fecha <= p_fecha_hasta)
+    GROUP BY f.fecha::date
+    ORDER BY f.fecha::date ASC
+    LIMIT 30;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Productos más vendidos
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_reportes(
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS TABLE (
+    id_producto INT,
+    producto VARCHAR,
+    codigo VARCHAR,
+    cantidad_vendida BIGINT,
+    total_vendido NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.nombre AS producto,
+        p.codigo,
+        COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+        COALESCE(SUM(df.total_linea), 0) AS total_vendido
+    FROM DetalleFactura df
+    INNER JOIN Factura f ON f.id_factura = df.id_factura
+    INNER JOIN Producto p ON p.id_producto = df.id_producto
+    WHERE (p_fecha_desde IS NULL OR f.fecha >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR f.fecha <= p_fecha_hasta)
+    GROUP BY p.id_producto, p.nombre, p.codigo
+    ORDER BY cantidad_vendida DESC, total_vendido DESC
+    LIMIT 10;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Ventas detalladas
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_ventas_detalladas_reportes(
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS TABLE (
+    id_factura INT,
+    fecha TIMESTAMP,
+    subtotal NUMERIC,
+    descuento NUMERIC,
+    impuesto NUMERIC,
+    total NUMERIC,
+    cliente TEXT,
+    usuario VARCHAR,
+    seccion VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        f.id_factura,
+        f.fecha,
+        f.subtotal,
+        f.descuento,
+        f.impuesto,
+        f.total,
+        COALESCE(NULLIF(f.nombre_cliente_fugaz, ''), c.nombres || ' ' || c.apellidos) AS cliente,
+        u.nombre AS usuario,
+        s.nombre AS seccion
+    FROM Factura f
+    INNER JOIN Cliente c ON c.id_cliente = f.id_cliente
+    INNER JOIN Usuario u ON u.id_usuario = f.id_usuario
+    INNER JOIN Seccion s ON s.id_seccion = f.id_seccion
+    WHERE (p_fecha_desde IS NULL OR f.fecha >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR f.fecha <= p_fecha_hasta)
+    ORDER BY f.fecha DESC, f.id_factura DESC
+    LIMIT 50;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Reporte de productos
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_productos_reporte(
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS TABLE (
+    id_producto INT,
+    codigo VARCHAR,
+    nombre VARCHAR,
+    stock INT,
+    cantidad_vendida BIGINT,
+    total_vendido NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.codigo,
+        p.nombre,
+        p.stock,
+        COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+        COALESCE(SUM(df.total_linea), 0) AS total_vendido
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+    WHERE (p_fecha_desde IS NULL OR f.fecha IS NULL OR f.fecha >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR f.fecha IS NULL OR f.fecha <= p_fecha_hasta)
+    GROUP BY p.id_producto, p.codigo, p.nombre, p.stock
+    ORDER BY cantidad_vendida DESC, total_vendido DESC, p.nombre ASC
+    LIMIT 50;
+END;
+$$;
+
+
+-- ============================================================
+-- REPORTES: Reporte de clientes
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_clientes_reporte(
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS TABLE (
+    id_cliente INT,
+    cliente TEXT,
+    telefono VARCHAR,
+    tipo_cliente VARCHAR,
+    cantidad_facturas BIGINT,
+    total_comprado NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id_cliente,
+        c.nombres || ' ' || c.apellidos AS cliente,
+        c.telefono,
+        c.tipo_cliente,
+        COUNT(f.id_factura) AS cantidad_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado
+    FROM Cliente c
+    LEFT JOIN Factura f ON f.id_cliente = c.id_cliente
+    WHERE (p_fecha_desde IS NULL OR f.fecha IS NULL OR f.fecha >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR f.fecha IS NULL OR f.fecha <= p_fecha_hasta)
+    GROUP BY c.id_cliente, c.nombres, c.apellidos, c.telefono, c.tipo_cliente
+    ORDER BY total_comprado DESC, cantidad_facturas DESC, cliente ASC
+    LIMIT 50;
+END;
+$$;
