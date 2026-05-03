@@ -597,3 +597,42 @@ BEGIN
     LIMIT p_limite;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Eliminar usuario del sistema
+-- Uso: módulo de usuarios / eliminar trabajador
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION eliminar_usuario_sistema(
+    p_id_usuario INT,
+    p_id_usuario_actual INT
+)
+RETURNS TABLE (
+    filas_afectadas INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_filas_afectadas INT;
+BEGIN
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'Trabajador no válido';
+    END IF;
+
+    IF p_id_usuario = 1 THEN
+        RAISE EXCEPTION 'No se puede eliminar la cuenta del jefe';
+    END IF;
+
+    IF p_id_usuario_actual IS NOT NULL AND p_id_usuario = p_id_usuario_actual THEN
+        RAISE EXCEPTION 'No puede eliminar su propia cuenta';
+    END IF;
+
+    DELETE FROM Usuario
+    WHERE id_usuario = p_id_usuario;
+
+    GET DIAGNOSTICS v_filas_afectadas = ROW_COUNT;
+
+    RETURN QUERY
+    SELECT v_filas_afectadas;
+END;
+$$;
