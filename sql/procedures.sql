@@ -1494,3 +1494,136 @@ BEGIN
     ORDER BY c.nombre;
 END;
 $$;
+
+-- ============================================================
+-- PRODUCTOS: Obtener producto por ID para edición
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_producto_edicion_por_id(
+    p_id_producto INT
+)
+RETURNS TABLE (
+    id_producto INT,
+    codigo VARCHAR,
+    nombre VARCHAR,
+    descripcion TEXT,
+    imagen VARCHAR,
+    id_categoria INT,
+    id_proveedor INT,
+    precio_compra NUMERIC,
+    precio_venta NUMERIC,
+    stock INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_producto IS NULL OR p_id_producto <= 0 THEN
+        RAISE EXCEPTION 'ID de producto no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.codigo,
+        p.nombre,
+        p.descripcion,
+        p.imagen,
+        p.id_categoria,
+        p.id_proveedor,
+        p.precio_compra,
+        p.precio_venta,
+        p.stock
+    FROM Producto p
+    WHERE p.id_producto = p_id_producto;
+END;
+$$;
+
+
+-- ============================================================
+-- PRODUCTOS: Actualizar producto desde formulario de edición
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION actualizar_producto_edicion(
+    p_id_producto INT,
+    p_codigo VARCHAR,
+    p_nombre VARCHAR,
+    p_descripcion TEXT,
+    p_imagen VARCHAR,
+    p_id_categoria INT,
+    p_id_proveedor INT,
+    p_precio_compra NUMERIC,
+    p_precio_venta NUMERIC,
+    p_stock INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_producto IS NULL OR p_id_producto <= 0 THEN
+        RAISE EXCEPTION 'ID de producto no válido';
+    END IF;
+
+    IF p_codigo IS NULL OR TRIM(p_codigo) = '' THEN
+        RAISE EXCEPTION 'El código del producto no puede estar vacío';
+    END IF;
+
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre del producto no puede estar vacío';
+    END IF;
+
+    IF p_precio_compra IS NULL OR p_precio_compra < 0 THEN
+        RAISE EXCEPTION 'El precio de compra no puede ser negativo';
+    END IF;
+
+    IF p_precio_venta IS NULL OR p_precio_venta < 0 THEN
+        RAISE EXCEPTION 'El precio de venta no puede ser negativo';
+    END IF;
+
+    IF p_stock IS NULL OR p_stock < 0 THEN
+        RAISE EXCEPTION 'El stock no puede ser negativo';
+    END IF;
+
+    UPDATE Producto
+    SET
+        codigo = TRIM(p_codigo),
+        nombre = TRIM(p_nombre),
+        descripcion = COALESCE(NULLIF(TRIM(p_descripcion), ''), 'Sin descripción'),
+        imagen = p_imagen,
+        id_categoria = p_id_categoria,
+        id_proveedor = p_id_proveedor,
+        precio_compra = p_precio_compra,
+        precio_venta = p_precio_venta,
+        stock = p_stock
+    WHERE Producto.id_producto = p_id_producto;
+
+    RETURN FOUND;
+END;
+$$;
+
+
+-- ============================================================
+-- PRODUCTOS: Listar productos para facturación
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_productos_para_factura()
+RETURNS TABLE (
+    id_producto INT,
+    codigo VARCHAR,
+    nombre VARCHAR,
+    precio_venta NUMERIC,
+    stock INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.codigo,
+        p.nombre,
+        p.precio_venta,
+        p.stock
+    FROM Producto p
+    ORDER BY p.nombre;
+END;
+$$;
