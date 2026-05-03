@@ -1850,3 +1850,192 @@ BEGIN
     RETURN FOUND;
 END;
 $$;
+
+-- ============================================================
+-- PROVEEDORES: Listar proveedores ordenados
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_proveedores_ordenados()
+RETURNS TABLE (
+    id_proveedor INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_proveedor,
+        p.nombre
+    FROM Proveedor p
+    ORDER BY p.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- PROVEEDORES: Crear proveedor
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION crear_proveedor_sistema(
+    p_nombre VARCHAR,
+    p_telefono VARCHAR DEFAULT NULL,
+    p_email VARCHAR DEFAULT NULL,
+    p_direccion VARCHAR DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre del proveedor no puede estar vacío';
+    END IF;
+
+    INSERT INTO Proveedor (
+        nombre,
+        telefono,
+        email,
+        direccion
+    )
+    VALUES (
+        TRIM(p_nombre),
+        NULLIF(TRIM(p_telefono), ''),
+        NULLIF(TRIM(p_email), ''),
+        NULLIF(TRIM(p_direccion), '')
+    );
+
+    RETURN TRUE;
+END;
+$$;
+
+
+-- ============================================================
+-- PROVEEDORES: Buscar proveedores con filtro
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_proveedores_filtrados(
+    p_busqueda TEXT DEFAULT NULL
+)
+RETURNS TABLE (
+    id_proveedor INT,
+    nombre VARCHAR,
+    telefono VARCHAR,
+    email VARCHAR,
+    direccion VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_proveedor,
+        p.nombre,
+        p.telefono,
+        p.email,
+        p.direccion
+    FROM Proveedor p
+    WHERE (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR CAST(p.id_proveedor AS TEXT) ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.telefono ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.email ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.direccion ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+    ORDER BY p.nombre ASC;
+END;
+$$;
+
+
+-- ============================================================
+-- PROVEEDORES: Obtener proveedor por ID
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_proveedor_por_id(
+    p_id_proveedor INT
+)
+RETURNS TABLE (
+    id_proveedor INT,
+    nombre VARCHAR,
+    telefono VARCHAR,
+    email VARCHAR,
+    direccion VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        RAISE EXCEPTION 'ID de proveedor no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        p.id_proveedor,
+        p.nombre,
+        p.telefono,
+        p.email,
+        p.direccion
+    FROM Proveedor p
+    WHERE p.id_proveedor = p_id_proveedor;
+END;
+$$;
+
+
+-- ============================================================
+-- PROVEEDORES: Actualizar proveedor
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION actualizar_proveedor_sistema(
+    p_id_proveedor INT,
+    p_nombre VARCHAR,
+    p_telefono VARCHAR DEFAULT NULL,
+    p_email VARCHAR DEFAULT NULL,
+    p_direccion VARCHAR DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        RAISE EXCEPTION 'ID de proveedor no válido';
+    END IF;
+
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre del proveedor no puede estar vacío';
+    END IF;
+
+    UPDATE Proveedor
+    SET
+        nombre = TRIM(p_nombre),
+        telefono = NULLIF(TRIM(p_telefono), ''),
+        email = NULLIF(TRIM(p_email), ''),
+        direccion = NULLIF(TRIM(p_direccion), '')
+    WHERE Proveedor.id_proveedor = p_id_proveedor;
+
+    RETURN FOUND;
+END;
+$$;
+
+
+-- ============================================================
+-- PROVEEDORES: Eliminar proveedor
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION eliminar_proveedor_sistema(
+    p_id_proveedor INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        RAISE EXCEPTION 'ID de proveedor no válido';
+    END IF;
+
+    DELETE FROM Proveedor
+    WHERE Proveedor.id_proveedor = p_id_proveedor;
+
+    RETURN FOUND;
+END;
+$$;
