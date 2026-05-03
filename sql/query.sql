@@ -10,17 +10,17 @@ CREATE DATABASE pandas_estampados_y_kitsune;
 -- 1) TABLAS BÁSICAS: ROLES, SECCIONES, USUARIOS
 ------------------------------------------------------------
 
-CREATE TABLE Seccion (
+CREATE TABLE IF NOT EXISTS Seccion (
     id_seccion SERIAL PRIMARY KEY,
     nombre     VARCHAR(30) NOT NULL UNIQUE
 );
 
-CREATE TABLE Rol (
+CREATE TABLE IF NOT EXISTS Rol (
     id_rol SERIAL PRIMARY KEY,
     nombre VARCHAR(30) NOT NULL UNIQUE
 );
 
-CREATE TABLE Usuario (
+CREATE TABLE IF NOT EXISTS Usuario (
     id_usuario  SERIAL PRIMARY KEY,
     nombre      VARCHAR(100) NOT NULL,
     email       VARCHAR(120) NOT NULL UNIQUE,
@@ -36,12 +36,12 @@ CREATE TABLE Usuario (
 -- 2) CATÁLOGO: CATEGORÍAS, PROVEEDORES, PRODUCTOS
 ------------------------------------------------------------
 
-CREATE TABLE Categoria (
+CREATE TABLE IF NOT EXISTS Categoria (
     id_categoria SERIAL PRIMARY KEY,
     nombre       VARCHAR(80) NOT NULL UNIQUE
 );
 
-CREATE TABLE Proveedor (
+CREATE TABLE IF NOT EXISTS Proveedor (
     id_proveedor SERIAL PRIMARY KEY,
     nombre       VARCHAR(120) NOT NULL,
     telefono     VARCHAR(30),
@@ -49,7 +49,7 @@ CREATE TABLE Proveedor (
     direccion    VARCHAR(200)
 );
 
-CREATE TABLE Producto (
+CREATE TABLE IF NOT EXISTS Producto (
     id_producto   SERIAL PRIMARY KEY,
     codigo        VARCHAR(50) NOT NULL UNIQUE,
     nombre        VARCHAR(120) NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE Producto (
 -- 3) CLIENTES
 ------------------------------------------------------------
 
-CREATE TABLE Cliente (
+CREATE TABLE IF NOT EXISTS Cliente (
     id_cliente     SERIAL PRIMARY KEY,
     nombres        VARCHAR(80) NOT NULL,
     apellidos      VARCHAR(80) NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE Cliente (
 -- 4) FACTURAS Y DETALLE DE FACTURA
 ------------------------------------------------------------
 
-CREATE TABLE Factura (
+CREATE TABLE IF NOT EXISTS Factura (
     id_factura SERIAL PRIMARY KEY,
     fecha      TIMESTAMP NOT NULL DEFAULT NOW(),
     id_cliente INT NOT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE Factura (
 );
 
 
-CREATE TABLE DetalleFactura (
+CREATE TABLE IF NOT EXISTS DetalleFactura (
     id_detalle       SERIAL PRIMARY KEY,
     id_factura       INT NOT NULL,
     id_producto      INT NOT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE DetalleFactura (
 -- 5) COMPRAS Y DETALLE DE COMPRAS
 ------------------------------------------------------------
 
-CREATE TABLE Compra (
+CREATE TABLE IF NOT EXISTS Compra (
     id_compra    SERIAL PRIMARY KEY,
     fecha        TIMESTAMP NOT NULL DEFAULT NOW(),
     id_proveedor INT NOT NULL,
@@ -135,7 +135,7 @@ CREATE TABLE Compra (
     CONSTRAINT FK_Compra_Usuario   FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
 
-CREATE TABLE DetalleCompra (
+CREATE TABLE IF NOT EXISTS DetalleCompra (
     id_detalle     SERIAL PRIMARY KEY,
     id_compra      INT NOT NULL,
     id_producto    INT NOT NULL,
@@ -144,4 +144,13 @@ CREATE TABLE DetalleCompra (
     total_linea    NUMERIC(10,2) NOT NULL,
     CONSTRAINT FK_DetCom_Compra FOREIGN KEY (id_compra) REFERENCES Compra(id_compra),
     CONSTRAINT FK_DetCom_Producto FOREIGN KEY (id_producto) REFERENCES Producto(id_producto)
+);
+
+CREATE TABLE IF NOT EXISTS Auditoria (
+    id_auditoria SERIAL PRIMARY KEY,
+    usuario VARCHAR(100) NOT NULL,
+    accion VARCHAR(50) NOT NULL,
+    tabla_afectada VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    fecha_registro TIMESTAMP NOT NULL DEFAULT NOW()
 );

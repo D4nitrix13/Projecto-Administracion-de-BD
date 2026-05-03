@@ -62,6 +62,7 @@ backup/
 *.sql.gz
 *.tar
 *.tar.gz
+database/
 
 # OJO:
 # No ignoro sql/*.sql porque tus scripts SQL sirven como estructura,

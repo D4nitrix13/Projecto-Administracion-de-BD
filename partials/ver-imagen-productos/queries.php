@@ -10,6 +10,7 @@ if ($id <= 0) {
     exit();
 }
 
+// * Stored function or procedure has been executed
 $stmt = $connection->prepare("
     SELECT
         id_producto,
