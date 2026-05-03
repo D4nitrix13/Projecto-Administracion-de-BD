@@ -1227,7 +1227,6 @@ BEGIN
 END;
 $$;
 
-
 -- ============================================================
 -- REPORTES: Ventas detalladas
 -- ============================================================
@@ -1346,5 +1345,110 @@ BEGIN
     GROUP BY c.id_cliente, c.nombres, c.apellidos, c.telefono, c.tipo_cliente
     ORDER BY total_comprado DESC, cantidad_facturas DESC, cliente ASC
     LIMIT 50;
+END;
+$$;
+
+-- ============================================================
+-- CATÁLOGO: Listar categorías del catálogo público
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_categorias_catalogo()
+RETURNS TABLE (
+    id_categoria INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id_categoria,
+        c.nombre
+    FROM Categoria c
+    ORDER BY c.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- CATÁLOGO: Buscar productos del catálogo público
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_productos_catalogo(
+    p_busqueda TEXT DEFAULT NULL,
+    p_id_categoria INT DEFAULT NULL,
+    p_disponibilidad VARCHAR DEFAULT NULL
+)
+RETURNS TABLE (
+    id_producto INT,
+    codigo VARCHAR,
+    nombre VARCHAR,
+    descripcion TEXT,
+    imagen VARCHAR,
+    categoria VARCHAR,
+    precio_venta NUMERIC,
+    stock INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_categoria IS NOT NULL AND p_id_categoria <= 0 THEN
+        RAISE EXCEPTION 'ID de categoría no válido';
+    END IF;
+
+    IF p_disponibilidad IS NOT NULL
+       AND p_disponibilidad <> ''
+       AND p_disponibilidad NOT IN ('disponible', 'stock_bajo', 'agotado') THEN
+        RAISE EXCEPTION 'Filtro de disponibilidad no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.codigo,
+        p.nombre,
+        p.descripcion,
+        p.imagen,
+        c.nombre AS categoria,
+        p.precio_venta,
+        p.stock
+    FROM Producto p
+    LEFT JOIN Categoria c ON p.id_categoria = c.id_categoria
+    WHERE (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR p.codigo ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.descripcion ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR c.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+      AND (
+            p_id_categoria IS NULL
+            OR p.id_categoria = p_id_categoria
+        )
+      AND (
+            p_disponibilidad IS NULL
+            OR p_disponibilidad = ''
+            OR (
+                p_disponibilidad = 'disponible'
+                AND p.stock > 5
+            )
+            OR (
+                p_disponibilidad = 'stock_bajo'
+                AND p.stock > 0
+                AND p.stock <= 5
+            )
+            OR (
+                p_disponibilidad = 'agotado'
+                AND p.stock <= 0
+            )
+        )
+    ORDER BY
+        CASE
+            WHEN p.stock <= 0 THEN 2
+            WHEN p.stock <= 5 THEN 1
+            ELSE 0
+        END,
+        p.nombre ASC;
 END;
 $$;
