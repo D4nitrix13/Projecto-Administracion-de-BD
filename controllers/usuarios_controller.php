@@ -36,7 +36,7 @@ function obtenerDatosUsuarios(): array
 
         if ($resultado["success"]) {
             $_SESSION["flash_success"] = "Trabajador registrado correctamente.";
-            header("Location: usuarios.php");
+            header("Location: trabajadores.php");
             exit();
         }
 

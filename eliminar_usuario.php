@@ -13,7 +13,7 @@ $user = $_SESSION["user"];
 // Solo administradores
 if (($user["rol"] ?? "") !== "Administrador") {
     $_SESSION["flash_error"] = "No tiene permiso para eliminar trabajadores.";
-    header("Location: usuarios.php");
+    header("Location: trabajadores.php");
     exit();
 }
 
@@ -23,7 +23,7 @@ $id = isset($_GET["id"]) ? (int) $_GET["id"] : 0;
 
 if ($id <= 0) {
     $_SESSION["flash_error"] = "Trabajador no válido.";
-    header("Location: usuarios.php");
+    header("Location: trabajadores.php");
     exit();
 }
 
@@ -54,5 +54,5 @@ try {
     }
 }
 
-header("Location: usuarios.php");
+header("Location: trabajadores.php");
 exit();

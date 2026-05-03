@@ -89,12 +89,6 @@ function isActivePage(string $page, string $currentPage): string
             </a>
 
             <?php if (($user["rol"] ?? "") === "Administrador"): ?>
-                <a
-                    href="usuarios.php"
-                    class="<?= isActivePage("usuarios.php", $currentPage) ?>">
-                    Trabajadores
-                </a>
-
                 <div class="sidebar-group">
                     <span class="sidebar-group-title">Análisis</span>
 
@@ -113,6 +107,12 @@ function isActivePage(string $page, string $currentPage): string
 
                 <div class="sidebar-group">
                     <span class="sidebar-group-title">Sistema</span>
+
+                    <a
+                        href="trabajadores.php"
+                        class="sidebar-sublink <?= isActivePage("trabajadores.php", $currentPage) ?>">
+                        Trabajadores
+                    </a>
 
                     <a
                         href="cambiar_numero_de_whatsapp.php"

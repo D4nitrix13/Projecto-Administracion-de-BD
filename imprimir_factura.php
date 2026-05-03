@@ -29,7 +29,8 @@ $fechaFactura         = $viewData["fechaFactura"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/facturas/imprimir/styles.php"; ?>
 
 <body class="dashboard-body invoice-print-body">
 
@@ -45,9 +46,7 @@ $fechaFactura         = $viewData["fechaFactura"];
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/facturas/imprimir/styles.php"; ?>
 
 </body>
 

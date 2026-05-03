@@ -26,7 +26,8 @@ $flashError       = $viewData["flashError"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/clientes/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -36,13 +37,15 @@ $flashError       = $viewData["flashError"];
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/clientes/header.php"; ?>
+        <section class="clientes-hero">
+            <?php require __DIR__ . "/partials/clientes/header.php"; ?>
+        </section>
 
-        <section class="dashboard-card">
+        <section class="clientes-card">
 
             <?php require __DIR__ . "/partials/clientes/alerts.php"; ?>
 
-            <div class="productos-header-actions">
+            <div class="clientes-header-actions">
                 <a href="nuevo_cliente.php" class="btn-primary-inline">
                     + Agregar nuevo cliente
                 </a>
@@ -56,7 +59,6 @@ $flashError       = $viewData["flashError"];
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
 
 </body>

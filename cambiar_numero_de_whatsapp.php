@@ -38,7 +38,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/whatsapp/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -48,13 +49,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/whatsapp/page-header.php"; ?>
+        <section class="whatsapp-page-heading">
+            <?php require __DIR__ . "/partials/whatsapp/page-header.php"; ?>
+        </section>
 
-        <?php require __DIR__ . "/partials/whatsapp/form.php"; ?>
+        <section class="whatsapp-card">
+            <?php require __DIR__ . "/partials/whatsapp/form.php"; ?>
+        </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
 
 </body>

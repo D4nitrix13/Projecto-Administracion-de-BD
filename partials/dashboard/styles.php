@@ -3,8 +3,8 @@
         --sidebar-width: 260px;
         --sidebar-bg: #243247;
         --sidebar-bg-dark: #202b3d;
-        --primary: #ff2f63;
-        --primary-dark: #dc1f50;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
         --text-main: #111827;
         --text-muted: #6b7280;
         --page-bg: #f3f5f9;
@@ -13,8 +13,8 @@
         --success: #16a34a;
         --danger: #dc2626;
         --info: #2563eb;
-        --shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-        --shadow-hover: 0 18px 35px rgba(15, 23, 42, 0.14);
+        --shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        --shadow-hover: 0 14px 30px rgba(15, 23, 42, 0.09);
     }
 
     * {
@@ -28,10 +28,6 @@
         color: var(--text-main);
         font-family: Arial, sans-serif;
     }
-
-    /* ==============================
-       Sidebar
-       ============================== */
 
     .sidebar {
         position: fixed;
@@ -157,7 +153,7 @@
     }
 
     .sidebar-nav a {
-        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        transition: background 0.2s ease, color 0.2s ease;
     }
 
     .sidebar-nav a:hover {
@@ -241,10 +237,6 @@
         margin-left: 0;
     }
 
-    /* ==============================
-       Layout principal
-       ============================== */
-
     .dashboard-main {
         margin-left: var(--sidebar-width);
         padding: 32px 36px;
@@ -275,7 +267,7 @@
         background: #ffffff;
         color: var(--text-main);
         font-weight: 700;
-        box-shadow: var(--shadow);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
     }
 
     .user-name {
@@ -308,26 +300,29 @@
     }
 
     .dashboard-page-heading {
-        margin-bottom: 28px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
     }
 
     .dashboard-page-heading h1 {
-        margin: 0 0 6px;
+        margin: 0 0 12px;
         color: var(--text-main);
-        font-size: 2rem;
+        font-size: clamp(1.55rem, 2vw, 1.9rem);
         font-weight: 900;
-        letter-spacing: -0.03em;
+        letter-spacing: -0.035em;
+        line-height: 1.12;
     }
 
     .dashboard-page-heading p {
         margin: 0;
         color: var(--text-muted);
-        font-size: 1rem;
+        font-size: 0.98rem;
+        line-height: 1.55;
     }
-
-    /* ==============================
-       Cards
-       ============================== */
 
     .summary-grid {
         display: grid;
@@ -338,14 +333,14 @@
 
     .dashboard-grid {
         display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+        grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
         gap: 28px;
         margin-bottom: 28px;
     }
 
     .bottom-grid {
         display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+        grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
         gap: 28px;
         margin-bottom: 28px;
     }
@@ -356,10 +351,11 @@
     .table-card,
     .quick-card {
         background: var(--card-bg);
-        border-radius: 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
         padding: 24px;
         box-shadow: var(--shadow);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
 
     .summary-card:hover,
@@ -367,8 +363,9 @@
     .sales-card:hover,
     .table-card:hover,
     .quick-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-2px);
         box-shadow: var(--shadow-hover);
+        border-color: #dbe3ee;
     }
 
     .clickable-card {
@@ -378,17 +375,23 @@
     .summary-card p {
         margin: 0 0 12px;
         color: var(--text-muted);
+        font-size: 0.92rem;
+        font-weight: 700;
     }
 
     .summary-card h2 {
-        margin: 0 0 18px;
+        margin: 0 0 14px;
+        color: var(--text-main);
         font-size: 1.8rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
     }
 
     .summary-card small {
         display: block;
         color: var(--text-muted);
         margin-top: 10px;
+        line-height: 1.35;
     }
 
     .positive {
@@ -410,24 +413,40 @@
     }
 
     .card-header h3 {
-        margin: 0 0 5px;
+        margin: 0 0 6px;
         color: var(--text-main);
+        font-size: 1.25rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
     }
 
     .card-header span {
         color: var(--text-muted);
         font-size: 0.92rem;
+        line-height: 1.45;
     }
 
     .card-header a {
-        color: var(--info);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 9px;
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
         text-decoration: none;
-        font-weight: 700;
+        font-size: 0.82rem;
+        font-weight: 800;
         white-space: nowrap;
+        transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
     }
 
     .card-header a:hover {
-        text-decoration: underline;
+        background: #bae6fd;
+        border-color: #7dd3fc;
+        transform: translateY(-1px);
     }
 
     .chart-card,
@@ -443,34 +462,53 @@
         max-height: 280px;
     }
 
-    /* ==============================
-       Tablas
-       ============================== */
+    .table-card {
+        overflow: hidden;
+    }
 
-    table {
+    .table-card table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 0;
+        table-layout: fixed;
     }
 
-    th {
-        text-align: left;
-        color: var(--text-muted);
+    .table-card thead {
         background: #f3f4f6;
-        padding: 14px;
-        font-size: 0.9rem;
     }
 
-    td {
-        padding: 16px 14px;
-        border-bottom: 1px solid var(--border);
-        font-size: 0.94rem;
+    .table-card th {
+        text-align: left;
+        color: #667085;
+        background: #f3f4f6;
+        padding: 14px 16px;
+        font-size: 0.86rem;
+        font-weight: 900;
+        white-space: nowrap;
     }
 
-    table tbody tr {
-        transition: background 0.2s ease;
+    .table-card td {
+        padding: 14px 16px;
+        border-top: 1px solid var(--border);
+        border-bottom: none;
+        color: var(--text-main);
+        font-size: 0.92rem;
+        vertical-align: middle;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    table tbody tr:hover {
+    .table-card th,
+    .table-card td {
+        max-width: 1px;
+    }
+
+    .table-card tbody tr {
+        transition: background 0.15s ease;
+    }
+
+    .table-card tbody tr:hover {
         background: #f8fafc;
     }
 
@@ -479,18 +517,16 @@
     }
 
     .clickable-row:hover {
-        background: #eef2ff;
+        background: #f8fafc;
     }
 
     .empty-table {
         text-align: center;
         color: var(--text-muted);
-        padding: 40px 16px;
+        padding: 34px 16px;
+        background: #f8fafc;
+        line-height: 1.5;
     }
-
-    /* ==============================
-       Acciones rápidas
-       ============================== */
 
     .quick-card {
         display: grid;
@@ -500,28 +536,30 @@
 
     .quick-card h3 {
         margin: 0 0 8px;
+        color: var(--text-main);
+        font-size: 1.25rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
     }
 
     .quick-card a {
         display: block;
         padding: 14px 16px;
-        background: #f3f5f9;
+        background: #f8fafc;
         color: var(--text-main);
+        border: 1px solid #e5e7eb;
         text-decoration: none;
         border-radius: 12px;
-        font-weight: 700;
-        transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+        font-weight: 800;
+        transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
     .quick-card a:hover {
-        transform: translateX(5px);
-        background: #e0e7ff;
+        transform: translateX(4px);
+        background: #eff6ff;
         color: #1d4ed8;
+        border-color: #bfdbfe;
     }
-
-    /* ==============================
-       Responsive
-       ============================== */
 
     @media (max-width: 1100px) {
         .summary-grid {
@@ -568,6 +606,23 @@
         }
     }
 
+    @media (max-width: 760px) {
+
+        .dashboard-page-heading,
+        .summary-card,
+        .chart-card,
+        .sales-card,
+        .table-card,
+        .quick-card {
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        .card-header {
+            flex-direction: column;
+        }
+    }
+
     @media (max-width: 640px) {
         .summary-grid {
             grid-template-columns: 1fr;
@@ -577,18 +632,18 @@
             font-size: 1.7rem;
         }
 
-        .summary-card,
-        .chart-card,
-        .sales-card,
-        .table-card,
-        .quick-card {
-            padding: 18px;
+        .table-card {
+            overflow-x: auto;
         }
 
-        table {
-            display: block;
-            overflow-x: auto;
-            white-space: nowrap;
+        .table-card table {
+            min-width: 620px;
+            table-layout: auto;
+        }
+
+        .table-card th,
+        .table-card td {
+            max-width: none;
         }
     }
 </style>

@@ -29,7 +29,8 @@ $textoSubtitulo       = $viewData["textoSubtitulo"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/facturas/nueva/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -39,15 +40,15 @@ $textoSubtitulo       = $viewData["textoSubtitulo"];
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/facturas/nueva/header.php"; ?>
+        <section class="dashboard-page-heading invoice-page-heading">
+            <?php require __DIR__ . "/partials/facturas/nueva/header.php"; ?>
+        </section>
 
         <?php require __DIR__ . "/partials/facturas/nueva/form.php"; ?>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/facturas/nueva/styles.php"; ?>
     <?php require __DIR__ . "/partials/facturas/nueva/scripts.php"; ?>
 
 </body>

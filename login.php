@@ -16,7 +16,7 @@ $success = $viewData["success"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+
 <?php require __DIR__ . "/partials/login/styles.php"; ?>
 
 <body class="login-page">

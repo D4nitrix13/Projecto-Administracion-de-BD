@@ -22,7 +22,8 @@ $proveedores = $viewData["proveedores"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/productos/editar/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -32,15 +33,15 @@ $proveedores = $viewData["proveedores"];
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/productos/editar/header.php"; ?>
+        <section class="product-page-heading">
+            <?php require __DIR__ . "/partials/productos/editar/header.php"; ?>
+        </section>
 
         <?php require __DIR__ . "/partials/productos/editar/form.php"; ?>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/productos/editar/styles.php"; ?>
 
 </body>
 

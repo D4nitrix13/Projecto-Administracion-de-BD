@@ -1,5 +1,5 @@
 <style>
-    .compras-hero {
+    .facturas-hero {
         margin-bottom: 22px;
     }
 
@@ -57,9 +57,118 @@
         border: 1px solid #fecaca;
     }
 
+    .facturas-actions {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+
+    .dashboard-card>form {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        align-items: end;
+        gap: 16px;
+        padding: 18px;
+        margin-bottom: 22px;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #f8fafc;
+    }
+
+    .dashboard-card>form label {
+        display: grid;
+        gap: 7px;
+        color: #111827;
+        font-size: 0.88rem;
+        font-weight: 800;
+    }
+
+    .dashboard-card>form label:first-child {
+        grid-column: auto;
+    }
+
+    .dashboard-card>form input,
+    .dashboard-card>form select {
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 0.94rem;
+        outline: none;
+        transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease,
+            background 0.15s ease;
+    }
+
+    .dashboard-card>form input::placeholder {
+        color: #8b95a5;
+    }
+
+    .dashboard-card>form input:focus,
+    .dashboard-card>form select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        background: #ffffff;
+    }
+
+    .dashboard-card>form button,
+    .dashboard-card>form a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        min-width: 112px;
+        height: 42px;
+        padding: 0 18px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 0.94rem;
+        text-decoration: none;
+        cursor: pointer;
+        align-self: end;
+        transition:
+            background 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease,
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .dashboard-card>form button {
+        border: none;
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.16);
+    }
+
+    .dashboard-card>form button:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .dashboard-card>form a {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #374151;
+    }
+
+    .dashboard-card>form a:hover {
+        background: #f3f4f6;
+        border-color: #94a3b8;
+        transform: translateY(-1px);
+    }
+
     .filters-panel {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        align-items: end;
         gap: 16px;
         padding: 18px;
         margin-bottom: 22px;
@@ -122,6 +231,9 @@
 
     .btn-primary-inline,
     .btn-secondary-inline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         min-height: 42px;
         padding: 0 18px;
         border-radius: 10px;
@@ -149,9 +261,6 @@
     }
 
     .btn-secondary-inline {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         border: 1px solid #cbd5e1;
         background: #ffffff;
         color: #374151;
@@ -160,6 +269,7 @@
     .btn-secondary-inline:hover {
         background: #f3f4f6;
         border-color: #94a3b8;
+        transform: translateY(-1px);
     }
 
     .section-heading {
@@ -195,7 +305,7 @@
     .table-wrapper table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 840px;
+        min-width: 920px;
     }
 
     .table-wrapper thead {
@@ -219,14 +329,23 @@
         vertical-align: middle;
     }
 
-    .table-wrapper tbody tr {
-        transition:
-            background 0.15s ease,
-            transform 0.15s ease;
-    }
-
     .table-wrapper tbody tr:hover {
         background: #f8fafc;
+    }
+
+    .table-wrapper th.col-acciones,
+    .table-wrapper td.acciones,
+    .table-wrapper th:last-child,
+    .table-wrapper td:last-child {
+        text-align: center;
+    }
+
+    .table-wrapper th:last-child {
+        width: 210px;
+    }
+
+    .table-wrapper td:last-child {
+        vertical-align: middle;
     }
 
     .col-acciones {
@@ -234,8 +353,12 @@
     }
 
     .acciones {
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
         white-space: nowrap;
+        text-align: center;
     }
 
     .btn-accion {
@@ -248,6 +371,8 @@
         font-size: 0.82rem;
         font-weight: 800;
         text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
         transition:
             background 0.15s ease,
             border-color 0.15s ease,
@@ -259,15 +384,28 @@
         transform: translateY(-1px);
     }
 
+    .btn-accion-ver,
     .btn-accion-editar {
         background: #e0f2fe;
         color: #0369a1;
-        border: 1px solid #bae6fd;
+        border-color: #bae6fd;
     }
 
+    .btn-accion-ver:hover,
     .btn-accion-editar:hover {
         background: #bae6fd;
         border-color: #7dd3fc;
+    }
+
+    .btn-accion-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    .btn-accion-danger:hover {
+        background: #fecaca;
+        border-color: #fca5a5;
     }
 
     .empty-message {
@@ -282,6 +420,8 @@
     }
 
     @media (max-width: 1100px) {
+
+        .dashboard-card>form,
         .filters-panel {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -296,9 +436,20 @@
         .section-heading {
             flex-direction: column;
         }
+
+        .facturas-actions {
+            justify-content: stretch;
+        }
+
+        .facturas-actions .btn-primary-inline,
+        .facturas-actions .btn-secondary-inline {
+            width: 100%;
+        }
     }
 
     @media (max-width: 640px) {
+
+        .dashboard-card>form,
         .filters-panel {
             grid-template-columns: 1fr;
             padding: 16px;
@@ -310,8 +461,14 @@
         }
 
         .btn-primary-inline,
-        .btn-secondary-inline {
+        .btn-secondary-inline,
+        .dashboard-card>form button,
+        .dashboard-card>form a {
             width: 100%;
+        }
+
+        .table-wrapper table {
+            min-width: 780px;
         }
     }
 </style>

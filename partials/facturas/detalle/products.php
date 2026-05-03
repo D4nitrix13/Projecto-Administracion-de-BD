@@ -23,7 +23,7 @@
             <tbody>
                 <?php if (empty($detalles)): ?>
                     <tr>
-                        <td colspan="7" class="dashboard-muted">
+                        <td colspan="7" class="empty-table-message">
                             Esta factura no tiene detalles registrados.
                         </td>
                     </tr>
@@ -32,7 +32,11 @@
                         <tr>
                             <td><?= $index + 1 ?></td>
                             <td><?= htmlspecialchars($detalle["codigo"]) ?></td>
-                            <td><?= htmlspecialchars($detalle["nombre"]) ?></td>
+                            <td>
+                                <strong>
+                                    <?= htmlspecialchars($detalle["nombre"]) ?>
+                                </strong>
+                            </td>
                             <td><?= (int)$detalle["cantidad"] ?></td>
                             <td>C$ <?= number_format((float)$detalle["precio_unitario"], 2) ?></td>
                             <td>C$ <?= number_format((float)$detalle["descuento_linea"], 2) ?></td>

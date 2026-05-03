@@ -19,7 +19,7 @@ function obtenerDatosEditarUsuario(): array
 
     if ($idUsuario <= 0) {
         $_SESSION["flash_error"] = "Trabajador no válido.";
-        header("Location: usuarios.php");
+        header("Location: trabajadores.php");
         exit();
     }
 
@@ -34,7 +34,7 @@ function obtenerDatosEditarUsuario(): array
 
         if ($resultado["success"]) {
             $_SESSION["flash_success"] = "Trabajador actualizado correctamente.";
-            header("Location: usuarios.php");
+            header("Location: trabajadores.php");
             exit();
         }
 
@@ -45,7 +45,7 @@ function obtenerDatosEditarUsuario(): array
 
     if (!$trabajador) {
         $_SESSION["flash_error"] = "El trabajador especificado no existe.";
-        header("Location: usuarios.php");
+        header("Location: trabajadores.php");
         exit();
     }
 

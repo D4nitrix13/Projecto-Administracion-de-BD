@@ -18,7 +18,7 @@ require_once __DIR__ . "/helpers/format.php";
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+
 
 <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
 
@@ -148,7 +148,7 @@ require_once __DIR__ . "/helpers/format.php";
                 <a href="facturas.php">Historial de facturas</a>
 
                 <?php if (($user["rol"] ?? "") === "Administrador"): ?>
-                    <a href="usuarios.php">Trabajadores</a>
+                    <a href="trabajadores.php">Trabajadores</a>
                     <a href="respaldo_bd.php">Respaldos</a>
                 <?php endif; ?>
             </article>
@@ -187,7 +187,7 @@ require_once __DIR__ . "/helpers/format.php";
                                     class="clickable-row"
                                     onclick="window.location.href='detalle_factura.php?id=<?= urlencode((string)$factura["id_factura"]) ?>'">
                                     <td>#<?= htmlspecialchars((string)$factura["id_factura"]) ?></td>
-                                    <td><?= htmlspecialchars(date("d/m/Y", strtotime($factura["fecha"]))) ?></td>
+                                    <td><?= htmlspecialchars(formatearFechaExtendida($factura["fecha"])) ?></td>
                                     <td>C$ <?= number_format((float)$factura["total"], 2) ?></td>
                                 </tr>
                             <?php endforeach; ?>

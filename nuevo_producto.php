@@ -1,21 +1,20 @@
 <?php
+
 // * Stored function or procedure has been executed
 
 session_start();
+
 $pageTitle = "Nuevo producto - Panda Estampados / Kitsune";
 
-// Proteger la página: solo usuarios logueados
-if (!isset($_SESSION["user"])) {
-    header("Location: login.php");
-    exit();
-}
+require_once __DIR__ . "/includes/auth_guard.php";
+
+requireLogin();
 
 $user = $_SESSION["user"];
-$connection = require "./sql/db.php";
+$connection = require __DIR__ . "/sql/db.php";
 
 $error = null;
 
-// Cargar categorías y proveedores para los select
 $stmtCat = $connection->query("
     SELECT
         id_categoria,
@@ -34,7 +33,6 @@ $stmtProv = $connection->query("
 
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
-// Valores por defecto para rellenar el form si hay error
 $codigo = "";
 $nombre = "";
 $descripcion = "";
@@ -44,32 +42,30 @@ $precio_compra = "";
 $precio_venta = "";
 $stock = "0";
 
-// Procesar envío del formulario
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $codigo = trim($_POST["codigo"] ?? "");
     $nombre = trim($_POST["nombre"] ?? "");
     $descripcion = trim($_POST["descripcion"] ?? "");
-    $id_categoria = $_POST["id_categoria"] !== "" ? (int) $_POST["id_categoria"] : null;
-    $id_proveedor = $_POST["id_proveedor"] !== "" ? (int) $_POST["id_proveedor"] : null;
+    $id_categoria = ($_POST["id_categoria"] ?? "") !== "" ? (int) $_POST["id_categoria"] : null;
+    $id_proveedor = ($_POST["id_proveedor"] ?? "") !== "" ? (int) $_POST["id_proveedor"] : null;
     $precio_compra = trim($_POST["precio_compra"] ?? "");
     $precio_venta = trim($_POST["precio_venta"] ?? "");
     $stock = trim($_POST["stock"] ?? "0");
 
-    // Validaciones básicas
     if ($codigo === "" || $nombre === "" || $precio_compra === "" || $precio_venta === "") {
         $error = "Complete los campos obligatorios marcados con (*).";
     } elseif (!is_numeric($precio_compra) || !is_numeric($precio_venta)) {
         $error = "Los precios deben ser valores numéricos.";
+    } elseif ((float) $precio_compra < 0 || (float) $precio_venta < 0) {
+        $error = "Los precios no pueden ser negativos.";
     } elseif ($stock !== "" && !ctype_digit($stock)) {
         $error = "El stock debe ser un número entero mayor o igual a 0.";
     }
 
-    // Validar que la imagen sea obligatoria
     if (!$error && empty($_FILES["imagen"]["name"])) {
         $error = "Debe seleccionar una imagen para el producto.";
     }
 
-    // Manejo de imagen
     $nombreImagenBD = null;
 
     if (!$error && !empty($_FILES["imagen"]["name"])) {
@@ -83,17 +79,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $maxBytes = 4 * 1024 * 1024;
 
             if ($size > $maxBytes) {
-                $error = "La imagen excede el tamaño máximo permitido (4MB).";
+                $error = "La imagen excede el tamaño máximo permitido de 4 MB.";
             } else {
                 $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
                 $extPermitidas = ["jpg", "jpeg", "png", "gif", "webp"];
 
                 if (!in_array($ext, $extPermitidas, true)) {
-                    $error = "Formato de imagen no permitido. Usa JPG, PNG, GIF o WEBP.";
+                    $error = "Formato de imagen no permitido. Use JPG, PNG, GIF o WEBP.";
                 } else {
                     $nombreImagenBD = uniqid("prod_", true) . "." . $ext;
 
                     $destinoCarpeta = __DIR__ . "/uploads/productos";
+
                     if (!is_dir($destinoCarpeta)) {
                         mkdir($destinoCarpeta, 0775, true);
                     }
@@ -106,11 +103,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
             }
         } else {
-            $error = "Error al subir la imagen (código $errorFile).";
+            $error = "Error al subir la imagen del producto.";
         }
     }
 
-    // Si todo está bien, guardar en BD mediante función almacenada
     if (!$error) {
         try {
             $stmt = $connection->prepare("
@@ -153,44 +149,54 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 }
+
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
-<?php require "partials/header.php"; ?>
 
-<body class="page-bg">
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/productos/nuevo/styles.php"; ?>
 
-    <!-- NAVBAR -->
-    <?php include __DIR__ . '/partials/navbar.php'; ?>
+<body class="dashboard-body">
 
-    <!-- CONTENIDO -->
-    <main class="dashboard-container">
+    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
 
-        <section class="dashboard-card dashboard-welcome">
-            <p class="dashboard-eyebrow">Inventario</p>
-            <h1 class="dashboard-title">Agregar nuevo producto</h1>
+    <main class="dashboard-main">
 
-            <p class="dashboard-muted">
-                Registre un nuevo producto para el inventario de Panda Estampados y Kitsune.
-            </p>
+        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-            <a href="productos.php" class="back-link" style="text-align:left; margin-top:10px;">
-                ← Volver al listado de productos
-            </a>
+        <section class="product-page-heading">
+            <div class="product-page-heading-top">
+                <div class="product-page-heading-text">
+                    <p class="product-eyebrow">Inventario</p>
+                    <h1 class="product-title">Agregar nuevo producto</h1>
+
+                    <p class="product-muted">
+                        Registre un nuevo producto para el inventario de Panda Estampados y Kitsune.
+                    </p>
+                </div>
+
+                <a href="productos.php" class="btn-secondary-inline">
+                    Volver al listado
+                </a>
+            </div>
         </section>
 
-        <section class="dashboard-card">
+        <section class="product-form-card">
 
             <?php if ($error): ?>
-                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                <div class="alert alert-danger">
+                    <?= htmlspecialchars($error) ?>
+                </div>
             <?php endif; ?>
 
             <form action="nuevo_producto.php" method="POST" enctype="multipart/form-data" class="form-grid">
 
                 <div class="form-group">
-                    <label class="label">Código (*)</label>
+                    <label for="codigo" class="label">Código (*)</label>
                     <input
+                        id="codigo"
                         type="text"
                         name="codigo"
                         class="input"
@@ -200,8 +206,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="form-group">
-                    <label class="label">Nombre del producto (*)</label>
+                    <label for="nombre" class="label">Nombre del producto (*)</label>
                     <input
+                        id="nombre"
                         type="text"
                         name="nombre"
                         class="input"
@@ -210,34 +217,38 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         value="<?= htmlspecialchars($nombre) ?>">
                 </div>
 
-                <div class="form-group">
-                    <label class="label">Descripción</label>
+                <div class="form-group form-group-full">
+                    <label for="descripcion" class="label">Descripción</label>
                     <textarea
+                        id="descripcion"
                         name="descripcion"
                         class="input"
                         rows="3"
                         placeholder="Detalles del producto..."><?= htmlspecialchars($descripcion) ?></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label class="label">Imagen del producto (*)</label>
+                <div class="form-group form-group-full">
+                    <label for="imagen" class="label">Imagen del producto (*)</label>
                     <input
+                        id="imagen"
                         type="file"
                         name="imagen"
                         class="input"
                         accept="image/*"
                         required>
-                    <small class="dashboard-muted">Formatos permitidos: JPG, PNG, GIF, WEBP (máx 4MB)</small>
+                    <p class="field-help">
+                        Formatos permitidos: JPG, PNG, GIF o WEBP. Tamaño máximo: 4 MB.
+                    </p>
                 </div>
 
                 <div class="form-group">
-                    <label class="label">Categoría</label>
-                    <select name="id_categoria" class="input">
-                        <option value="">(Sin categoría)</option>
+                    <label for="id_categoria" class="label">Categoría</label>
+                    <select id="id_categoria" name="id_categoria" class="input">
+                        <option value="">Sin categoría</option>
                         <?php foreach ($categorias as $cat): ?>
                             <option
                                 value="<?= (int) $cat["id_categoria"] ?>"
-                                <?= ($id_categoria == $cat["id_categoria"]) ? "selected" : "" ?>>
+                                <?= ((string) $id_categoria === (string) $cat["id_categoria"]) ? "selected" : "" ?>>
                                 <?= htmlspecialchars($cat["nombre"]) ?>
                             </option>
                         <?php endforeach; ?>
@@ -245,13 +256,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="form-group">
-                    <label class="label">Proveedor</label>
-                    <select name="id_proveedor" class="input">
-                        <option value="">(Sin proveedor)</option>
+                    <label for="id_proveedor" class="label">Proveedor</label>
+                    <select id="id_proveedor" name="id_proveedor" class="input">
+                        <option value="">Sin proveedor</option>
                         <?php foreach ($proveedores as $prov): ?>
                             <option
                                 value="<?= (int) $prov["id_proveedor"] ?>"
-                                <?= ($id_proveedor == $prov["id_proveedor"]) ? "selected" : "" ?>>
+                                <?= ((string) $id_proveedor === (string) $prov["id_proveedor"]) ? "selected" : "" ?>>
                                 <?= htmlspecialchars($prov["nombre"]) ?>
                             </option>
                         <?php endforeach; ?>
@@ -259,8 +270,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="form-group">
-                    <label class="label">Precio de compra (*)</label>
+                    <label for="precio_compra" class="label">Precio de compra (*)</label>
                     <input
+                        id="precio_compra"
                         type="number"
                         step="0.01"
                         min="0"
@@ -271,8 +283,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="form-group">
-                    <label class="label">Precio de venta (*)</label>
+                    <label for="precio_venta" class="label">Precio de venta (*)</label>
                     <input
+                        id="precio_venta"
                         type="number"
                         step="0.01"
                         min="0"
@@ -283,8 +296,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="form-group">
-                    <label class="label">Stock inicial</label>
+                    <label for="stock" class="label">Stock inicial</label>
                     <input
+                        id="stock"
                         type="number"
                         step="1"
                         min="0"
@@ -294,7 +308,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary">
+                    <a href="productos.php" class="btn-secondary-inline">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn-primary-inline">
                         Guardar producto
                     </button>
                 </div>
@@ -302,6 +320,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </section>
 
     </main>
+
+    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
 
 </body>
 

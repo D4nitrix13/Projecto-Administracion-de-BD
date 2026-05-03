@@ -11,16 +11,17 @@ requireLogin();
 
 $viewData = obtenerDatosEditarProveedor();
 
-$user          = $viewData["user"];
-$error         = $viewData["error"];
-$proveedor     = $viewData["proveedor"];
+$user      = $viewData["user"];
+$error     = $viewData["error"];
+$proveedor = $viewData["proveedor"];
 
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/proveedores/editar/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -36,9 +37,7 @@ $proveedor     = $viewData["proveedor"];
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/proveedores/editar/styles.php"; ?>
 
 </body>
 

@@ -1,12 +1,12 @@
 <?php
+
 session_start();
 
 $pageTitle = "Categorías - Panda Estampados / Kitsune";
 
-if (!isset($_SESSION["user"])) {
-    header("Location: /login.php");
-    exit();
-}
+require_once __DIR__ . "/includes/auth_guard.php";
+
+requireLogin();
 
 $user = $_SESSION["user"];
 $idRol = (int)($user["id_rol"] ?? 0);
@@ -15,11 +15,14 @@ $canManageCategories = $idRol === 1;
 $connection = require __DIR__ . "/sql/db.php";
 
 require __DIR__ . "/partials/categorias/queries.php";
+
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
-<?php require __DIR__ . "/partials/header.php"; ?>
+
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/categorias/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -33,9 +36,7 @@ require __DIR__ . "/partials/categorias/queries.php";
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/categorias/styles.php"; ?>
 
 </body>
 

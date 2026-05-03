@@ -1,16 +1,9 @@
-<section class="dashboard-card user-edit-card">
+<section class="usuarios-section">
+    <h2 class="dashboard-card-title" style="margin-bottom:10px;">
+        Registrar nuevo trabajador
+    </h2>
 
-    <?php if ($error): ?>
-        <div class="alert alert-danger">
-            <?= htmlspecialchars($error) ?>
-        </div>
-    <?php endif; ?>
-
-    <form action="editar_usuario.php" method="POST" class="form-grid user-edit-form">
-        <input
-            type="hidden"
-            name="id_usuario"
-            value="<?= (int)$trabajador["id_usuario"] ?>">
+    <form action="trabajadores.php" method="POST" class="form-grid">
 
         <div class="form-group">
             <label class="label">Nombre completo *</label>
@@ -21,7 +14,7 @@
                 class="input"
                 required
                 maxlength="100"
-                value="<?= htmlspecialchars($trabajador["nombre"]) ?>">
+                placeholder="Nombre y apellido">
         </div>
 
         <div class="form-group">
@@ -33,22 +26,19 @@
                 class="input"
                 required
                 maxlength="120"
-                value="<?= htmlspecialchars($trabajador["email"]) ?>">
+                placeholder="correo@ejemplo.com">
         </div>
 
         <div class="form-group">
-            <label class="label">Contraseña nueva</label>
+            <label class="label">Contraseña *</label>
 
             <input
                 type="password"
                 name="password"
                 class="input"
+                required
                 minlength="6"
-                placeholder="Dejar en blanco para no cambiar">
-
-            <p class="dashboard-muted user-edit-help">
-                Solo escriba una contraseña si desea reemplazar la actual.
-            </p>
+                placeholder="Contraseña inicial">
         </div>
 
         <div class="form-group">
@@ -58,15 +48,13 @@
                 <option value="">Seleccione un rol</option>
 
                 <?php foreach ($roles as $rol): ?>
-                    <option
-                        value="<?= (int)$rol["id_rol"] ?>"
-                        <?= ((int)$trabajador["id_rol"] === (int)$rol["id_rol"]) ? "selected" : "" ?>>
+                    <option value="<?= (int)$rol["id_rol"] ?>">
                         <?= htmlspecialchars($rol["nombre"]) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
 
-            <p class="dashboard-muted user-edit-help">
+            <p class="dashboard-muted" style="font-size:12px;margin-top:4px;">
                 La sección se asigna automáticamente según el rol.
             </p>
         </div>
@@ -78,22 +66,18 @@
                 type="text"
                 id="seccion_info"
                 class="input"
-                value="<?= htmlspecialchars($seccionTextoActual) ?>"
+                value="Seleccione un rol"
                 readonly>
 
-            <p class="dashboard-muted user-edit-help">
+            <p class="dashboard-muted" style="font-size:12px;margin-top:4px;">
                 Admin: todas las secciones. Supervisor y Facturador: Kitsune.
             </p>
         </div>
-        <div class="user-edit-actions">
-            <a href="usuarios.php" class="user-edit-btn user-edit-btn-cancel">
-                Cancelar
-            </a>
 
-            <button type="submit" class="user-edit-btn user-edit-btn-save">
-                Guardar cambios
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                Guardar trabajador
             </button>
         </div>
     </form>
-
 </section>

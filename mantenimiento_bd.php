@@ -21,7 +21,7 @@ $archivos  = $viewData["archivos"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+
 
 <body class="dashboard-body">
 

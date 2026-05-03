@@ -71,7 +71,7 @@ if (!isset($user) && isset($_SESSION["user"])) {
         <a class="nav-item" href="clientes.php">Clientes</a>
 
         <?php if ($user && ($user['rol'] ?? '') === 'Administrador'): ?>
-            <a class="nav-item" href="usuarios.php">Trabajadores</a>
+            <a class="nav-item" href="trabajadores.php">Trabajadores</a>
         <?php endif; ?>
 
         <?php if ($user && ($user['rol'] ?? '') === 'Administrador'): ?>

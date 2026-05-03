@@ -52,7 +52,7 @@
             Aplicar filtros
         </button>
 
-        <a href="usuarios.php" class="btn-secondary-inline">
+        <a href="trabajadores.php" class="btn-secondary-inline">
             Limpiar
         </a>
     </div>

@@ -7,7 +7,7 @@
         Modifique los datos del trabajador y su rol. La sección se asigna automáticamente.
     </p>
 
-    <a href="usuarios.php" class="back-link" style="text-align:left; margin-top:10px;">
+    <a href="trabajadores.php" class="back-link" style="text-align:left; margin-top:10px;">
         ← Volver a trabajadores
     </a>
 </section>

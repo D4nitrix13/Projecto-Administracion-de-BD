@@ -21,7 +21,7 @@ $filtroDisponibilidad   = $viewData["filtroDisponibilidad"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+
 <?php require __DIR__ . "/partials/catalogo/styles.php"; ?>
 
 <body class="catalog-public-body">

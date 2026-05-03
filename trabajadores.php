@@ -27,7 +27,8 @@ $seccionFiltro    = $viewData["seccionFiltro"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/trabajadores/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -37,27 +38,26 @@ $seccionFiltro    = $viewData["seccionFiltro"];
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/usuarios/header.php"; ?>
+        <section class="usuarios-hero">
+            <?php require __DIR__ . "/partials/trabajadores/header.php"; ?>
+        </section>
 
-        <section class="dashboard-card">
+        <?php require __DIR__ . "/partials/trabajadores/alerts.php"; ?>
 
-            <?php require __DIR__ . "/partials/usuarios/alerts.php"; ?>
+        <section class="usuarios-card">
+            <?php require __DIR__ . "/partials/trabajadores/create-form.php"; ?>
+        </section>
 
-            <?php require __DIR__ . "/partials/usuarios/create-form.php"; ?>
+        <section class="usuarios-card">
+            <?php require __DIR__ . "/partials/trabajadores/filters.php"; ?>
 
-            <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
-
-            <?php require __DIR__ . "/partials/usuarios/filters.php"; ?>
-
-            <?php require __DIR__ . "/partials/usuarios/table.php"; ?>
-
+            <?php require __DIR__ . "/partials/trabajadores/table.php"; ?>
         </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/usuarios/scripts.php"; ?>
+    <?php require __DIR__ . "/partials/trabajadores/scripts.php"; ?>
 
 </body>
 

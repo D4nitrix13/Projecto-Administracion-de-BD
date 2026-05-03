@@ -28,7 +28,7 @@ $compras            = $viewData["compras"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+
 <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
 <?php require __DIR__ . "/partials/compras/styles.php"; ?>
 

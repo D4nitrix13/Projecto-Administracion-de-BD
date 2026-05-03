@@ -38,7 +38,7 @@
 
                         <td class="acciones">
                             <a
-                                href="editar_usuario.php?id=<?= (int)$usuario["id_usuario"] ?>"
+                                href="editar_trabajador.php?id=<?= (int)$usuario["id_usuario"] ?>"
                                 class="btn-accion btn-accion-editar">
                                 Editar
                             </a>

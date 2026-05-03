@@ -30,7 +30,8 @@ $flashError        = $viewData["flashError"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/facturas/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -56,7 +57,6 @@ $flashError        = $viewData["flashError"];
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
 
 </body>

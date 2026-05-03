@@ -11,22 +11,23 @@ requireLogin();
 
 $viewData = obtenerDatosProveedores();
 
-$user          = $viewData["user"];
-$idRol         = $viewData["idRol"];
-$puedeGestionar = $viewData["puedeGestionar"];
-$error         = $viewData["error"];
-$success       = $viewData["success"];
-$flashSuccess  = $viewData["flashSuccess"];
-$flashError    = $viewData["flashError"];
-$busqueda      = $viewData["busqueda"];
-$proveedores   = $viewData["proveedores"];
+$user             = $viewData["user"];
+$idRol            = $viewData["idRol"];
+$puedeGestionar   = $viewData["puedeGestionar"];
+$error            = $viewData["error"];
+$success          = $viewData["success"];
+$flashSuccess     = $viewData["flashSuccess"];
+$flashError       = $viewData["flashError"];
+$busqueda         = $viewData["busqueda"];
+$proveedores      = $viewData["proveedores"];
 
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/proveedores/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -36,27 +37,34 @@ $proveedores   = $viewData["proveedores"];
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/proveedores/header.php"; ?>
+        <section class="proveedores-hero">
+            <p class="dashboard-eyebrow">Inventario</p>
 
-        <section class="dashboard-card">
+            <h1 class="dashboard-title">
+                Proveedores
+            </h1>
 
-            <?php require __DIR__ . "/partials/proveedores/alerts.php"; ?>
+            <p class="dashboard-muted">
+                Administre los proveedores que suministran productos a Panda Estampados y Kitsune.
+            </p>
+        </section>
 
-            <?php if ($puedeGestionar): ?>
+        <?php require __DIR__ . "/partials/proveedores/alerts.php"; ?>
+
+        <?php if ($puedeGestionar): ?>
+            <section class="proveedores-card">
                 <?php require __DIR__ . "/partials/proveedores/create-form.php"; ?>
+            </section>
+        <?php endif; ?>
 
-                <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
-            <?php endif; ?>
-
+        <section class="proveedores-card">
             <?php require __DIR__ . "/partials/proveedores/filters.php"; ?>
 
             <?php require __DIR__ . "/partials/proveedores/table.php"; ?>
-
         </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
 
 </body>

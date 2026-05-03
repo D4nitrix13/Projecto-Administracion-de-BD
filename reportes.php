@@ -33,7 +33,8 @@ $clientesReporte         = $viewData["clientesReporte"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/reportes/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -43,11 +44,27 @@ $clientesReporte         = $viewData["clientesReporte"];
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/reportes/header.php"; ?>
+        <section class="reports-page-heading">
+            <div>
+                <p class="dashboard-eyebrow">Análisis</p>
+
+                <h1 class="dashboard-title">
+                    Reportes generales
+                </h1>
+
+                <p class="dashboard-muted">
+                    Consulte ventas, productos, clientes, facturación e inventario desde una vista consolidada.
+                </p>
+            </div>
+
+            <a href="dashboard.php" class="btn-secondary-inline reports-back-btn">
+                Volver al dashboard
+            </a>
+        </section>
 
         <?php require __DIR__ . "/partials/reportes/summary.php"; ?>
 
-        <section class="dashboard-card reports-main-card">
+        <section class="reports-main-card">
 
             <?php require __DIR__ . "/partials/reportes/filters.php"; ?>
 
@@ -65,8 +82,6 @@ $clientesReporte         = $viewData["clientesReporte"];
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-    <?php require __DIR__ . "/partials/reportes/styles.php"; ?>
     <?php require __DIR__ . "/partials/reportes/scripts.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
 
