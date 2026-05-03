@@ -763,3 +763,33 @@ BEGIN
     RETURNING Producto.id_producto;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Eliminar producto del sistema
+-- Uso: módulo de productos / eliminar producto
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION eliminar_producto_sistema(
+    p_id_producto INT
+)
+RETURNS TABLE (
+    filas_afectadas INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_filas_afectadas INT;
+BEGIN
+    IF p_id_producto IS NULL OR p_id_producto <= 0 THEN
+        RAISE EXCEPTION 'Producto no válido';
+    END IF;
+
+    DELETE FROM Producto
+    WHERE id_producto = p_id_producto;
+
+    GET DIAGNOSTICS v_filas_afectadas = ROW_COUNT;
+
+    RETURN QUERY
+    SELECT v_filas_afectadas;
+END;
+$$;
