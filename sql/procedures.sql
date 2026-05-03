@@ -3017,3 +3017,25 @@ BEGIN
     RETURN FOUND;
 END;
 $$;
+
+-- ============================================================
+-- CLIENTES: Eliminar cliente
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION eliminar_cliente_sistema(
+    p_id_cliente INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
+        RAISE EXCEPTION 'ID de cliente no válido';
+    END IF;
+
+    DELETE FROM Cliente
+    WHERE Cliente.id_cliente = p_id_cliente;
+
+    RETURN FOUND;
+END;
+$$;
