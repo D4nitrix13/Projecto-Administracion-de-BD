@@ -2316,3 +2316,81 @@ BEGIN
     ORDER BY df.id_detalle ASC;
 END;
 $$;
+
+-- ============================================================
+-- SECCIONES: Listar todas las secciones ordenadas
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION listar_secciones_ordenadas()
+RETURNS TABLE (
+    id_seccion INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        s.id_seccion,
+        s.nombre
+    FROM Seccion s
+    ORDER BY s.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- SECCIONES: Obtener sección por nombre
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_seccion_por_nombre(
+    p_nombre VARCHAR
+)
+RETURNS TABLE (
+    id_seccion INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre de la sección no puede estar vacío';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        s.id_seccion,
+        s.nombre
+    FROM Seccion s
+    WHERE s.nombre = TRIM(p_nombre)
+    ORDER BY s.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- SECCIONES: Obtener sección por ID
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_seccion_por_id(
+    p_id_seccion INT
+)
+RETURNS TABLE (
+    id_seccion INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_seccion IS NULL OR p_id_seccion <= 0 THEN
+        RAISE EXCEPTION 'ID de sección no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        s.id_seccion,
+        s.nombre
+    FROM Seccion s
+    WHERE s.id_seccion = p_id_seccion;
+END;
+$$;
