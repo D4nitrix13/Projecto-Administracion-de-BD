@@ -23,7 +23,8 @@ $seccionTexto  = $viewData["seccionTexto"];
 <!DOCTYPE html>
 <html lang="es">
 
-
+<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/cuenta/configurar/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -33,15 +34,17 @@ $seccionTexto  = $viewData["seccionTexto"];
 
         <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/cuenta/configurar/header.php"; ?>
+        <section class="account-page-heading">
+            <?php require __DIR__ . "/partials/cuenta/configurar/header.php"; ?>
+        </section>
 
-        <?php require __DIR__ . "/partials/cuenta/configurar/form.php"; ?>
+        <section class="account-config-card">
+            <?php require __DIR__ . "/partials/cuenta/configurar/form.php"; ?>
+        </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/cuenta/configurar/styles.php"; ?>
 
 </body>
 
