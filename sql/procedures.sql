@@ -2039,3 +2039,280 @@ BEGIN
     RETURN FOUND;
 END;
 $$;
+
+-- ============================================================
+-- FACTURAS: Buscar facturas con filtros
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_facturas_filtradas(
+    p_id_rol INT DEFAULT NULL,
+    p_busqueda TEXT DEFAULT NULL,
+    p_id_seccion INT DEFAULT NULL,
+    p_id_usuario INT DEFAULT NULL,
+    p_fecha_desde TIMESTAMP DEFAULT NULL,
+    p_fecha_hasta TIMESTAMP DEFAULT NULL
+)
+RETURNS TABLE (
+    id_factura INT,
+    fecha TIMESTAMP,
+    total NUMERIC,
+    cliente TEXT,
+    usuario VARCHAR,
+    seccion VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_rol IS NOT NULL AND p_id_rol < 0 THEN
+        RAISE EXCEPTION 'ID de rol no válido';
+    END IF;
+
+    IF p_id_seccion IS NOT NULL AND p_id_seccion <= 0 THEN
+        RAISE EXCEPTION 'ID de sección no válido';
+    END IF;
+
+    IF p_id_usuario IS NOT NULL AND p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        f.id_factura,
+        f.fecha,
+        f.total,
+        c.nombres || ' ' || c.apellidos AS cliente,
+        u.nombre AS usuario,
+        s.nombre AS seccion
+    FROM Factura f
+    JOIN Cliente c ON f.id_cliente = c.id_cliente
+    JOIN Usuario u ON f.id_usuario = u.id_usuario
+    JOIN Seccion s ON f.id_seccion = s.id_seccion
+    WHERE (
+            p_id_rol IS NULL
+            OR p_id_rol NOT IN (2, 3)
+            OR (
+                c.tipo_cliente = 'Detallista'
+                AND s.nombre = 'Kitsune'
+            )
+        )
+      AND (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR CAST(f.id_factura AS TEXT) ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR c.nombres ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR c.apellidos ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR c.nombres || ' ' || c.apellidos ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR u.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR s.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+      AND (
+            p_id_seccion IS NULL
+            OR f.id_seccion = p_id_seccion
+        )
+      AND (
+            p_id_usuario IS NULL
+            OR f.id_usuario = p_id_usuario
+        )
+      AND (
+            p_fecha_desde IS NULL
+            OR f.fecha >= p_fecha_desde
+        )
+      AND (
+            p_fecha_hasta IS NULL
+            OR f.fecha <= p_fecha_hasta
+        )
+    ORDER BY f.fecha DESC, f.id_factura DESC;
+END;
+$$;
+
+
+-- ============================================================
+-- FACTURAS: Obtener encabezado de factura para detalle
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_factura_detalle_por_id(
+    p_id_factura INT
+)
+RETURNS TABLE (
+    id_factura INT,
+    fecha TIMESTAMP,
+    subtotal NUMERIC,
+    descuento NUMERIC,
+    impuesto NUMERIC,
+    total NUMERIC,
+    cliente TEXT,
+    telefono VARCHAR,
+    direccion VARCHAR,
+    usuario VARCHAR,
+    seccion VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_factura IS NULL OR p_id_factura <= 0 THEN
+        RAISE EXCEPTION 'ID de factura no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        f.id_factura,
+        f.fecha,
+        f.subtotal,
+        f.descuento,
+        f.impuesto,
+        f.total,
+        c.nombres || ' ' || c.apellidos AS cliente,
+        c.telefono,
+        c.direccion,
+        u.nombre AS usuario,
+        s.nombre AS seccion
+    FROM Factura f
+    JOIN Cliente c ON f.id_cliente = c.id_cliente
+    JOIN Usuario u ON f.id_usuario = u.id_usuario
+    JOIN Seccion s ON f.id_seccion = s.id_seccion
+    WHERE f.id_factura = p_id_factura;
+END;
+$$;
+
+
+-- ============================================================
+-- FACTURAS: Obtener líneas del detalle de factura
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_lineas_detalle_factura(
+    p_id_factura INT
+)
+RETURNS TABLE (
+    id_detalle INT,
+    codigo VARCHAR,
+    nombre VARCHAR,
+    cantidad INT,
+    precio_unitario NUMERIC,
+    descuento_linea NUMERIC,
+    total_linea NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_factura IS NULL OR p_id_factura <= 0 THEN
+        RAISE EXCEPTION 'ID de factura no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        df.id_detalle,
+        p.codigo,
+        p.nombre,
+        df.cantidad,
+        df.precio_unitario,
+        df.descuento_linea,
+        df.total_linea
+    FROM DetalleFactura df
+    JOIN Producto p ON df.id_producto = p.id_producto
+    WHERE df.id_factura = p_id_factura
+    ORDER BY df.id_detalle ASC;
+END;
+$$;
+
+
+-- ============================================================
+-- FACTURAS: Obtener encabezado de factura para impresión
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_factura_para_impresion(
+    p_id_factura INT
+)
+RETURNS TABLE (
+    id_factura INT,
+    fecha TIMESTAMP,
+    id_cliente INT,
+    id_usuario INT,
+    id_seccion INT,
+    subtotal NUMERIC,
+    descuento NUMERIC,
+    impuesto NUMERIC,
+    total NUMERIC,
+    tipo_cliente_venta VARCHAR,
+    nombre_cliente_fugaz VARCHAR,
+    cli_nombres VARCHAR,
+    cli_apellidos VARCHAR,
+    cli_telefono VARCHAR,
+    cli_direccion VARCHAR,
+    cli_identificacion VARCHAR,
+    usuario_nombre VARCHAR,
+    seccion_nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_factura IS NULL OR p_id_factura <= 0 THEN
+        RAISE EXCEPTION 'ID de factura no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        f.id_factura,
+        f.fecha,
+        f.id_cliente,
+        f.id_usuario,
+        f.id_seccion,
+        f.subtotal,
+        f.descuento,
+        f.impuesto,
+        f.total,
+        f.tipo_cliente_venta,
+        f.nombre_cliente_fugaz,
+        c.nombres AS cli_nombres,
+        c.apellidos AS cli_apellidos,
+        c.telefono AS cli_telefono,
+        c.direccion AS cli_direccion,
+        c.identificacion AS cli_identificacion,
+        u.nombre AS usuario_nombre,
+        s.nombre AS seccion_nombre
+    FROM Factura f
+    JOIN Cliente c ON f.id_cliente = c.id_cliente
+    JOIN Usuario u ON f.id_usuario = u.id_usuario
+    JOIN Seccion s ON f.id_seccion = s.id_seccion
+    WHERE f.id_factura = p_id_factura;
+END;
+$$;
+
+
+-- ============================================================
+-- FACTURAS: Obtener líneas de factura para impresión
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_lineas_factura_para_impresion(
+    p_id_factura INT
+)
+RETURNS TABLE (
+    id_detalle INT,
+    cantidad INT,
+    precio_unitario NUMERIC,
+    descuento_linea NUMERIC,
+    total_linea NUMERIC,
+    producto_nombre VARCHAR,
+    producto_codigo VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_factura IS NULL OR p_id_factura <= 0 THEN
+        RAISE EXCEPTION 'ID de factura no válido';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        df.id_detalle,
+        df.cantidad,
+        df.precio_unitario,
+        df.descuento_linea,
+        df.total_linea,
+        p.nombre AS producto_nombre,
+        p.codigo AS producto_codigo
+    FROM DetalleFactura df
+    JOIN Producto p ON df.id_producto = p.id_producto
+    WHERE df.id_factura = p_id_factura
+    ORDER BY df.id_detalle ASC;
+END;
+$$;
