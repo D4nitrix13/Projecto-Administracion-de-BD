@@ -2766,3 +2766,232 @@ BEGIN
     RETURN TRUE;
 END;
 $$;
+
+-- ============================================================
+-- FACTURAS: Obtener ID del cliente fugaz
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_id_cliente_fugaz()
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_cliente INT;
+BEGIN
+    SELECT c.id_cliente
+    INTO v_id_cliente
+    FROM Cliente c
+    WHERE c.identificacion = 'FUGAZ'
+    LIMIT 1;
+
+    RETURN COALESCE(v_id_cliente, 0);
+END;
+$$;
+
+
+-- ============================================================
+-- FACTURAS: Obtener productos seleccionados para facturación
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_productos_factura_por_ids(
+    p_ids_productos INT[]
+)
+RETURNS TABLE (
+    id_producto INT,
+    precio_venta NUMERIC,
+    stock INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_ids_productos IS NULL OR ARRAY_LENGTH(p_ids_productos, 1) IS NULL THEN
+        RAISE EXCEPTION 'Debe seleccionar al menos un producto';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.precio_venta,
+        p.stock,
+        p.nombre
+    FROM Producto p
+    WHERE p.id_producto = ANY(p_ids_productos);
+END;
+$$;
+
+
+-- ============================================================
+-- FACTURAS: Registrar factura con detalle y actualizar stock
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION registrar_factura_sistema(
+    p_id_cliente INT,
+    p_id_usuario INT,
+    p_id_seccion INT,
+    p_subtotal NUMERIC,
+    p_descuento NUMERIC,
+    p_impuesto NUMERIC,
+    p_total NUMERIC,
+    p_tipo_cliente_venta VARCHAR,
+    p_nombre_cliente_fugaz VARCHAR,
+    p_items JSONB
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_factura INT;
+    v_item JSONB;
+    v_id_producto INT;
+    v_cantidad INT;
+    v_precio_unitario NUMERIC;
+    v_descuento_linea NUMERIC;
+    v_total_linea NUMERIC;
+BEGIN
+    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
+        RAISE EXCEPTION 'Debe seleccionar un cliente válido';
+    END IF;
+
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE EXCEPTION 'ID de usuario no válido';
+    END IF;
+
+    IF p_id_seccion IS NULL OR p_id_seccion <= 0 THEN
+        RAISE EXCEPTION 'Debe seleccionar una sección válida';
+    END IF;
+
+    IF p_tipo_cliente_venta NOT IN ('Habitual', 'Fugaz') THEN
+        RAISE EXCEPTION 'Tipo de cliente de venta no válido';
+    END IF;
+
+    IF p_items IS NULL OR JSONB_TYPEOF(p_items) <> 'array' OR JSONB_ARRAY_LENGTH(p_items) = 0 THEN
+        RAISE EXCEPTION 'Debe agregar al menos un producto a la factura';
+    END IF;
+
+    IF p_subtotal IS NULL OR p_subtotal < 0 THEN
+        RAISE EXCEPTION 'Subtotal no válido';
+    END IF;
+
+    IF p_descuento IS NULL OR p_descuento < 0 THEN
+        RAISE EXCEPTION 'Descuento no válido';
+    END IF;
+
+    IF p_impuesto IS NULL OR p_impuesto < 0 THEN
+        RAISE EXCEPTION 'Impuesto no válido';
+    END IF;
+
+    IF p_total IS NULL OR p_total < 0 THEN
+        RAISE EXCEPTION 'Total no válido';
+    END IF;
+
+    INSERT INTO Factura (
+        id_cliente,
+        id_usuario,
+        id_seccion,
+        subtotal,
+        descuento,
+        impuesto,
+        total,
+        tipo_cliente_venta,
+        nombre_cliente_fugaz
+    )
+    VALUES (
+        p_id_cliente,
+        p_id_usuario,
+        p_id_seccion,
+        p_subtotal,
+        p_descuento,
+        p_impuesto,
+        p_total,
+        p_tipo_cliente_venta,
+        CASE
+            WHEN p_tipo_cliente_venta = 'Fugaz'
+                THEN NULLIF(TRIM(p_nombre_cliente_fugaz), '')
+            ELSE NULL
+        END
+    )
+    RETURNING id_factura INTO v_id_factura;
+
+    FOR v_item IN
+        SELECT value
+        FROM JSONB_ARRAY_ELEMENTS(p_items)
+    LOOP
+        v_id_producto := (v_item->>'id_producto')::INT;
+        v_cantidad := (v_item->>'cantidad')::INT;
+        v_precio_unitario := (v_item->>'precio_unitario')::NUMERIC;
+        v_descuento_linea := (v_item->>'descuento_linea')::NUMERIC;
+        v_total_linea := (v_item->>'total_linea')::NUMERIC;
+
+        IF v_id_producto IS NULL OR v_id_producto <= 0 THEN
+            RAISE EXCEPTION 'Producto no válido en el detalle de factura';
+        END IF;
+
+        IF v_cantidad IS NULL OR v_cantidad <= 0 THEN
+            RAISE EXCEPTION 'Cantidad no válida en el detalle de factura';
+        END IF;
+
+        IF v_precio_unitario IS NULL OR v_precio_unitario < 0 THEN
+            RAISE EXCEPTION 'Precio unitario no válido en el detalle de factura';
+        END IF;
+
+        IF v_descuento_linea IS NULL OR v_descuento_linea < 0 THEN
+            RAISE EXCEPTION 'Descuento de línea no válido';
+        END IF;
+
+        IF v_total_linea IS NULL OR v_total_linea < 0 THEN
+            RAISE EXCEPTION 'Total de línea no válido';
+        END IF;
+
+        UPDATE Producto
+        SET stock = stock - v_cantidad
+        WHERE Producto.id_producto = v_id_producto
+          AND Producto.stock >= v_cantidad;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Stock insuficiente o producto no encontrado para el producto ID %', v_id_producto;
+        END IF;
+
+        INSERT INTO DetalleFactura (
+            id_factura,
+            id_producto,
+            cantidad,
+            precio_unitario,
+            descuento_linea,
+            total_linea
+        )
+        VALUES (
+            v_id_factura,
+            v_id_producto,
+            v_cantidad,
+            v_precio_unitario,
+            v_descuento_linea,
+            v_total_linea
+        );
+    END LOOP;
+
+    RETURN v_id_factura;
+END;
+$$;
+
+-- ============================================================
+-- PROVEEDORES: Eliminar proveedor
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION eliminar_proveedor_sistema(
+    p_id_proveedor INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        RAISE EXCEPTION 'ID de proveedor no válido';
+    END IF;
+
+    DELETE FROM Proveedor
+    WHERE Proveedor.id_proveedor = p_id_proveedor;
+
+    RETURN FOUND;
+END;
+$$;
