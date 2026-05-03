@@ -265,3 +265,67 @@ BEGIN
     ORDER BY prod.nombre ASC;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Registrar categoría
+-- Uso: módulo de categorías / creación
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION registrar_categoria(
+    p_nombre VARCHAR
+)
+RETURNS TABLE (
+    id_categoria INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        RAISE EXCEPTION 'El nombre de la categoría es obligatorio';
+    END IF;
+
+    IF LENGTH(TRIM(p_nombre)) > 80 THEN
+        RAISE EXCEPTION 'El nombre de la categoría no debe superar los 80 caracteres';
+    END IF;
+
+    RETURN QUERY
+    INSERT INTO Categoria (
+        nombre
+    )
+    VALUES (
+        TRIM(p_nombre)
+    )
+    RETURNING
+        Categoria.id_categoria,
+        Categoria.nombre;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Buscar categorías
+-- Uso: módulo de categorías / listado y búsqueda
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION buscar_categorias(
+    p_busqueda TEXT DEFAULT ''
+)
+RETURNS TABLE (
+    id_categoria INT,
+    nombre VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id_categoria,
+        c.nombre
+    FROM Categoria c
+    WHERE
+        COALESCE(TRIM(p_busqueda), '') = ''
+        OR c.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+    ORDER BY c.nombre ASC;
+END;
+$$;
