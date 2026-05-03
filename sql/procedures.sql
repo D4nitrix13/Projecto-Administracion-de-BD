@@ -398,3 +398,202 @@ BEGIN
     SELECT v_filas_afectadas;
 END;
 $$;
+
+-- ============================================================
+-- FUNCIÓN: Obtener métricas generales del dashboard
+-- Uso: dashboard principal
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_metricas_dashboard()
+RETURNS TABLE (
+    total_clientes BIGINT,
+    total_productos BIGINT,
+    total_facturas BIGINT,
+    total_ventas NUMERIC,
+    ventas_hoy NUMERIC,
+    stock_bajo BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        (SELECT COUNT(*) FROM Cliente) AS total_clientes,
+        (SELECT COUNT(*) FROM Producto) AS total_productos,
+        (SELECT COUNT(*) FROM Factura) AS total_facturas,
+        (SELECT COALESCE(SUM(total), 0) FROM Factura) AS total_ventas,
+        (SELECT COALESCE(SUM(total), 0) FROM Factura WHERE DATE(fecha) = CURRENT_DATE) AS ventas_hoy,
+        (SELECT COUNT(*) FROM Producto WHERE stock <= 5) AS stock_bajo;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Obtener ventas de los últimos 30 días
+-- Uso: gráfica de ventas del dashboard
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_ventas_dashboard(
+    p_dias INT DEFAULT 30
+)
+RETURNS TABLE (
+    dia DATE,
+    total_dia NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_dias IS NULL OR p_dias <= 0 THEN
+        RAISE EXCEPTION 'La cantidad de días debe ser mayor que cero';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        DATE(f.fecha) AS dia,
+        COALESCE(SUM(f.total), 0) AS total_dia
+    FROM Factura f
+    WHERE f.fecha >= CURRENT_DATE - (p_dias * INTERVAL '1 day')
+    GROUP BY DATE(f.fecha)
+    ORDER BY dia ASC;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Obtener productos más vendidos
+-- Uso: ranking del dashboard
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_dashboard(
+    p_limite INT DEFAULT 5
+)
+RETURNS TABLE (
+    id_producto INT,
+    producto VARCHAR,
+    cantidad_vendida BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_limite IS NULL OR p_limite <= 0 THEN
+        RAISE EXCEPTION 'El límite debe ser mayor que cero';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.nombre AS producto,
+        COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida
+    FROM DetalleFactura df
+    INNER JOIN Producto p ON p.id_producto = df.id_producto
+    GROUP BY p.id_producto, p.nombre
+    ORDER BY cantidad_vendida DESC
+    LIMIT p_limite;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Obtener últimos productos vendidos
+-- Uso: tabla de últimos movimientos del dashboard
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_ultimos_productos_vendidos_dashboard(
+    p_limite INT DEFAULT 6
+)
+RETURNS TABLE (
+    id_factura INT,
+    id_producto INT,
+    nombre VARCHAR,
+    cantidad INT,
+    subtotal NUMERIC,
+    fecha TIMESTAMP
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_limite IS NULL OR p_limite <= 0 THEN
+        RAISE EXCEPTION 'El límite debe ser mayor que cero';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        f.id_factura,
+        p.id_producto,
+        p.nombre,
+        df.cantidad,
+        df.total_linea AS subtotal,
+        f.fecha
+    FROM DetalleFactura df
+    INNER JOIN Producto p ON p.id_producto = df.id_producto
+    INNER JOIN Factura f ON f.id_factura = df.id_factura
+    ORDER BY f.fecha DESC, f.id_factura DESC
+    LIMIT p_limite;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Obtener facturas recientes
+-- Uso: tabla de facturas recientes del dashboard
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_facturas_recientes_dashboard(
+    p_limite INT DEFAULT 5
+)
+RETURNS TABLE (
+    id_factura INT,
+    fecha TIMESTAMP,
+    total NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_limite IS NULL OR p_limite <= 0 THEN
+        RAISE EXCEPTION 'El límite debe ser mayor que cero';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        f.id_factura,
+        f.fecha,
+        f.total
+    FROM Factura f
+    ORDER BY f.fecha DESC, f.id_factura DESC
+    LIMIT p_limite;
+END;
+$$;
+
+
+-- ============================================================
+-- FUNCIÓN: Obtener clientes recientes
+-- Uso: tabla de clientes recientes del dashboard
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION obtener_clientes_recientes_dashboard(
+    p_limite INT DEFAULT 5
+)
+RETURNS TABLE (
+    id_cliente INT,
+    nombre TEXT,
+    telefono VARCHAR,
+    fecha_registro DATE
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_limite IS NULL OR p_limite <= 0 THEN
+        RAISE EXCEPTION 'El límite debe ser mayor que cero';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.id_cliente,
+        CONCAT(c.nombres, ' ', c.apellidos) AS nombre,
+        c.telefono,
+        c.fecha_registro
+    FROM Cliente c
+    ORDER BY c.fecha_registro DESC, c.id_cliente DESC
+    LIMIT p_limite;
+END;
+$$;
