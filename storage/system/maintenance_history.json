@@ -1,5 +1,380 @@
 [
     {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:32:59",
+        "next_run_at": "2026-05-03 19:33:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:31:59",
+        "next_run_at": "2026-05-03 19:32:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-31-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:30:59",
+        "next_run_at": "2026-05-03 19:31:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-30-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:29:59",
+        "next_run_at": "2026-05-03 19:30:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-29-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:28:59",
+        "next_run_at": "2026-05-03 19:29:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-28-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:27:59",
+        "next_run_at": "2026-05-03 19:28:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-27-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:26:59",
+        "next_run_at": "2026-05-03 19:27:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-26-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:25:59",
+        "next_run_at": "2026-05-03 19:26:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-25-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:24:59",
+        "next_run_at": "2026-05-03 19:25:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-24-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:23:59",
+        "next_run_at": "2026-05-03 19:24:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-23-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:22:59",
+        "next_run_at": "2026-05-03 19:23:59",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-22-59.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:21:58",
+        "next_run_at": "2026-05-03 19:22:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-21-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:20:58",
+        "next_run_at": "2026-05-03 19:21:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-20-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:19:58",
+        "next_run_at": "2026-05-03 19:20:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-19-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:18:58",
+        "next_run_at": "2026-05-03 19:19:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-18-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:17:58",
+        "next_run_at": "2026-05-03 19:18:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-17-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:16:58",
+        "next_run_at": "2026-05-03 19:17:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-16-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:15:58",
+        "next_run_at": "2026-05-03 19:16:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-15-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:14:58",
+        "next_run_at": "2026-05-03 19:15:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "Ejecutando plan de mantenimiento de base de datos...\nIniciando backup full...\nError al generar el backup full\nIniciando backup diferencial académico...\nError al generar el backup diferencial académico\nLogs guardados en: .\/backups\/logs\/docker_postgres_2026-05-03_19-14-58.log\nPlan de mantenimiento finalizado.",
+                "error": ".\/scripts\/backup_full.sh: line 18: docker: command not found\n.\/scripts\/backup_diff.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:12:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:11:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:10:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:09:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:08:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:07:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
         "type": "full",
         "success": false,
         "executed_at": "2026-05-03 19:06:58",

@@ -66,7 +66,6 @@ services:
     volumes:
       - ..:/var/www/html
       - ../backups:/var/www/html/backups
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       TZ: America/Managua
       DB_HOST: postgres

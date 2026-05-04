@@ -17,10 +17,10 @@ $error = null;
 $success = null;
 
 $tiposBackup = [
-    "full" => "Backup completo",
-    "diff" => "Backup diferencial académico",
-    "both" => "Backup completo + diferencial",
-    "maintenance" => "Plan completo de mantenimiento",
+    "full" => "Respaldo completo",
+    "diff" => "Respaldo rápido de datos importantes",
+    "both" => "Completo + datos importantes",
+    "maintenance" => "Mantenimiento completo",
 ];
 
 $unidadesIntervalo = [
@@ -154,10 +154,10 @@ function formatearFechaProgramacion(?string $fecha): string
 function obtenerDescripcionTipoBackup(string $tipo): string
 {
     return match ($tipo) {
-        "full" => "Copia completa de toda la base de datos.",
-        "diff" => "Respaldo académico de las tablas críticas del sistema.",
-        "both" => "Ejecuta backup completo y backup diferencial académico.",
-        "maintenance" => "Ejecuta backup completo, diferencial académico y copia de logs.",
+        "full" => "Copia toda la base de datos. Es la opción más segura para restaurar el sistema completo.",
+        "diff" => "Copia solo los datos principales que cambian con frecuencia, como productos, clientes, ventas y usuarios.",
+        "both" => "Genera un respaldo completo y también un respaldo rápido separado de los datos importantes.",
+        "maintenance" => "Ejecuta el respaldo completo, el respaldo rápido y guarda registros del sistema.",
         default => "Genera respaldos automáticos según la configuración seleccionada.",
     };
 }

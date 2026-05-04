@@ -402,4 +402,37 @@
             width: 100%;
         }
     }
+
+    .programar-type-help {
+        margin-top: 8px;
+        padding: 14px 16px;
+        border: 1px solid #dbeafe;
+        border-radius: 12px;
+        background: #eff6ff;
+    }
+
+    .programar-type-help strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #1d4ed8;
+        font-size: 0.88rem;
+        font-weight: 900;
+    }
+
+    .programar-type-help ul {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .programar-type-help li {
+        color: #334155;
+        font-size: 0.86rem;
+        line-height: 1.45;
+    }
+
+    .programar-type-help b {
+        color: #111827;
+    }
 </style>

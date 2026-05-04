@@ -60,8 +60,34 @@
             </select>
 
             <small>
-                El plan completo ejecuta backup full, backup diferencial académico y copia de logs.
+                Elija el tipo de respaldo que desea generar automáticamente. La opción más completa es “Mantenimiento completo”.
             </small>
+
+            <div class="programar-type-help">
+                <strong>¿Qué significa cada opción?</strong>
+
+                <ul>
+                    <li>
+                        <b>Respaldo completo:</b>
+                        guarda una copia de toda la base de datos.
+                    </li>
+
+                    <li>
+                        <b>Respaldo rápido de datos importantes:</b>
+                        guarda solo la información principal que cambia constantemente.
+                    </li>
+
+                    <li>
+                        <b>Completo + datos importantes:</b>
+                        crea los dos respaldos anteriores.
+                    </li>
+
+                    <li>
+                        <b>Mantenimiento completo:</b>
+                        crea respaldos y también guarda registros del sistema.
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <div class="programar-form-row">
