@@ -21,64 +21,62 @@
             <p>Pruebe limpiando los filtros o revisando si existen archivos en las carpetas de logs.</p>
         </div>
     <?php else: ?>
-        <div class="logs-table-wrapper">
-            <table class="logs-table">
-                <thead>
-                    <tr>
-                        <th>Archivo</th>
-                        <th>Origen</th>
-                        <th>Tipo</th>
-                        <th>Tamaño</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
+        <div class="logs-list">
+            <?php foreach ($filteredLogs as $log): ?>
+                <article class="logs-item">
+                    <div class="logs-item-main">
+                        <div class="logs-file-icon">
+                            LOG
+                        </div>
 
-                <tbody>
-                    <?php foreach ($filteredLogs as $log): ?>
-                        <tr>
-                            <td>
-                                <strong><?= htmlspecialchars($log["filename"]) ?></strong>
-                                <small><?= htmlspecialchars($log["source_description"]) ?></small>
-                            </td>
+                        <div class="logs-file-info">
+                            <h3 title="<?= htmlspecialchars($log["filename"]) ?>">
+                                <?= htmlspecialchars($log["filename"]) ?>
+                            </h3>
 
-                            <td>
+                            <p>
+                                <?= htmlspecialchars($log["source_description"]) ?>
+                            </p>
+
+                            <div class="logs-meta-row">
                                 <span class="logs-chip">
                                     <?= htmlspecialchars($log["source_label"]) ?>
                                 </span>
-                            </td>
 
-                            <td>
-                                <?= htmlspecialchars($log["type"]) ?>
-                            </td>
+                                <span class="logs-chip">
+                                    <?= htmlspecialchars($log["type"]) ?>
+                                </span>
 
-                            <td>
-                                <?= htmlspecialchars($log["size_label"]) ?>
-                            </td>
+                                <span class="logs-chip">
+                                    <?= htmlspecialchars($log["size_label"]) ?>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-                            <td>
-                                <?= htmlspecialchars($log["modified_label"]) ?>
-                            </td>
+                    <div class="logs-date-box">
+                        <span>Última modificación</span>
 
-                            <td>
-                                <div class="logs-actions">
-                                    <a
-                                        href="logs_sistema.php?selected_source=<?= urlencode($log["source"]) ?>&selected_file=<?= urlencode($log["filename"]) ?>"
-                                        class="logs-action-button logs-action-button-dark">
-                                        Ver
-                                    </a>
+                        <strong>
+                            <?= htmlspecialchars($log["modified_label"]) ?>
+                        </strong>
+                    </div>
 
-                                    <a
-                                        href="descargar_log_sistema.php?source=<?= urlencode($log["source"]) ?>&file=<?= urlencode($log["filename"]) ?>"
-                                        class="logs-action-button logs-action-button-primary">
-                                        Descargar
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    <div class="logs-actions">
+                        <a
+                            href="logs_sistema.php?selected_source=<?= urlencode($log["source"]) ?>&selected_file=<?= urlencode($log["filename"]) ?>"
+                            class="logs-action-button logs-action-button-dark">
+                            Ver
+                        </a>
+
+                        <a
+                            href="descargar_log_sistema.php?source=<?= urlencode($log["source"]) ?>&file=<?= urlencode($log["filename"]) ?>"
+                            class="logs-action-button logs-action-button-primary">
+                            Descargar
+                        </a>
+                    </div>
+                </article>
+            <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </section>
