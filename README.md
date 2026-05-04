@@ -54,6 +54,10 @@ chmod +x scripts/mantenimiento_bd.sh
 
 mkdir -p backups/full backups/diff backups/logs database/logs
 
+sudo mkdir -p ../database/pgadmin
+sudo chown -R 5050:5050 ../database/pgadmin
+sudo chmod -R 755 ../database/pgadmin
+
 sudo chown -R 33:33 backups database/logs
 sudo chmod -R 775 backups database/logs
 sudo find backups database/logs -type f -exec chmod 664 {} \;

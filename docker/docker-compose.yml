@@ -24,7 +24,7 @@ services:
   postgres:
     image: postgres:18
     container_name: pandas_bd
-    ports: ["5432:5432"]
+    ports: [ "5432:5432" ]
 
     environment:
       TZ: America/Managua
@@ -39,17 +39,10 @@ services:
       - ../backups:/backups
 
     command: >
-      postgres
-      -c timezone=America/Managua
-      -c wal_level=replica
-      -c archive_mode=on
-      -c archive_command='test ! -f /wal_archive/%f && cp %p /wal_archive/%f'
-      -c logging_collector=on
-      -c log_directory=/var/log/postgresql
-      -c log_filename=postgresql-%Y-%m-%d.log
+      postgres -c timezone=America/Managua -c wal_level=replica -c archive_mode=on -c archive_command='test ! -f /wal_archive/%f && cp %p /wal_archive/%f' -c logging_collector=on -c log_directory=/var/log/postgresql -c log_filename=postgresql-%Y-%m-%d.log
 
     restart: unless-stopped
-    
+
   backup_scheduler:
     build:
       context: ..
@@ -85,7 +78,10 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     volumes:
-      - ../database/pgadmin:/var/lib/pgadmin
+      - pgadmin_data:/var/lib/pgadmin
     depends_on:
       - postgres
     restart: unless-stopped
+
+volumes:
+  pgadmin_data:
