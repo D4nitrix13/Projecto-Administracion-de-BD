@@ -11,7 +11,7 @@ if (!isset($_SESSION["user"])) {
 $user = $_SESSION["user"];
 $connection = require __DIR__ . "/sql/db.php";
 
-require __DIR__ . "/partials/dashboard/queries.php";
+require __DIR__ . "/partials/inicio-publico/dashboard/queries.php";
 require_once __DIR__ . "/helpers/format.php";
 ?>
 
@@ -20,15 +20,15 @@ require_once __DIR__ . "/helpers/format.php";
 
 
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <section class="dashboard-page-heading">
             <div>
@@ -365,7 +365,7 @@ require_once __DIR__ . "/helpers/format.php";
         }
     </script>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

@@ -29,32 +29,32 @@ $compras            = $viewData["compras"];
 <html lang="es">
 
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/compras/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/analisis/compras/styles.php"; ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/compras/header.php"; ?>
+        <?php require __DIR__ . "/partials/analisis/compras/header.php"; ?>
 
         <section class="dashboard-card">
 
-            <?php require __DIR__ . "/partials/compras/alerts.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/compras/alerts.php"; ?>
 
-            <?php require __DIR__ . "/partials/compras/filters.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/compras/filters.php"; ?>
 
-            <?php require __DIR__ . "/partials/compras/table.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/compras/table.php"; ?>
 
         </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

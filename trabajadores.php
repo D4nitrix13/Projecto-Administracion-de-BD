@@ -27,37 +27,37 @@ $seccionFiltro    = $viewData["seccionFiltro"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/trabajadores/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/sistema/trabajadores/styles.php"; ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <section class="usuarios-hero">
-            <?php require __DIR__ . "/partials/trabajadores/header.php"; ?>
+            <?php require __DIR__ . "/partials/sistema/trabajadores/header.php"; ?>
         </section>
 
-        <?php require __DIR__ . "/partials/trabajadores/alerts.php"; ?>
+        <?php require __DIR__ . "/partials/sistema/trabajadores/alerts.php"; ?>
 
         <section class="usuarios-card">
-            <?php require __DIR__ . "/partials/trabajadores/create-form.php"; ?>
+            <?php require __DIR__ . "/partials/sistema/trabajadores/create-form.php"; ?>
         </section>
 
         <section class="usuarios-card">
-            <?php require __DIR__ . "/partials/trabajadores/filters.php"; ?>
+            <?php require __DIR__ . "/partials/sistema/trabajadores/filters.php"; ?>
 
-            <?php require __DIR__ . "/partials/trabajadores/table.php"; ?>
+            <?php require __DIR__ . "/partials/sistema/trabajadores/table.php"; ?>
         </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/trabajadores/scripts.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/sistema/trabajadores/scripts.php"; ?>
 
 </body>
 

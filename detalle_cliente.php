@@ -90,16 +90,16 @@ $idCliente = (int) clienteValue($cliente, ["id_cliente", "id"], "0");
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/clientes/editar/styles.php" ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/compradores/clientes/editar/styles.php" ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <section class="cliente-page-heading">
             <p class="dashboard-eyebrow">Clientes</p>
@@ -276,7 +276,7 @@ $idCliente = (int) clienteValue($cliente, ["id_cliente", "id"], "0");
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

@@ -21,18 +21,18 @@ require __DIR__ . "/partials/ver-imagen-productos/queries.php";
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <?php require __DIR__ . "/partials/ver-imagen-productos/content.php"; ?>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
     <?php require __DIR__ . "/partials/ver-imagen-productos/styles.php"; ?>
 
 </body>

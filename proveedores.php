@@ -26,16 +26,16 @@ $proveedores      = $viewData["proveedores"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/proveedores/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/inventario/proveedores/styles.php"; ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <section class="proveedores-hero">
             <p class="dashboard-eyebrow">Inventario</p>
@@ -49,23 +49,23 @@ $proveedores      = $viewData["proveedores"];
             </p>
         </section>
 
-        <?php require __DIR__ . "/partials/proveedores/alerts.php"; ?>
+        <?php require __DIR__ . "/partials/inventario/proveedores/alerts.php"; ?>
 
         <?php if ($puedeGestionar): ?>
             <section class="proveedores-card">
-                <?php require __DIR__ . "/partials/proveedores/create-form.php"; ?>
+                <?php require __DIR__ . "/partials/inventario/proveedores/create-form.php"; ?>
             </section>
         <?php endif; ?>
 
         <section class="proveedores-card">
-            <?php require __DIR__ . "/partials/proveedores/filters.php"; ?>
+            <?php require __DIR__ . "/partials/inventario/proveedores/filters.php"; ?>
 
-            <?php require __DIR__ . "/partials/proveedores/table.php"; ?>
+            <?php require __DIR__ . "/partials/inventario/proveedores/table.php"; ?>
         </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

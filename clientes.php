@@ -26,24 +26,24 @@ $flashError       = $viewData["flashError"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/clientes/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/compradores/clientes/styles.php"; ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <section class="clientes-hero">
-            <?php require __DIR__ . "/partials/clientes/header.php"; ?>
+            <?php require __DIR__ . "/partials/compradores/clientes/header.php"; ?>
         </section>
 
         <section class="clientes-card">
 
-            <?php require __DIR__ . "/partials/clientes/alerts.php"; ?>
+            <?php require __DIR__ . "/partials/compradores/clientes/alerts.php"; ?>
 
             <div class="clientes-header-actions">
                 <a href="nuevo_cliente.php" class="btn-primary-inline">
@@ -51,15 +51,15 @@ $flashError       = $viewData["flashError"];
                 </a>
             </div>
 
-            <?php require __DIR__ . "/partials/clientes/filters.php"; ?>
+            <?php require __DIR__ . "/partials/compradores/clientes/filters.php"; ?>
 
-            <?php require __DIR__ . "/partials/clientes/table.php"; ?>
+            <?php require __DIR__ . "/partials/compradores/clientes/table.php"; ?>
 
         </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

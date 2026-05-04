@@ -25,33 +25,33 @@ $archivos  = $viewData["archivos"];
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/respaldo/header.php"; ?>
+        <?php require __DIR__ . "/partials/sistema/backups-manuales/header.php"; ?>
 
         <section class="dashboard-card backup-page-card">
 
-            <?php require __DIR__ . "/partials/respaldo/alerts.php"; ?>
+            <?php require __DIR__ . "/partials/sistema/backups-manuales/alerts.php"; ?>
 
             <div class="backup-grid">
-                <?php require __DIR__ . "/partials/respaldo/backup-form.php"; ?>
+                <?php require __DIR__ . "/partials/sistema/backups-manuales/backup-form.php"; ?>
 
-                <?php require __DIR__ . "/partials/respaldo/restore-form.php"; ?>
+                <?php require __DIR__ . "/partials/sistema/backups-manuales/restore-form.php"; ?>
             </div>
 
-            <?php require __DIR__ . "/partials/respaldo/table.php"; ?>
+            <?php require __DIR__ . "/partials/sistema/backups-manuales/table.php"; ?>
 
         </section>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-    <?php require __DIR__ . "/partials/respaldo/styles.php"; ?>
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+    <?php require __DIR__ . "/partials/sistema/backups-manuales/styles.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

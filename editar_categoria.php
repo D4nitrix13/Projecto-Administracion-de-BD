@@ -19,29 +19,29 @@ if ($idRol !== 1) {
 
 $connection = require __DIR__ . "/sql/db.php";
 
-require __DIR__ . "/partials/categorias/editar/queries.php";
+require __DIR__ . "/partials/inventario/categorias/editar/queries.php";
 
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/categorias/editar/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/inventario/categorias/editar/styles.php"; ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/categorias/editar/content.php"; ?>
+        <?php require __DIR__ . "/partials/inventario/categorias/editar/content.php"; ?>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

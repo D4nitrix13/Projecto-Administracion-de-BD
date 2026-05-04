@@ -1,7 +1,7 @@
 respaldo_bd.php
 controllers/respaldo_bd_controller.php
 services/BackupService.php
-partials/respaldo/
+partials/sistema/backups-manuales/
 lib/backup.php
 scripts/backup_full.sh
 scripts/backup_diff.sh

@@ -13,7 +13,7 @@ $idRol = (int)($user["id_rol"] ?? 0);
 
 $connection = require "./sql/db.php";
 
-require __DIR__ . "/partials/productos/queries.php";
+require __DIR__ . "/partials/inventario/productos/queries.php";
 ?>
 
 <!DOCTYPE html>
@@ -22,13 +22,13 @@ require __DIR__ . "/partials/productos/queries.php";
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/productos/header.php"; ?>
+        <?php require __DIR__ . "/partials/inventario/productos/header.php"; ?>
 
         <section class="dashboard-card products-panel">
 
@@ -44,7 +44,7 @@ require __DIR__ . "/partials/productos/queries.php";
                 </div>
             <?php endif; ?>
 
-            <?php require __DIR__ . "/partials/productos/filters.php"; ?>
+            <?php require __DIR__ . "/partials/inventario/productos/filters.php"; ?>
 
             <?php if (empty($productos)): ?>
                 <div class="empty-products">
@@ -61,7 +61,7 @@ require __DIR__ . "/partials/productos/queries.php";
 
                 <div class="productos-grid">
                     <?php foreach ($productos as $prod): ?>
-                        <?php require __DIR__ . "/partials/productos/card.php"; ?>
+                        <?php require __DIR__ . "/partials/inventario/productos/card.php"; ?>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
@@ -70,9 +70,9 @@ require __DIR__ . "/partials/productos/queries.php";
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/productos/styles.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inventario/productos/styles.php"; ?>
 
 </body>
 

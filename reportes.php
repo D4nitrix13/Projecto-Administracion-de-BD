@@ -33,16 +33,16 @@ $clientesReporte         = $viewData["clientesReporte"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/reportes/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/analisis/reportes/styles.php"; ?>
 
 <body class="dashboard-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <section class="reports-page-heading">
             <div>
@@ -62,19 +62,19 @@ $clientesReporte         = $viewData["clientesReporte"];
             </a>
         </section>
 
-        <?php require __DIR__ . "/partials/reportes/summary.php"; ?>
+        <?php require __DIR__ . "/partials/analisis/reportes/summary.php"; ?>
 
         <section class="reports-main-card">
 
-            <?php require __DIR__ . "/partials/reportes/filters.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/reportes/filters.php"; ?>
 
-            <?php require __DIR__ . "/partials/reportes/charts.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/reportes/charts.php"; ?>
 
-            <?php require __DIR__ . "/partials/reportes/ventas-table.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/reportes/ventas-table.php"; ?>
 
-            <?php require __DIR__ . "/partials/reportes/productos-table.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/reportes/productos-table.php"; ?>
 
-            <?php require __DIR__ . "/partials/reportes/clientes-table.php"; ?>
+            <?php require __DIR__ . "/partials/analisis/reportes/clientes-table.php"; ?>
 
         </section>
 
@@ -82,8 +82,8 @@ $clientesReporte         = $viewData["clientesReporte"];
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <?php require __DIR__ . "/partials/reportes/scripts.php"; ?>
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/analisis/reportes/scripts.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

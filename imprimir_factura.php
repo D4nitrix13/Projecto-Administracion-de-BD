@@ -29,24 +29,24 @@ $fechaFactura         = $viewData["fechaFactura"];
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/facturas/imprimir/styles.php"; ?>
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/facturacion/facturas/imprimir/styles.php"; ?>
 
 <body class="dashboard-body invoice-print-body">
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main invoice-print-main">
 
-        <?php require __DIR__ . "/partials/dashboard/topbar.php"; ?>
+        <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/facturas/imprimir/toolbar.php"; ?>
+        <?php require __DIR__ . "/partials/facturacion/facturas/imprimir/toolbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/facturas/imprimir/paper.php"; ?>
+        <?php require __DIR__ . "/partials/facturacion/facturas/imprimir/paper.php"; ?>
 
     </main>
 
-    <?php require __DIR__ . "/partials/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>
 

@@ -82,11 +82,16 @@ function isActivePage(string $page, string $currentPage): string
                 </a>
             </div>
 
-            <a
-                href="clientes.php"
-                class="<?= isActivePage("clientes.php", $currentPage) ?>">
-                Clientes
-            </a>
+
+            <div class="sidebar-group">
+                <span class="sidebar-group-title">Clientes</span>
+                <a
+                    href="clientes.php"
+                    class="<?= isActivePage("clientes.php", $currentPage) ?>">
+                    Ver listado de clientes
+                </a>
+            </div>
+
 
             <?php if (($user["rol"] ?? "") === "Administrador"): ?>
                 <div class="sidebar-group">
