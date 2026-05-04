@@ -2,6 +2,36 @@
     {
         "type": "maintenance",
         "success": true,
+        "executed_at": "2026-05-03 19:36:31",
+        "next_run_at": "2026-05-03 19:37:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-03 19:35:31",
+        "next_run_at": "2026-05-03 19:36:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
         "executed_at": "2026-05-03 19:32:59",
         "next_run_at": "2026-05-03 19:33:59",
         "results": [

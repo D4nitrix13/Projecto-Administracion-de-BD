@@ -99,7 +99,8 @@ function bmFormatearFechaCorta(?string $fecha): string
 <!DOCTYPE html>
 <html lang="es">
 
-
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/sistema/backups-manuales/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -109,50 +110,50 @@ function bmFormatearFechaCorta(?string $fecha): string
 
         <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
-        <section class="dashboard-card dashboard-welcome backup-hero">
-            <div>
-                <p class="dashboard-eyebrow">Sistema</p>
+        <?php require __DIR__ . "/partials/sistema/backups-manuales/header.php"; ?>
 
-                <h1 class="dashboard-title">Backups manuales</h1>
-
-                <p class="dashboard-muted">
-                    Genere respaldos manuales, descargue archivos y administre el borrado seguro con espera de 24 horas.
-                </p>
-            </div>
-
-            <a href="dashboard.php" class="btn-secondary-inline backup-back-btn">
-                Volver al panel
-            </a>
-        </section>
-
-        <section class="dashboard-card backup-page-card backup-page-card-compact">
+        <section class="backup-page-card backup-page-card-compact">
 
             <?php require __DIR__ . "/partials/sistema/backups-manuales/alerts.php"; ?>
 
             <section class="backup-summary-row">
                 <article class="backup-summary-card">
                     <span>Total de respaldos</span>
-                    <strong><?= $totalArchivos ?></strong>
+
+                    <strong>
+                        <?= htmlspecialchars((string)$totalArchivos) ?>
+                    </strong>
+
                     <small>archivos disponibles</small>
                 </article>
 
                 <article class="backup-summary-card">
                     <span>Espacio ocupado</span>
-                    <strong><?= htmlspecialchars(bmFormatearTamano((int)$totalTamano)) ?></strong>
+
+                    <strong>
+                        <?= htmlspecialchars(bmFormatearTamano((int)$totalTamano)) ?>
+                    </strong>
+
                     <small>almacenado en el sistema</small>
                 </article>
 
                 <article class="backup-summary-card">
                     <span>Borrados pendientes</span>
-                    <strong><?= $totalPendientes ?></strong>
+
+                    <strong>
+                        <?= htmlspecialchars((string)$totalPendientes) ?>
+                    </strong>
+
                     <small>en espera de 24 horas</small>
                 </article>
 
                 <article class="backup-summary-card backup-summary-card-blue">
                     <span>Último respaldo</span>
+
                     <strong>
                         <?= $ultimoArchivo ? htmlspecialchars(bmFormatearTamano((int)($ultimoArchivo["tamanio"] ?? 0))) : "N/A" ?>
                     </strong>
+
                     <small>
                         <?= htmlspecialchars(bmFormatearFechaCorta($ultimoArchivo["fecha"] ?? null)) ?>
                     </small>
@@ -169,8 +170,6 @@ function bmFormatearFechaCorta(?string $fecha): string
 
     </main>
 
-    <?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
-    <?php require __DIR__ . "/partials/sistema/backups-manuales/styles.php"; ?>
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>

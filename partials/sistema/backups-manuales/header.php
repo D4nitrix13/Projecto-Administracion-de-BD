@@ -1,15 +1,15 @@
-<section class="dashboard-card dashboard-welcome backup-hero">
+<section class="dashboard-page-heading backup-page-heading">
     <div>
-        <p class="dashboard-eyebrow">Sistema</p>
+        <p class="backup-eyebrow">Sistema</p>
 
-        <h1 class="dashboard-title">Respaldos de base de datos</h1>
+        <h1>Backups manuales</h1>
 
-        <p class="dashboard-muted">
-            Genere respaldos, restaure la base de datos y revise los archivos disponibles.
+        <p>
+            Genere respaldos manuales, descargue archivos y administre el borrado seguro con espera de 24 horas.
         </p>
     </div>
 
-    <a href="dashboard.php" class="btn-secondary-inline backup-back-btn">
+    <a href="dashboard.php" class="backup-back-btn">
         Volver al panel
     </a>
 </section>

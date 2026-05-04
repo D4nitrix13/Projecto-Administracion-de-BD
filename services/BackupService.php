@@ -1,19 +1,27 @@
 <?php
 
-require_once __DIR__ . "/../lib/backup.php";
-
 class BackupService
 {
     private PDO $connection;
     private string $backupDir;
+    private string $manualBackupDir;
+    private string $fullBackupDir;
+    private string $diffBackupDir;
+    private string $logsDir;
     private string $deleteQueueFile;
 
     public function __construct(PDO $connection, string $backupDir)
     {
         $this->connection = $connection;
-        $this->backupDir = rtrim($backupDir, "/");
-        $this->deleteQueueFile = $this->backupDir . "/logs/delete_queue.json";
 
+        $this->backupDir = rtrim($backupDir, "/");
+        $this->manualBackupDir = $this->backupDir . "/manual";
+        $this->fullBackupDir = $this->backupDir . "/full";
+        $this->diffBackupDir = $this->backupDir . "/diff";
+        $this->logsDir = $this->backupDir . "/logs";
+        $this->deleteQueueFile = $this->logsDir . "/delete_queue.json";
+
+        $this->asegurarDirectorios();
         $this->asegurarArchivoCola();
     }
 
@@ -22,17 +30,75 @@ class BackupService
         ?string $nombrePersonalizado,
         ?string $mensajePersonalizado
     ): array {
-        [$ok, $msg] = hacerRespaldo(
-            $this->connection,
-            "manual",
-            $idUsuario,
-            $nombrePersonalizado,
-            $mensajePersonalizado
+        $nombreBase = $this->normalizarNombreArchivo($nombrePersonalizado);
+
+        if ($nombreBase === "") {
+            $nombreBase = "pandas_estampados_y_kitsune";
+        }
+
+        $fecha = date("Y-m-d_H-i-s");
+        $nombreArchivo = "backup_manual_{$nombreBase}_{$fecha}.sql";
+        $rutaTemporal = $this->manualBackupDir . "/" . $nombreArchivo . ".tmp";
+        $rutaFinal = $this->manualBackupDir . "/" . $nombreArchivo;
+        $logFile = $this->logsDir . "/backup_manual_{$fecha}.log";
+
+        $dbHost = getenv("DB_HOST") ?: "postgres";
+        $dbPort = getenv("DB_PORT") ?: "5432";
+        $dbUser = getenv("DB_USERNAME") ?: (getenv("DB_USER") ?: "postgres");
+        $dbPass = getenv("DB_PASSWORD") ?: "root";
+        $dbName = getenv("DB_DATABASE") ?: (getenv("DB_NAME") ?: "pandas_estampados_y_kitsune");
+
+        $command = sprintf(
+            'PGPASSWORD=%s pg_dump -h %s -p %s -U %s -d %s --clean --if-exists --no-owner --no-privileges > %s 2> %s',
+            escapeshellarg($dbPass),
+            escapeshellarg($dbHost),
+            escapeshellarg($dbPort),
+            escapeshellarg($dbUser),
+            escapeshellarg($dbName),
+            escapeshellarg($rutaTemporal),
+            escapeshellarg($logFile)
         );
 
+        $returnCode = 0;
+        system($command, $returnCode);
+
+        if ($returnCode !== 0) {
+            @unlink($rutaTemporal);
+
+            $detalle = is_file($logFile)
+                ? trim((string)file_get_contents($logFile))
+                : "No se pudo obtener el detalle del error.";
+
+            return [
+                "success" => false,
+                "message" => "Error al generar el respaldo manual:\n" . $detalle,
+            ];
+        }
+
+        if (!is_file($rutaTemporal) || filesize($rutaTemporal) === 0) {
+            @unlink($rutaTemporal);
+
+            return [
+                "success" => false,
+                "message" => "El respaldo manual no se generó correctamente porque el archivo quedó vacío.",
+            ];
+        }
+
+        rename($rutaTemporal, $rutaFinal);
+
+        $mensajeLog = [
+            "Fecha: " . date("Y-m-d H:i:s"),
+            "Usuario ID: " . ($idUsuario !== null ? (string)$idUsuario : "No disponible"),
+            "Archivo: " . $rutaFinal,
+            "Descripción: " . trim((string)$mensajePersonalizado),
+            "Estado: respaldo manual generado correctamente",
+        ];
+
+        file_put_contents($logFile, implode(PHP_EOL, $mensajeLog) . PHP_EOL, FILE_APPEND);
+
         return [
-            "success" => $ok,
-            "message" => $msg,
+            "success" => true,
+            "message" => "Respaldo manual generado correctamente: {$nombreArchivo}",
         ];
     }
 
@@ -55,11 +121,11 @@ class BackupService
             ];
         }
 
-        $dbHost = getenv("DB_HOST") ?: "pandas_bd";
+        $dbHost = getenv("DB_HOST") ?: "postgres";
         $dbPort = getenv("DB_PORT") ?: "5432";
-        $dbUser = getenv("DB_USER") ?: "postgres";
+        $dbUser = getenv("DB_USERNAME") ?: (getenv("DB_USER") ?: "postgres");
         $dbPass = getenv("DB_PASSWORD") ?: "root";
-        $dbName = getenv("DB_NAME") ?: "pandas_estampados_y_kitsune";
+        $dbName = getenv("DB_DATABASE") ?: (getenv("DB_NAME") ?: "pandas_estampados_y_kitsune");
 
         $dropResult = $this->limpiarBaseDatos(
             $dbHost,
@@ -96,7 +162,7 @@ class BackupService
                 continue;
             }
 
-            foreach (glob($directorio . "/*.sql") as $filepath) {
+            foreach (glob($directorio . "/*.sql") ?: [] as $filepath) {
                 $nombre = basename($filepath);
                 $pendiente = isset($cola[$nombre]);
 
@@ -229,22 +295,38 @@ class BackupService
     private function obtenerDirectoriosBusqueda(): array
     {
         return [
-            $this->backupDir => "Manual",
-            $this->backupDir . "/full" => "Completo",
-            $this->backupDir . "/diff" => "Diferencial",
+            $this->manualBackupDir => "Manual",
+            $this->fullBackupDir => "Completo",
+            $this->diffBackupDir => "Diferencial",
         ];
+    }
+
+    private function asegurarDirectorios(): void
+    {
+        foreach (
+            [
+                $this->backupDir,
+                $this->manualBackupDir,
+                $this->fullBackupDir,
+                $this->diffBackupDir,
+                $this->logsDir,
+            ] as $directorio
+        ) {
+            if (!is_dir($directorio)) {
+                mkdir($directorio, 0775, true);
+            }
+        }
     }
 
     private function asegurarArchivoCola(): void
     {
-        $directorio = dirname($this->deleteQueueFile);
-
-        if (!is_dir($directorio)) {
-            mkdir($directorio, 0775, true);
-        }
+        $this->asegurarDirectorios();
 
         if (!is_file($this->deleteQueueFile)) {
-            file_put_contents($this->deleteQueueFile, json_encode([], JSON_PRETTY_PRINT));
+            file_put_contents(
+                $this->deleteQueueFile,
+                json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
         }
     }
 
@@ -271,6 +353,32 @@ class BackupService
             $this->deleteQueueFile,
             json_encode($cola, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
+    }
+
+    private function normalizarNombreArchivo(?string $nombre): string
+    {
+        $nombre = trim((string)$nombre);
+
+        if ($nombre === "") {
+            return "";
+        }
+
+        $nombre = mb_strtolower($nombre, "UTF-8");
+
+        $reemplazos = [
+            "á" => "a",
+            "é" => "e",
+            "í" => "i",
+            "ó" => "o",
+            "ú" => "u",
+            "ñ" => "n",
+        ];
+
+        $nombre = strtr($nombre, $reemplazos);
+        $nombre = preg_replace('/[^a-z0-9]+/', '_', $nombre);
+        $nombre = trim((string)$nombre, "_");
+
+        return mb_substr($nombre, 0, 80);
     }
 
     private function limpiarBaseDatos(
