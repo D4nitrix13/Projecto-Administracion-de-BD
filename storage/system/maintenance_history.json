@@ -1,1 +1,122 @@
-[]
+[
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:06:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:05:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:04:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:03:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:02:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:01:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 19:00:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-05-03 18:59:58",
+        "next_run_at": "2026-05-03 18:59:19",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "Iniciando backup full...\nError al generar el backup full",
+                "error": "\/var\/www\/html\/scripts\/backup_full.sh: line 18: docker: command not found"
+            }
+        ]
+    }
+]

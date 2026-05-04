@@ -2,7 +2,8 @@
     "enabled": true,
     "type": "full",
     "interval_value": 1,
-    "interval_unit": "weeks",
+    "interval_unit": "minutes",
     "last_run_at": null,
-    "next_run_at": null
+    "next_run_at": "2026-05-03 18:59:19",
+    "updated_at": "2026-05-03 18:58:19"
 }

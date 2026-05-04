@@ -13,6 +13,7 @@ services:
     depends_on:
       - postgres
     environment:
+      TZ: America/Managua
       DB_HOST: postgres
       DB_PORT: 5432
       DB_DATABASE: pandas_estampados_y_kitsune
@@ -26,6 +27,8 @@ services:
     ports:
       - "5432:5432"
     environment:
+      TZ: America/Managua
+      PGTZ: America/Managua
       POSTGRES_DB: pandas_estampados_y_kitsune
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
@@ -36,6 +39,10 @@ services:
       - ../backups:/backups
     command:
       - "postgres"
+      - "-c"
+      - "timezone=America/Managua"
+      - "-c"
+      - "log_timezone=America/Managua"
       - "-c"
       - "wal_level=replica"
       - "-c"
@@ -50,12 +57,39 @@ services:
       - "log_filename=postgresql-%Y-%m-%d.log"
     restart: unless-stopped
 
+  backup_scheduler:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: pandas_backup_scheduler
+    working_dir: /var/www/html
+    volumes:
+      - ..:/var/www/html
+      - ../backups:/var/www/html/backups
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      TZ: America/Managua
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: pandas_estampados_y_kitsune
+      DB_USERNAME: postgres
+      DB_PASSWORD: root
+    command: >
+      sh -c " while true; do
+        php /var/www/html/utils/cron_backup.php;
+        sleep 60;
+      done "
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pandas_pgadmin
     ports:
       - "5050:80"
     environment:
+      TZ: America/Managua
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     volumes:

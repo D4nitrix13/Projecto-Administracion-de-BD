@@ -5,6 +5,16 @@
 
 # Guía rápida de instalación y configuración
 
+mkdir -p storage/system
+
+touch storage/system/backup_schedule.json
+touch storage/system/maintenance_history.json
+
+sudo chown -R 33:33 storage
+sudo chmod -R 775 storage
+sudo chmod 664 storage/system/backup_schedule.json
+sudo chmod 664 storage/system/maintenance_history.json
+
 Esta guía explica cómo preparar, levantar y restaurar el entorno del sistema **Panda Estampados / Kitsune** usando Docker Compose, PostgreSQL 18, pgAdmin y respaldos locales. Está resumida para seguir los comandos en orden correcto. :contentReference[oaicite:0]{index=0}
 
 ---

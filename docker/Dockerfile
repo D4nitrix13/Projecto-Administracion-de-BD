@@ -1,7 +1,6 @@
 FROM php:8.3-apache-bookworm
 
 WORKDIR /var/www/html
-
 RUN apt-get update && apt-get install -y \
     cron \
     vim \
@@ -33,8 +32,10 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN echo "0 0 * * * /usr/local/bin/php /var/www/html/utils/cron_backup.php >> /var/www/html/backups/backup.log 2>&1" > /etc/cron.d/backup-cron \
-    && chmod 0644 /etc/cron.d/backup-cron \
-    && crontab /etc/cron.d/backup-cron
+ENV TZ=America/Managua
+
+# RUN echo "0 0 * * * /usr/local/bin/php /var/www/html/utils/cron_backup.php >> /var/www/html/backups/backup.log 2>&1" > /etc/cron.d/backup-cron \
+#     && chmod 0644 /etc/cron.d/backup-cron \
+#     && crontab /etc/cron.d/backup-cron
 
 CMD service cron start && apache2-foreground
