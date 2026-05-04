@@ -30,7 +30,6 @@ export PGPASSWORD="$DB_PASSWORD"
     echo "Host: $DB_HOST"
     echo "Puerto: $DB_PORT"
     echo "Base de datos: $DB_NAME"
-    echo "Archivo temporal: $TEMP_FILE"
 
     TABLES_QUERY="
         SELECT table_schema || '.' || table_name
@@ -46,8 +45,14 @@ export PGPASSWORD="$DB_PASSWORD"
               'facturas',
               'detallefactura',
               'detalle_factura',
+              'detalle_facturas',
               'usuario',
-              'usuarios'
+              'usuarios',
+              'compra',
+              'compras',
+              'detallecompra',
+              'detalle_compra',
+              'detalle_compras'
           )
         ORDER BY table_name;
     "
@@ -64,22 +69,23 @@ export PGPASSWORD="$DB_PASSWORD"
 
     if [ "${#TABLES[@]}" -eq 0 ]; then
         echo "Error: no se encontraron tablas críticas para el respaldo rápido."
-        echo "Revise los nombres reales de las tablas con:"
-        echo "psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c '\\dt'"
+        echo "Tablas buscadas: productos, clientes, facturas, detalle_factura, usuarios, compras."
+        echo "Revise los nombres reales con:"
+        echo "docker exec -it pandas_bd psql -U postgres -d pandas_estampados_y_kitsune -c '\\dt'"
+        rm -f "$TEMP_FILE"
         exit 1
     fi
 
-    echo "Tablas encontradas para respaldo rápido:"
-    for table in "${TABLES[@]}"; do
-        echo "- $table"
-    done
-
+    echo "Tablas encontradas:"
     TABLE_ARGS=()
 
     for table in "${TABLES[@]}"; do
+        echo "- $table"
+
         schema="${table%%.*}"
         table_name="${table#*.}"
-        TABLE_ARGS+=(--table="${schema}.\"${table_name}\"")
+
+        TABLE_ARGS+=("--table=${schema}.${table_name}")
     done
 
     if pg_dump \
@@ -95,7 +101,7 @@ export PGPASSWORD="$DB_PASSWORD"
         > "$TEMP_FILE"; then
 
         if [ ! -s "$TEMP_FILE" ]; then
-            echo "Error: pg_dump terminó, pero el archivo diferencial quedó vacío."
+            echo "Error: pg_dump terminó, pero el archivo quedó vacío."
             rm -f "$TEMP_FILE"
             exit 1
         fi
@@ -106,7 +112,7 @@ export PGPASSWORD="$DB_PASSWORD"
         echo "Archivo: $BACKUP_FILE"
         echo "Tamaño: $(du -h "$BACKUP_FILE" | awk '{print $1}')"
     else
-        echo "Error: falló la ejecución de pg_dump para el respaldo rápido."
+        echo "Error: falló pg_dump al generar el respaldo rápido."
         rm -f "$TEMP_FILE"
         exit 1
     fi

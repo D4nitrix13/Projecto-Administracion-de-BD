@@ -55,6 +55,8 @@ services:
       - "log_directory=/var/log/postgresql"
       - "-c"
       - "log_filename=postgresql-%Y-%m-%d.log"
+      - "-c"
+      - "log_file_mode=0644"
     restart: unless-stopped
 
   backup_scheduler:
