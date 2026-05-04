@@ -1,7 +1,7 @@
 -- ============================================================
 -- FUNCIÓN: Obtener información de imagen de producto
 -- Sistema: Panda Estampados / Kitsune
--- Uso: partials/ver-imagen-productos/queries.php
+-- Uso: partials/inventario/productos/ver-imagen/queries.php
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION obtener_producto_imagen(

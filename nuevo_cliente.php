@@ -96,7 +96,7 @@ if ($idRol === 1) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
-<?php require "partials/header.php"; ?>
+
 
 <body class="page-bg">
 

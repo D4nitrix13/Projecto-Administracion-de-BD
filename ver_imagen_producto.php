@@ -12,12 +12,11 @@ $user = $_SESSION["user"];
 
 $connection = require "./sql/db.php";
 
-require __DIR__ . "/partials/ver-imagen-productos/queries.php";
+require __DIR__ . "/partials/inventario/productos/ver-imagen/queries.php";
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
-<?php require "partials/header.php"; ?>
 
 <body class="dashboard-body">
 
@@ -27,13 +26,13 @@ require __DIR__ . "/partials/ver-imagen-productos/queries.php";
 
         <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
-        <?php require __DIR__ . "/partials/ver-imagen-productos/content.php"; ?>
+        <?php require __DIR__ . "/partials/inventario/productos/ver-imagen/content.php"; ?>
 
     </main>
 
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
-    <?php require __DIR__ . "/partials/ver-imagen-productos/styles.php"; ?>
+    <?php require __DIR__ . "/partials/inventario/productos/ver-imagen/styles.php"; ?>
 
 </body>
 

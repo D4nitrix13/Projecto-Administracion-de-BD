@@ -285,7 +285,7 @@ $typeDescription = obtenerDescripcionTipoBackup($type);
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/header.php"; ?>
+<?php require __DIR__ . "/"; ?>
 
 <body class="dashboard-body">
 

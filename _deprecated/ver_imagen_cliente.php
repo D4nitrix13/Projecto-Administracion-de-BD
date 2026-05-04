@@ -59,7 +59,7 @@ $usuario = $_SESSION["user"] ?? null;
 
 <!DOCTYPE html>
 <html lang="es">
-<?php require "partials/header.php"; ?>
+
 
 <style>
     .public-navbar {

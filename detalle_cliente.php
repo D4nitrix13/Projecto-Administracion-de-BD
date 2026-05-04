@@ -12,7 +12,7 @@ $user = $_SESSION["user"];
 $connection = require __DIR__ . "/sql/db.php";
 
 require_once __DIR__ . "/helpers/format.php";
-require __DIR__ . "/partials/detalle-cliente/queries.php";
+require __DIR__ . "/partials/compradores/clientes/detalles/queries.php";
 
 $cliente = $cliente ?? $clienteDetalle ?? $detalleCliente ?? null;
 

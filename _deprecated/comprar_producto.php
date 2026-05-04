@@ -124,7 +124,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require "partials/header.php"; ?>
+
 
 <body class="page-bg">
 
