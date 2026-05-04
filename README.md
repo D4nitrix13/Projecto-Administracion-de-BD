@@ -40,6 +40,13 @@ sudo chmod -R 775 backups
 sudo find backups -type f -exec chmod 664 {} \;
 sudo find backups -type d -exec chmod 775 {} \;
 
+mkdir -p database/wal_archive
+
+sudo chown -R 33:33 database/wal_archive
+sudo chmod -R 775 database/wal_archive
+sudo find database/wal_archive -type f -exec chmod 664 {} \;
+sudo find database/wal_archive -type d -exec chmod 775 {} \;
+
 Esta guía explica cómo preparar, levantar y restaurar el entorno del sistema **Panda Estampados / Kitsune** usando Docker Compose, PostgreSQL 18, pgAdmin y respaldos locales. Está resumida para seguir los comandos en orden correcto. :contentReference[oaicite:0]{index=0}
 
 ---
