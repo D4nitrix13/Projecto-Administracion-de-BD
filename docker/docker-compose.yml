@@ -10,6 +10,7 @@ services:
       - ..:/var/www/html
       - ../conf/php.ini:/usr/local/etc/php/conf.d/custom.ini
       - ../backups:/var/www/html/backups
+      - ../database/logs:/var/www/html/database/logs:ro
     depends_on:
       - postgres
     environment:
@@ -24,23 +25,30 @@ services:
   postgres:
     image: postgres:18
     container_name: pandas_bd
-    ports: [ "5432:5432" ]
-
+    ports:
+      - "5432:5432"
     environment:
       TZ: America/Managua
+      PGTZ: America/Managua
       POSTGRES_DB: pandas_estampados_y_kitsune
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
-
+      PGDATA: /var/lib/postgresql/data
     volumes:
-      - ../database/postgresql:/var/lib/postgresql
+      - ../database/postgresql:/var/lib/postgresql/data
       - ../database/logs:/var/log/postgresql
       - ../database/wal_archive:/wal_archive
       - ../backups:/backups
-
     command: >
-      postgres -c timezone=America/Managua -c wal_level=replica -c archive_mode=on -c archive_command='test ! -f /wal_archive/%f && cp %p /wal_archive/%f' -c logging_collector=on -c log_directory=/var/log/postgresql -c log_filename=postgresql-%Y-%m-%d.log
-
+      postgres
+      -c timezone=America/Managua
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /wal_archive/%f && cp %p /wal_archive/%f'
+      -c logging_collector=on
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d.log
+      -c log_file_mode=0644
     restart: unless-stopped
 
   backup_scheduler:
@@ -49,9 +57,11 @@ services:
       dockerfile: docker/Dockerfile
     container_name: pandas_backup_scheduler
     working_dir: /var/www/html
+    user: "33:33"
     volumes:
       - ..:/var/www/html
       - ../backups:/var/www/html/backups
+      - ../database/logs:/var/www/html/database/logs:ro
     environment:
       TZ: America/Managua
       DB_HOST: postgres
@@ -60,10 +70,10 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: root
     command: >
-      sh -c " while true; do
+      sh -c "while true; do
         php /var/www/html/utils/cron_backup.php;
         sleep 60;
-      done "
+      done"
     restart: unless-stopped
     depends_on:
       - postgres
@@ -78,10 +88,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - ../database/pgadmin:/var/lib/pgadmin
     depends_on:
       - postgres
     restart: unless-stopped
-
-volumes:
-  pgadmin_data:

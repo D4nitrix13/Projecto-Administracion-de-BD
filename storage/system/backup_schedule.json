@@ -1,9 +1,9 @@
 {
     "enabled": true,
-    "type": "full",
+    "type": "maintenance",
     "interval_value": 1,
-    "interval_unit": "weeks",
+    "interval_unit": "minutes",
     "last_run_at": null,
-    "next_run_at": "2026-05-10 19:36:41",
-    "updated_at": "2026-05-03 19:36:41"
+    "next_run_at": "2026-05-05 22:49:20",
+    "updated_at": "2026-05-05 22:48:20"
 }
