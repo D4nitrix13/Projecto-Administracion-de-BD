@@ -332,71 +332,159 @@
         }
     }
 
-    .restore-backup-list {
+    .restore-filter-grid {
         display: grid;
-        gap: 10px;
+        grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+        gap: 12px;
+    }
+
+    .restore-filter-grid input,
+    .restore-filter-grid select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #ffffff;
+        color: #111827;
+        font-family: Arial, sans-serif;
+        font-size: 0.92rem;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .restore-filter-grid input:focus,
+    .restore-filter-grid select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .restore-table-wrapper {
         max-height: 360px;
-        overflow-y: auto;
-        padding: 6px;
+        overflow: auto;
         border: 1px solid #e5e7eb;
         border-radius: 14px;
+        background: #ffffff;
+    }
+
+    .restore-backup-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86rem;
+    }
+
+    .restore-backup-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
         background: #f8fafc;
     }
 
-    .restore-backup-option {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 14px;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        background: #ffffff;
-        cursor: pointer;
-        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .restore-backup-option:hover {
-        border-color: #bfdbfe;
-        background: #eff6ff;
-    }
-
-    .restore-backup-option input {
-        width: 18px;
-        height: 18px;
-        margin-top: 3px;
-        accent-color: #dc2626;
-        flex: 0 0 auto;
-    }
-
-    .restore-backup-option:has(input:checked) {
-        border-color: #dc2626;
-        background: #fff1f2;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10);
-    }
-
-    .restore-backup-content {
-        display: grid;
-        gap: 4px;
-        min-width: 0;
-    }
-
-    .restore-backup-content strong {
-        color: #111827;
-        font-size: 0.92rem;
+    .restore-backup-table th {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e5e7eb;
+        color: #64748b;
+        font-size: 0.74rem;
         font-weight: 900;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
     }
 
-    .restore-backup-content small {
+    .restore-backup-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f1f5f9;
         color: #334155;
-        font-size: 0.84rem;
-        line-height: 1.4;
+        vertical-align: middle;
+    }
+
+    .restore-backup-row {
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .restore-backup-row:hover {
+        background: #f8fafc;
+    }
+
+    .restore-backup-row.is-selected {
+        background: #fff1f2;
+    }
+
+    .restore-backup-row.is-selected td {
+        border-bottom-color: #fecaca;
+    }
+
+    .restore-radio-cell {
+        width: 44px;
+        text-align: center;
+    }
+
+    .restore-radio-cell input {
+        width: 16px;
+        height: 16px;
+        accent-color: #dc2626;
+        cursor: pointer;
+    }
+
+    .restore-type-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 0.74rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .restore-file-name {
+        max-width: 320px;
+        color: #111827;
+        font-weight: 800;
         word-break: break-word;
     }
 
-    .restore-backup-content em {
+    .restore-size-cell {
+        color: #475569;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .restore-date-cell {
         color: #64748b;
-        font-size: 0.8rem;
-        font-style: normal;
-        line-height: 1.4;
+        font-size: 0.82rem;
+        white-space: nowrap;
+    }
+
+    .restore-no-results-row {
+        display: none;
+    }
+
+    .restore-no-results-row td {
+        padding: 18px;
+        color: #64748b;
+        font-weight: 800;
+        text-align: center;
+        background: #f8fafc;
+    }
+
+    @media (max-width: 900px) {
+        .restore-table-wrapper {
+            max-height: 420px;
+        }
+
+        .restore-backup-table {
+            min-width: 780px;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .restore-filter-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>

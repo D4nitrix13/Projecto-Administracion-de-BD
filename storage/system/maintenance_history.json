@@ -2,6 +2,66 @@
     {
         "type": "maintenance",
         "success": true,
+        "executed_at": "2026-05-05 23:07:44",
+        "next_run_at": "2026-05-05 23:08:44",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-05 23:06:44",
+        "next_run_at": "2026-05-05 23:07:44",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-05 23:05:44",
+        "next_run_at": "2026-05-05 23:06:44",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-05 23:04:44",
+        "next_run_at": "2026-05-05 23:05:44",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
         "executed_at": "2026-05-05 23:03:43",
         "next_run_at": "2026-05-05 23:04:43",
         "results": [

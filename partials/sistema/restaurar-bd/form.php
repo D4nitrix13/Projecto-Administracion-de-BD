@@ -30,46 +30,95 @@
                 <input type="hidden" name="action" value="restore">
 
                 <div class="restore-field">
+                    <label>Filtrar respaldos</label>
+
+                    <div class="restore-filter-grid">
+                        <input
+                            type="search"
+                            id="restoreSearch"
+                            placeholder="Buscar respaldo por nombre...">
+
+                        <select id="restoreTypeFilter">
+                            <option value="all">Todos los tipos</option>
+                            <option value="manual">Manual</option>
+                            <option value="completo">Completo</option>
+                            <option value="diferencial">Diferencial</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="restore-field">
                     <label>Archivo de respaldo</label>
 
-                    <div class="restore-backup-list">
-                        <?php foreach ($archivos as $archivo): ?>
-                            <?php
-                            $nombre = $archivo["nombre"] ?? "";
-                            $tipo = $archivo["tipo"] ?? "Respaldo";
-                            $fecha = restaurarFormatearFecha($archivo["fecha"] ?? null);
-                            $tamano = restaurarFormatearTamano((int)($archivo["tamanio"] ?? 0));
-                            $pendiente = (bool)($archivo["deletion_pending"] ?? false);
-                            ?>
+                    <div class="restore-table-wrapper">
+                        <table class="restore-backup-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Tipo</th>
+                                    <th>Archivo</th>
+                                    <th>Tamaño</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
 
-                            <?php if (!$pendiente): ?>
-                                <label class="restore-backup-option">
-                                    <input
-                                        type="radio"
-                                        name="archivo"
-                                        value="<?= htmlspecialchars($nombre) ?>"
-                                        required>
+                            <tbody id="restoreBackupList">
+                                <?php foreach ($archivos as $archivo): ?>
+                                    <?php
+                                    $nombre = $archivo["nombre"] ?? "";
+                                    $tipo = $archivo["tipo"] ?? "Respaldo";
+                                    $fecha = restaurarFormatearFecha($archivo["fecha"] ?? null);
+                                    $tamano = restaurarFormatearTamano((int)($archivo["tamanio"] ?? 0));
+                                    $pendiente = (bool)($archivo["deletion_pending"] ?? false);
+                                    $tipoFiltro = strtolower($tipo);
+                                    ?>
 
-                                    <span class="restore-backup-content">
-                                        <strong>
-                                            <?= htmlspecialchars($tipo) ?>
-                                        </strong>
+                                    <?php if (!$pendiente): ?>
+                                        <tr
+                                            class="restore-backup-row"
+                                            data-name="<?= htmlspecialchars(strtolower($nombre)) ?>"
+                                            data-type="<?= htmlspecialchars($tipoFiltro) ?>">
 
-                                        <small>
-                                            <?= htmlspecialchars($nombre) ?>
-                                        </small>
+                                            <td class="restore-radio-cell">
+                                                <input
+                                                    type="radio"
+                                                    name="archivo"
+                                                    value="<?= htmlspecialchars($nombre) ?>"
+                                                    required>
+                                            </td>
 
-                                        <em>
-                                            <?= htmlspecialchars($tamano) ?> — <?= htmlspecialchars($fecha) ?>
-                                        </em>
-                                    </span>
-                                </label>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
+                                            <td>
+                                                <span class="restore-type-pill">
+                                                    <?= htmlspecialchars($tipo) ?>
+                                                </span>
+                                            </td>
+
+                                            <td class="restore-file-name">
+                                                <?= htmlspecialchars($nombre) ?>
+                                            </td>
+
+                                            <td class="restore-size-cell">
+                                                <?= htmlspecialchars($tamano) ?>
+                                            </td>
+
+                                            <td class="restore-date-cell">
+                                                <?= htmlspecialchars($fecha) ?>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+
+                                <tr id="restoreNoResults" class="restore-no-results-row">
+                                    <td colspan="5">
+                                        No se encontraron respaldos con ese filtro.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
                     <small>
-                        Solo se muestran respaldos disponibles. Los archivos con borrado programado no se recomiendan para restauración.
+                        Seleccione un respaldo disponible. Los archivos con borrado programado no se muestran para restauración.
                     </small>
                 </div>
 
@@ -158,3 +207,66 @@
     </aside>
 
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById("restoreSearch");
+        const typeFilter = document.getElementById("restoreTypeFilter");
+        const rows = Array.from(document.querySelectorAll(".restore-backup-row"));
+        const noResults = document.getElementById("restoreNoResults");
+
+        function applyFilters() {
+            const searchValue = searchInput.value.trim().toLowerCase();
+            const typeValue = typeFilter.value;
+            let visibleCount = 0;
+
+            rows.forEach(function(row) {
+                const name = row.dataset.name || "";
+                const type = row.dataset.type || "";
+
+                const matchesSearch = name.includes(searchValue);
+                const matchesType = typeValue === "all" || type.includes(typeValue);
+                const visible = matchesSearch && matchesType;
+
+                row.style.display = visible ? "table-row" : "none";
+
+                if (!visible) {
+                    const radio = row.querySelector("input[type='radio']");
+                    if (radio && radio.checked) {
+                        radio.checked = false;
+                        row.classList.remove("is-selected");
+                    }
+                }
+
+                if (visible) {
+                    visibleCount++;
+                }
+            });
+
+            noResults.style.display = visibleCount === 0 ? "table-row" : "none";
+        }
+
+        rows.forEach(function(row) {
+            row.addEventListener("click", function() {
+                const radio = row.querySelector("input[type='radio']");
+
+                if (!radio) {
+                    return;
+                }
+
+                radio.checked = true;
+
+                rows.forEach(function(item) {
+                    item.classList.remove("is-selected");
+                });
+
+                row.classList.add("is-selected");
+            });
+        });
+
+        searchInput.addEventListener("input", applyFilters);
+        typeFilter.addEventListener("change", applyFilters);
+
+        applyFilters();
+    });
+</script>
