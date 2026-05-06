@@ -17,6 +17,7 @@ $success = null;
 
 $databaseLogDir = __DIR__ . "/database/logs";
 $backupLogDir = __DIR__ . "/backups/logs";
+$deleteQueueFile = __DIR__ . "/backups/logs/log_delete_queue.json";
 
 $allowedSources = [
     "database" => [
@@ -36,6 +37,119 @@ function logsAsegurarDirectorio(string $directory): void
     if (!is_dir($directory)) {
         mkdir($directory, 0775, true);
     }
+}
+
+function logsAsegurarArchivoCola(string $file): void
+{
+    $dir = dirname($file);
+
+    if (!is_dir($dir)) {
+        mkdir($dir, 0775, true);
+    }
+
+    if (!is_file($file)) {
+        file_put_contents($file, "[]", LOCK_EX);
+    }
+}
+
+function logsLeerColaBorrado(string $file): array
+{
+    logsAsegurarArchivoCola($file);
+
+    $content = file_get_contents($file);
+
+    if ($content === false || trim($content) === "") {
+        return [];
+    }
+
+    $data = json_decode($content, true);
+
+    return is_array($data) ? $data : [];
+}
+
+function logsGuardarColaBorrado(string $file, array $queue): void
+{
+    file_put_contents(
+        $file,
+        json_encode(array_values($queue), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        LOCK_EX
+    );
+}
+
+function logsCrearClave(string $source, string $filename): string
+{
+    return $source . "::" . $filename;
+}
+
+function logsBuscarEntradaCola(array $queue, string $source, string $filename): ?array
+{
+    $key = logsCrearClave($source, $filename);
+
+    foreach ($queue as $entry) {
+        if (($entry["key"] ?? "") === $key) {
+            return $entry;
+        }
+    }
+
+    return null;
+}
+
+function logsResolverRutaSegura(array $allowedSources, string $source, string $filename): ?string
+{
+    if (!isset($allowedSources[$source])) {
+        return null;
+    }
+
+    $safeFile = basename($filename);
+    $directory = $allowedSources[$source]["directory"];
+    $path = $directory . "/" . $safeFile;
+
+    $realDirectory = realpath($directory);
+    $realFile = realpath($path);
+
+    if (
+        $realDirectory === false ||
+        $realFile === false ||
+        !str_starts_with($realFile, $realDirectory) ||
+        !is_file($realFile)
+    ) {
+        return null;
+    }
+
+    return $realFile;
+}
+
+function logsProcesarBorradosPendientes(array $allowedSources, string $queueFile): array
+{
+    $queue = logsLeerColaBorrado($queueFile);
+    $now = time();
+    $remaining = [];
+
+    foreach ($queue as $entry) {
+        $source = (string)($entry["source"] ?? "");
+        $filename = basename((string)($entry["filename"] ?? ""));
+        $deleteAt = (int)($entry["delete_at"] ?? 0);
+
+        if ($source === "" || $filename === "" || $deleteAt <= 0) {
+            continue;
+        }
+
+        if ($now >= $deleteAt) {
+            $path = logsResolverRutaSegura($allowedSources, $source, $filename);
+
+            if ($path !== null && is_writable($path)) {
+                @unlink($path);
+            }
+
+            continue;
+        }
+
+        $remaining[] = $entry;
+    }
+
+    logsGuardarColaBorrado($queueFile, $remaining);
+
+    return $remaining;
 }
 
 function logsFormatearTamano(int $bytes): string
@@ -61,30 +175,8 @@ function logsFormatearFecha(?int $timestamp): string
         return "Fecha no disponible";
     }
 
-    $dias = [
-        "domingo",
-        "lunes",
-        "martes",
-        "miércoles",
-        "jueves",
-        "viernes",
-        "sábado",
-    ];
-
-    $meses = [
-        "enero",
-        "febrero",
-        "marzo",
-        "abril",
-        "mayo",
-        "junio",
-        "julio",
-        "agosto",
-        "septiembre",
-        "octubre",
-        "noviembre",
-        "diciembre",
-    ];
+    $dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+    $meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
     $diaSemana = $dias[(int)date("w", $timestamp)];
     $dia = (int)date("j", $timestamp);
@@ -100,37 +192,14 @@ function logsObtenerTipoArchivo(string $filename): string
 {
     $lower = strtolower($filename);
 
-    if (str_contains($lower, "postgresql")) {
-        return "PostgreSQL";
-    }
-
-    if (str_contains($lower, "backup_full")) {
-        return "Backup completo";
-    }
-
-    if (str_contains($lower, "backup_diff")) {
-        return "Backup diferencial";
-    }
-
-    if (str_contains($lower, "backup_manual")) {
-        return "Backup manual";
-    }
-
-    if (str_contains($lower, "cron_backup")) {
-        return "Programador automático";
-    }
-
-    if (str_contains($lower, "mantenimiento")) {
-        return "Mantenimiento";
-    }
-
-    if (str_contains($lower, "postgres_logs")) {
-        return "Copia de logs";
-    }
-
-    if (str_ends_with($lower, ".tar.gz")) {
-        return "Archivo comprimido";
-    }
+    if (str_contains($lower, "postgresql")) return "PostgreSQL";
+    if (str_contains($lower, "backup_full")) return "Backup completo";
+    if (str_contains($lower, "backup_diff")) return "Backup diferencial";
+    if (str_contains($lower, "backup_manual")) return "Backup manual";
+    if (str_contains($lower, "cron_backup")) return "Programador automático";
+    if (str_contains($lower, "mantenimiento")) return "Mantenimiento";
+    if (str_contains($lower, "postgres_logs")) return "Copia de logs";
+    if (str_ends_with($lower, ".tar.gz")) return "Archivo comprimido";
 
     return "Log del sistema";
 }
@@ -156,15 +225,14 @@ function logsLeerUltimasLineas(string $filepath, int $maxLines = 400): string
         return "No se pudo leer el contenido del archivo.";
     }
 
-    $lines = array_slice($lines, -$maxLines);
-
-    return implode(PHP_EOL, $lines);
+    return implode(PHP_EOL, array_slice($lines, -$maxLines));
 }
 
 function logsNormalizarTexto(string $text): string
 {
     $text = mb_strtolower($text, "UTF-8");
-    $text = strtr($text, [
+
+    return strtr($text, [
         "á" => "a",
         "é" => "e",
         "í" => "i",
@@ -172,11 +240,9 @@ function logsNormalizarTexto(string $text): string
         "ú" => "u",
         "ñ" => "n",
     ]);
-
-    return $text;
 }
 
-function logsListarArchivos(array $allowedSources): array
+function logsListarArchivos(array $allowedSources, array $deleteQueue): array
 {
     $logs = [];
 
@@ -184,10 +250,6 @@ function logsListarArchivos(array $allowedSources): array
         $directory = $sourceData["directory"];
 
         logsAsegurarDirectorio($directory);
-
-        if (!is_dir($directory)) {
-            continue;
-        }
 
         $patterns = [
             $directory . "/*.log",
@@ -205,6 +267,7 @@ function logsListarArchivos(array $allowedSources): array
                 $filename = basename($filepath);
                 $mtime = filemtime($filepath) ?: 0;
                 $size = filesize($filepath) ?: 0;
+                $queueEntry = logsBuscarEntradaCola($deleteQueue, $sourceKey, $filename);
 
                 $logs[] = [
                     "source" => $sourceKey,
@@ -217,65 +280,103 @@ function logsListarArchivos(array $allowedSources): array
                     "modified_at" => $mtime,
                     "modified_label" => logsFormatearFecha($mtime),
                     "is_text" => logsEsVisibleComoTexto($filename),
+                    "delete_pending" => $queueEntry !== null,
+                    "delete_at" => $queueEntry["delete_at"] ?? null,
+                    "delete_at_label" => $queueEntry ? logsFormatearFecha((int)$queueEntry["delete_at"]) : null,
                 ];
             }
         }
     }
 
-    usort(
-        $logs,
-        fn(array $a, array $b): int => $b["modified_at"] <=> $a["modified_at"]
-    );
+    usort($logs, fn(array $a, array $b): int => $b["modified_at"] <=> $a["modified_at"]);
 
     return $logs;
 }
 
-$logs = logsListarArchivos($allowedSources);
+logsAsegurarArchivoCola($deleteQueueFile);
+$deleteQueue = logsProcesarBorradosPendientes($allowedSources, $deleteQueueFile);
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $action = $_POST["action"] ?? "";
+    $source = trim($_POST["source"] ?? "");
+    $filename = basename(trim($_POST["filename"] ?? ""));
+
+    if ($action === "schedule_delete") {
+        $path = logsResolverRutaSegura($allowedSources, $source, $filename);
+
+        if ($path === null) {
+            $error = "No se encontró el log seleccionado.";
+        } elseif (logsBuscarEntradaCola($deleteQueue, $source, $filename)) {
+            $error = "Este log ya tiene borrado programado.";
+        } else {
+            $deleteQueue[] = [
+                "key" => logsCrearClave($source, $filename),
+                "source" => $source,
+                "filename" => $filename,
+                "scheduled_at" => time(),
+                "delete_at" => time() + 86400,
+                "scheduled_by" => $user["nombre"] ?? "Administrador",
+            ];
+
+            logsGuardarColaBorrado($deleteQueueFile, $deleteQueue);
+
+            $success = "El log fue programado para borrarse dentro de 24 horas.";
+        }
+    }
+
+    if ($action === "cancel_delete") {
+        $key = logsCrearClave($source, $filename);
+        $newQueue = array_filter(
+            $deleteQueue,
+            fn(array $entry): bool => ($entry["key"] ?? "") !== $key
+        );
+
+        logsGuardarColaBorrado($deleteQueueFile, $newQueue);
+
+        $success = "El borrado programado fue cancelado correctamente.";
+    }
+
+    $deleteQueue = logsLeerColaBorrado($deleteQueueFile);
+}
+
+$logs = logsListarArchivos($allowedSources, $deleteQueue);
 
 $sourceFilter = trim($_GET["source"] ?? "");
 $typeFilter = trim($_GET["type"] ?? "");
 $searchFilter = trim($_GET["search"] ?? "");
 $dateFilter = trim($_GET["date"] ?? "");
+$deleteFilter = trim($_GET["delete_status"] ?? "");
 $selectedSource = trim($_GET["selected_source"] ?? "");
 $selectedFile = basename(trim($_GET["selected_file"] ?? ""));
 
-$filteredLogs = array_filter(
-    $logs,
-    function (array $log) use ($sourceFilter, $typeFilter, $searchFilter, $dateFilter): bool {
-        if ($sourceFilter !== "" && $log["source"] !== $sourceFilter) {
-            return false;
-        }
+$filteredLogs = array_filter($logs, function (array $log) use ($sourceFilter, $typeFilter, $searchFilter, $dateFilter, $deleteFilter): bool {
+    if ($sourceFilter !== "" && $log["source"] !== $sourceFilter) return false;
+    if ($typeFilter !== "" && $log["type"] !== $typeFilter) return false;
+    if ($dateFilter !== "" && date("Y-m-d", (int)$log["modified_at"]) !== $dateFilter) return false;
 
-        if ($typeFilter !== "" && $log["type"] !== $typeFilter) {
-            return false;
-        }
+    if ($deleteFilter === "pending" && !$log["delete_pending"]) return false;
+    if ($deleteFilter === "active" && $log["delete_pending"]) return false;
 
-        if ($dateFilter !== "" && date("Y-m-d", (int)$log["modified_at"]) !== $dateFilter) {
-            return false;
-        }
+    if ($searchFilter !== "") {
+        $search = logsNormalizarTexto($searchFilter);
+        $haystack = logsNormalizarTexto(
+            $log["filename"] . " " .
+                $log["type"] . " " .
+                $log["source_label"] . " " .
+                $log["modified_label"]
+        );
 
-        if ($searchFilter !== "") {
-            $search = logsNormalizarTexto($searchFilter);
-            $haystack = logsNormalizarTexto(
-                $log["filename"] . " " .
-                    $log["type"] . " " .
-                    $log["source_label"] . " " .
-                    $log["modified_label"]
-            );
-
-            if (!str_contains($haystack, $search)) {
-                return false;
-            }
-        }
-
-        return true;
+        if (!str_contains($haystack, $search)) return false;
     }
-);
+
+    return true;
+});
 
 $filteredLogs = array_values($filteredLogs);
 
 $totalLogs = count($logs);
 $totalFiltered = count($filteredLogs);
+$totalPendingDelete = count(array_filter($logs, fn(array $log): bool => (bool)$log["delete_pending"]));
 $totalSize = array_sum(array_map(fn(array $log): int => (int)$log["size"], $logs));
 $lastLog = $logs[0] ?? null;
 
@@ -293,33 +394,22 @@ $selectedLog = null;
 $selectedContent = null;
 
 if ($selectedSource !== "" && $selectedFile !== "") {
-    if (!isset($allowedSources[$selectedSource])) {
-        $error = "Origen de log no válido.";
+    $selectedPath = logsResolverRutaSegura($allowedSources, $selectedSource, $selectedFile);
+
+    if ($selectedPath === null) {
+        $error = "No se encontró el archivo de log seleccionado.";
     } else {
-        $selectedPath = $allowedSources[$selectedSource]["directory"] . "/" . $selectedFile;
-        $realDirectory = realpath($allowedSources[$selectedSource]["directory"]);
-        $realFile = realpath($selectedPath);
-
-        if (
-            $realDirectory === false ||
-            $realFile === false ||
-            !str_starts_with($realFile, $realDirectory) ||
-            !is_file($realFile)
-        ) {
-            $error = "No se encontró el archivo de log seleccionado.";
-        } else {
-            foreach ($logs as $log) {
-                if ($log["source"] === $selectedSource && $log["filename"] === $selectedFile) {
-                    $selectedLog = $log;
-                    break;
-                }
+        foreach ($logs as $log) {
+            if ($log["source"] === $selectedSource && $log["filename"] === $selectedFile) {
+                $selectedLog = $log;
+                break;
             }
+        }
 
-            if ($selectedLog && $selectedLog["is_text"]) {
-                $selectedContent = logsLeerUltimasLineas($realFile);
-            } elseif ($selectedLog) {
-                $selectedContent = "Este archivo no se puede previsualizar como texto. Puede descargarlo para revisarlo.";
-            }
+        if ($selectedLog && $selectedLog["is_text"]) {
+            $selectedContent = logsLeerUltimasLineas($selectedPath);
+        } elseif ($selectedLog) {
+            $selectedContent = "Este archivo no se puede previsualizar como texto. Puede descargarlo para revisarlo.";
         }
     }
 }
@@ -358,9 +448,9 @@ if ($selectedSource !== "" && $selectedFile !== "") {
             </article>
 
             <article class="logs-summary-card">
-                <span>Espacio ocupado</span>
-                <strong><?= htmlspecialchars(logsFormatearTamano((int)$totalSize)) ?></strong>
-                <small>almacenado en logs</small>
+                <span>Borrado pendiente</span>
+                <strong><?= htmlspecialchars((string)$totalPendingDelete) ?></strong>
+                <small>se eliminarán después de 24 horas</small>
             </article>
 
             <article class="logs-summary-card logs-summary-card-blue">

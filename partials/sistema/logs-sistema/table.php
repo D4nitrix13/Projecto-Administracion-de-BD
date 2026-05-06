@@ -6,7 +6,7 @@
             <h2>Registros disponibles</h2>
 
             <p>
-                Seleccione un archivo para ver su contenido o descargarlo.
+                Consulte, descargue o programe el borrado de logs.
             </p>
         </div>
 
@@ -23,7 +23,7 @@
     <?php else: ?>
         <div class="logs-list">
             <?php foreach ($filteredLogs as $log): ?>
-                <article class="logs-item">
+                <article class="logs-item <?= $log["delete_pending"] ? "logs-item-pending" : "" ?>">
                     <div class="logs-item-main">
                         <div class="logs-file-icon">
                             LOG
@@ -50,7 +50,19 @@
                                 <span class="logs-chip">
                                     <?= htmlspecialchars($log["size_label"]) ?>
                                 </span>
+
+                                <?php if ($log["delete_pending"]): ?>
+                                    <span class="logs-chip logs-chip-danger">
+                                        Borrado pendiente
+                                    </span>
+                                <?php endif; ?>
                             </div>
+
+                            <?php if ($log["delete_pending"]): ?>
+                                <small class="logs-delete-note">
+                                    Se eliminará: <?= htmlspecialchars((string)$log["delete_at_label"]) ?>
+                                </small>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -74,6 +86,34 @@
                             class="logs-action-button logs-action-button-primary">
                             Descargar
                         </a>
+
+                        <?php if ($log["delete_pending"]): ?>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="cancel_delete">
+                                <input type="hidden" name="source" value="<?= htmlspecialchars($log["source"]) ?>">
+                                <input type="hidden" name="filename" value="<?= htmlspecialchars($log["filename"]) ?>">
+
+                                <button
+                                    type="submit"
+                                    class="logs-action-button logs-action-button-warning"
+                                    onclick="return confirm('¿Desea cancelar el borrado programado de este log?');">
+                                    Cancelar borrado
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="schedule_delete">
+                                <input type="hidden" name="source" value="<?= htmlspecialchars($log["source"]) ?>">
+                                <input type="hidden" name="filename" value="<?= htmlspecialchars($log["filename"]) ?>">
+
+                                <button
+                                    type="submit"
+                                    class="logs-action-button logs-action-button-danger"
+                                    onclick="return confirm('¿Desea programar el borrado de este log? Se eliminará después de 24 horas.');">
+                                    Borrar en 24h
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </article>
             <?php endforeach; ?>

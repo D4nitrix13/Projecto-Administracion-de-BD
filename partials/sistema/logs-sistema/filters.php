@@ -6,21 +6,32 @@
             <h2>Buscar logs</h2>
 
             <p>
-                Filtre los registros por origen, tipo, fecha o nombre de archivo.
+                Use una búsqueda general y filtros simples para encontrar registros rápidamente.
             </p>
         </div>
 
         <a href="logs_sistema.php" class="logs-secondary-button">
-            Limpiar filtros
+            Limpiar
         </a>
     </div>
 
-    <form method="GET" class="logs-filter-form">
+    <form method="GET" class="logs-filter-form logs-filter-form-clean">
+        <div class="logs-field logs-field-search">
+            <label for="search">Búsqueda general</label>
+
+            <input
+                type="search"
+                name="search"
+                id="search"
+                placeholder="Buscar por archivo, tipo, origen o fecha..."
+                value="<?= htmlspecialchars($searchFilter) ?>">
+        </div>
+
         <div class="logs-field">
             <label for="source">Origen</label>
 
             <select name="source" id="source">
-                <option value="">Todos los orígenes</option>
+                <option value="">Todos</option>
 
                 <?php foreach ($allowedSources as $sourceKey => $sourceData): ?>
                     <option
@@ -36,7 +47,7 @@
             <label for="type">Tipo</label>
 
             <select name="type" id="type">
-                <option value="">Todos los tipos</option>
+                <option value="">Todos</option>
 
                 <?php foreach ($availableTypes as $type): ?>
                     <option
@@ -45,6 +56,24 @@
                         <?= htmlspecialchars($type) ?>
                     </option>
                 <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="logs-field">
+            <label for="delete_status">Estado</label>
+
+            <select name="delete_status" id="delete_status">
+                <option value="" <?= $deleteFilter === "" ? "selected" : "" ?>>
+                    Todos
+                </option>
+
+                <option value="active" <?= $deleteFilter === "active" ? "selected" : "" ?>>
+                    Activos
+                </option>
+
+                <option value="pending" <?= $deleteFilter === "pending" ? "selected" : "" ?>>
+                    Borrado pendiente
+                </option>
             </select>
         </div>
 
@@ -58,19 +87,8 @@
                 value="<?= htmlspecialchars($dateFilter) ?>">
         </div>
 
-        <div class="logs-field logs-field-search">
-            <label for="search">Buscar</label>
-
-            <input
-                type="search"
-                name="search"
-                id="search"
-                placeholder="Ej. backup, postgres, cron"
-                value="<?= htmlspecialchars($searchFilter) ?>">
-        </div>
-
         <button type="submit" class="logs-primary-button">
-            Aplicar filtros
+            Filtrar
         </button>
     </form>
 </section>

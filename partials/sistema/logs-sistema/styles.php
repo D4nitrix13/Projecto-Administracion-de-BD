@@ -539,4 +539,69 @@
             white-space: normal;
         }
     }
+
+    .logs-filter-form-clean {
+        grid-template-columns: minmax(260px, 1.4fr) minmax(130px, 0.6fr) minmax(170px, 0.8fr) minmax(160px, 0.75fr) minmax(150px, 0.7fr) auto;
+    }
+
+    .logs-item-pending {
+        border-color: #fed7aa;
+        background: #fff7ed;
+    }
+
+    .logs-chip-danger {
+        border-color: #fecaca;
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .logs-delete-note {
+        display: block;
+        margin-top: 10px;
+        color: #9a3412;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .logs-action-button-danger {
+        border: 0;
+        background: #dc2626;
+        color: #ffffff;
+    }
+
+    .logs-action-button-danger:hover {
+        background: #b91c1c;
+        transform: translateY(-1px);
+    }
+
+    .logs-action-button-warning {
+        border: 0;
+        background: #f59e0b;
+        color: #ffffff;
+    }
+
+    .logs-action-button-warning:hover {
+        background: #d97706;
+        transform: translateY(-1px);
+    }
+
+    .logs-actions form {
+        margin: 0;
+    }
+
+    .logs-actions button {
+        font-family: Arial, sans-serif;
+    }
+
+    @media (max-width: 1280px) {
+        .logs-filter-form-clean {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 760px) {
+        .logs-filter-form-clean {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
