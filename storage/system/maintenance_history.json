@@ -2,6 +2,36 @@
     {
         "type": "maintenance",
         "success": true,
+        "executed_at": "2026-05-06 09:36:58",
+        "next_run_at": "2026-05-06 09:37:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
+        "executed_at": "2026-05-06 09:35:58",
+        "next_run_at": "2026-05-06 09:36:58",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "maintenance",
+        "success": true,
         "executed_at": "2026-05-06 09:34:57",
         "next_run_at": "2026-05-06 09:35:57",
         "results": [
@@ -1459,36 +1489,6 @@
         "success": true,
         "executed_at": "2026-05-05 23:49:55",
         "next_run_at": "2026-05-05 23:50:55",
-        "results": [
-            {
-                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
-                "success": true,
-                "exit_code": 0,
-                "output": "",
-                "error": ""
-            }
-        ]
-    },
-    {
-        "type": "maintenance",
-        "success": true,
-        "executed_at": "2026-05-05 23:48:55",
-        "next_run_at": "2026-05-05 23:49:55",
-        "results": [
-            {
-                "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
-                "success": true,
-                "exit_code": 0,
-                "output": "",
-                "error": ""
-            }
-        ]
-    },
-    {
-        "type": "maintenance",
-        "success": true,
-        "executed_at": "2026-05-05 23:47:54",
-        "next_run_at": "2026-05-05 23:48:54",
         "results": [
             {
                 "command": "bash '\/var\/www\/html\/scripts\/mantenimiento_bd.sh'",
