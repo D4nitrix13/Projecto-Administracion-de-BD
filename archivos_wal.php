@@ -16,12 +16,116 @@ $error = null;
 $success = null;
 
 $walDir = __DIR__ . "/database/wal_archive";
+$deleteQueueFile = __DIR__ . "/storage/system/wal_delete_queue.json";
 
 function walAsegurarDirectorio(string $directory): void
 {
     if (!is_dir($directory)) {
         mkdir($directory, 0775, true);
     }
+}
+
+function walAsegurarArchivoCola(string $file): void
+{
+    $dir = dirname($file);
+
+    if (!is_dir($dir)) {
+        mkdir($dir, 0775, true);
+    }
+
+    if (!is_file($file)) {
+        file_put_contents($file, "[]", LOCK_EX);
+    }
+}
+
+function walLeerColaBorrado(string $file): array
+{
+    walAsegurarArchivoCola($file);
+
+    $content = file_get_contents($file);
+
+    if ($content === false || trim($content) === "") {
+        return [];
+    }
+
+    $data = json_decode($content, true);
+
+    return is_array($data) ? $data : [];
+}
+
+function walGuardarColaBorrado(string $file, array $queue): void
+{
+    file_put_contents(
+        $file,
+        json_encode(array_values($queue), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        LOCK_EX
+    );
+}
+
+function walBuscarEntradaCola(array $queue, string $filename): ?array
+{
+    foreach ($queue as $entry) {
+        if (($entry["filename"] ?? "") === $filename) {
+            return $entry;
+        }
+    }
+
+    return null;
+}
+
+function walResolverRutaSegura(string $walDir, string $filename): ?string
+{
+    $safeFile = basename($filename);
+
+    $path = $walDir . "/" . $safeFile;
+
+    $realDirectory = realpath($walDir);
+    $realFile = realpath($path);
+
+    if (
+        $realDirectory === false ||
+        $realFile === false ||
+        !str_starts_with($realFile, $realDirectory) ||
+        !is_file($realFile)
+    ) {
+        return null;
+    }
+
+    return $realFile;
+}
+
+function walProcesarBorradosPendientes(string $walDir, string $queueFile): array
+{
+    $queue = walLeerColaBorrado($queueFile);
+
+    $now = time();
+
+    $remaining = [];
+
+    foreach ($queue as $entry) {
+        $filename = basename((string)($entry["filename"] ?? ""));
+        $deleteAt = (int)($entry["delete_at"] ?? 0);
+
+        if ($filename === "" || $deleteAt <= 0) {
+            continue;
+        }
+
+        if ($now >= $deleteAt) {
+            $path = walResolverRutaSegura($walDir, $filename);
+
+            if ($path !== null && is_writable($path)) {
+                @unlink($path);
+            }
+
+            continue;
+        }
+
+        $remaining[] = $entry;
+    }
+
+    walGuardarColaBorrado($queueFile, $remaining);
+
+    return $remaining;
 }
 
 function walFormatearTamano(int $bytes): string
@@ -47,15 +151,7 @@ function walFormatearFecha(?int $timestamp): string
         return "Fecha no disponible";
     }
 
-    $dias = [
-        "domingo",
-        "lunes",
-        "martes",
-        "miércoles",
-        "jueves",
-        "viernes",
-        "sábado",
-    ];
+    $dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
     $meses = [
         "enero",
@@ -115,7 +211,7 @@ function walDetectarTipo(string $filename): string
     return "Archivo WAL";
 }
 
-function walListarArchivos(string $walDir): array
+function walListarArchivos(string $walDir, array $deleteQueue): array
 {
     walAsegurarDirectorio($walDir);
 
@@ -129,6 +225,7 @@ function walListarArchivos(string $walDir): array
         $filename = basename($filepath);
         $mtime = filemtime($filepath) ?: 0;
         $size = filesize($filepath) ?: 0;
+        $queueEntry = walBuscarEntradaCola($deleteQueue, $filename);
 
         $archivos[] = [
             "filename" => $filename,
@@ -137,6 +234,10 @@ function walListarArchivos(string $walDir): array
             "size_label" => walFormatearTamano((int)$size),
             "modified_at" => $mtime,
             "modified_label" => walFormatearFecha($mtime),
+            "delete_pending" => $queueEntry !== null,
+            "delete_at_label" => $queueEntry
+                ? walFormatearFecha((int)$queueEntry["delete_at"])
+                : null,
         ];
     }
 
@@ -148,11 +249,55 @@ function walListarArchivos(string $walDir): array
     return $archivos;
 }
 
-$archivosWal = walListarArchivos($walDir);
+walAsegurarArchivoCola($deleteQueueFile);
+
+$deleteQueue = walProcesarBorradosPendientes($walDir, $deleteQueueFile);
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $action = $_POST["action"] ?? "";
+    $filename = basename(trim($_POST["filename"] ?? ""));
+
+    if ($action === "schedule_delete") {
+        $path = walResolverRutaSegura($walDir, $filename);
+
+        if ($path === null) {
+            $error = "No se encontró el archivo WAL seleccionado.";
+        } elseif (walBuscarEntradaCola($deleteQueue, $filename)) {
+            $error = "Este archivo ya tiene borrado programado.";
+        } else {
+            $deleteQueue[] = [
+                "filename" => $filename,
+                "scheduled_at" => time(),
+                "delete_at" => time() + 86400,
+                "scheduled_by" => $user["nombre"] ?? "Administrador",
+            ];
+
+            walGuardarColaBorrado($deleteQueueFile, $deleteQueue);
+
+            $success = "El archivo WAL fue programado para borrarse dentro de 24 horas.";
+        }
+    }
+
+    if ($action === "cancel_delete") {
+        $newQueue = array_filter(
+            $deleteQueue,
+            fn(array $entry): bool => ($entry["filename"] ?? "") !== $filename
+        );
+
+        walGuardarColaBorrado($deleteQueueFile, $newQueue);
+
+        $success = "El borrado programado fue cancelado correctamente.";
+    }
+
+    $deleteQueue = walLeerColaBorrado($deleteQueueFile);
+}
+
+$archivosWal = walListarArchivos($walDir, $deleteQueue);
 
 $searchFilter = trim($_GET["search"] ?? "");
 $typeFilter = trim($_GET["type"] ?? "");
 $dateFilter = trim($_GET["date"] ?? "");
+$deleteFilter = trim($_GET["delete_status"] ?? "");
 $sortFilter = trim($_GET["sort"] ?? "date_desc");
 
 $tiposDisponibles = [];
@@ -167,7 +312,13 @@ sort($tiposDisponibles);
 
 $filteredWal = array_filter(
     $archivosWal,
-    function (array $archivo) use ($searchFilter, $typeFilter, $dateFilter): bool {
+    function (array $archivo) use (
+        $searchFilter,
+        $typeFilter,
+        $dateFilter,
+        $deleteFilter
+    ): bool {
+
         if ($typeFilter !== "" && $archivo["type"] !== $typeFilter) {
             return false;
         }
@@ -176,8 +327,17 @@ $filteredWal = array_filter(
             return false;
         }
 
+        if ($deleteFilter === "pending" && !$archivo["delete_pending"]) {
+            return false;
+        }
+
+        if ($deleteFilter === "active" && $archivo["delete_pending"]) {
+            return false;
+        }
+
         if ($searchFilter !== "") {
             $search = walNormalizarTexto($searchFilter);
+
             $haystack = walNormalizarTexto(
                 $archivo["filename"] . " " .
                     $archivo["type"] . " " .
@@ -195,7 +355,6 @@ $filteredWal = array_filter(
 );
 
 $filteredWal = array_values($filteredWal);
-
 usort(
     $filteredWal,
     function (array $a, array $b) use ($sortFilter): int {
@@ -209,10 +368,24 @@ usort(
         };
     }
 );
-
 $totalArchivos = count($archivosWal);
+
 $totalFiltrados = count($filteredWal);
-$totalTamano = array_sum(array_map(fn(array $archivo): int => (int)$archivo["size"], $archivosWal));
+
+$totalTamano = array_sum(
+    array_map(
+        fn(array $archivo): int => (int)$archivo["size"],
+        $archivosWal
+    )
+);
+
+$totalPendingDelete = count(
+    array_filter(
+        $archivosWal,
+        fn(array $archivo): bool => (bool)$archivo["delete_pending"]
+    )
+);
+
 $ultimoArchivo = $archivosWal[0] ?? null;
 
 ?>
@@ -249,9 +422,9 @@ $ultimoArchivo = $archivosWal[0] ?? null;
             </article>
 
             <article class="wal-summary-card">
-                <span>Espacio ocupado</span>
-                <strong><?= htmlspecialchars(walFormatearTamano((int)$totalTamano)) ?></strong>
-                <small>almacenado en wal_archive</small>
+                <span>Borrado pendiente</span>
+                <strong><?= htmlspecialchars((string)$totalPendingDelete) ?></strong>
+                <small>se eliminarán después de 24 horas</small>
             </article>
 
             <article class="wal-summary-card wal-summary-card-blue">

@@ -441,4 +441,122 @@
             white-space: normal;
         }
     }
+
+    .wal-filter-form-clean {
+        grid-template-columns: minmax(260px, 1.3fr) minmax(150px, 0.7fr) minmax(160px, 0.75fr) minmax(150px, 0.7fr) minmax(160px, 0.75fr) auto;
+    }
+
+    .wal-item-pending {
+        border-color: #fed7aa;
+        background: #fff7ed;
+    }
+
+    .wal-chip-danger {
+        border-color: #fecaca;
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .wal-delete-note {
+        display: block;
+        margin-top: 10px;
+        color: #9a3412;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .wal-action-button-danger {
+        border: 0;
+        background: #dc2626;
+        color: #ffffff;
+    }
+
+    .wal-action-button-danger:hover {
+        background: #b91c1c;
+        transform: translateY(-1px);
+    }
+
+    .wal-action-button-warning {
+        border: 0;
+        background: #f59e0b;
+        color: #ffffff;
+    }
+
+    .wal-action-button-warning:hover {
+        background: #d97706;
+        transform: translateY(-1px);
+    }
+
+    .wal-actions form {
+        margin: 0;
+    }
+
+    .wal-actions button {
+        font-family: Arial, sans-serif;
+    }
+
+    @media (max-width: 1280px) {
+        .wal-filter-form-clean {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 760px) {
+        .wal-filter-form-clean {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .wal-item-pending {
+        border-color: #fed7aa;
+        background: #fff7ed;
+    }
+
+    .wal-chip-danger {
+        border-color: #fecaca;
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .wal-delete-note {
+        display: block;
+        margin-top: 10px;
+        color: #9a3412;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .wal-delete-note strong {
+        color: #7c2d12;
+    }
+
+    .wal-action-button-danger {
+        border: 0;
+        background: #dc2626;
+        color: #ffffff;
+    }
+
+    .wal-action-button-danger:hover {
+        background: #b91c1c;
+        transform: translateY(-1px);
+    }
+
+    .wal-action-button-warning {
+        border: 0;
+        background: #f59e0b;
+        color: #ffffff;
+    }
+
+    .wal-action-button-warning:hover {
+        background: #d97706;
+        transform: translateY(-1px);
+    }
+
+    .wal-actions form {
+        margin: 0;
+    }
+
+    .wal-actions button {
+        font-family: Arial, sans-serif;
+    }
 </style>

@@ -6,7 +6,7 @@
             <h2>Segmentos archivados</h2>
 
             <p>
-                Estos archivos provienen del directorio de archivado WAL configurado para PostgreSQL.
+                Consulte, descargue o programe el borrado de archivos WAL.
             </p>
         </div>
 
@@ -23,7 +23,7 @@
     <?php else: ?>
         <div class="wal-list">
             <?php foreach ($filteredWal as $archivo): ?>
-                <article class="wal-item">
+                <article class="wal-item <?= $archivo["delete_pending"] ? "wal-item-pending" : "" ?>">
                     <div class="wal-item-main">
                         <div class="wal-file-icon">
                             WAL
@@ -39,9 +39,27 @@
                             </p>
 
                             <div class="wal-meta-row">
-                                <span class="wal-chip"><?= htmlspecialchars($archivo["type"]) ?></span>
-                                <span class="wal-chip"><?= htmlspecialchars($archivo["size_label"]) ?></span>
+                                <span class="wal-chip">
+                                    <?= htmlspecialchars($archivo["type"]) ?>
+                                </span>
+
+                                <span class="wal-chip">
+                                    <?= htmlspecialchars($archivo["size_label"]) ?>
+                                </span>
+
+                                <?php if ($archivo["delete_pending"]): ?>
+                                    <span class="wal-chip wal-chip-danger">
+                                        Borrado pendiente
+                                    </span>
+                                <?php endif; ?>
                             </div>
+
+                            <?php if ($archivo["delete_pending"]): ?>
+                                <small class="wal-delete-note">
+                                    Programado para eliminarse el:
+                                    <strong><?= htmlspecialchars((string)$archivo["delete_at_label"]) ?></strong>
+                                </small>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -59,6 +77,32 @@
                             class="wal-action-button wal-action-button-primary">
                             Descargar
                         </a>
+
+                        <?php if ($archivo["delete_pending"]): ?>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="cancel_delete">
+                                <input type="hidden" name="filename" value="<?= htmlspecialchars($archivo["filename"]) ?>">
+
+                                <button
+                                    type="submit"
+                                    class="wal-action-button wal-action-button-warning"
+                                    onclick="return confirm('¿Desea cancelar el borrado programado de este archivo WAL?');">
+                                    Cancelar borrado
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="schedule_delete">
+                                <input type="hidden" name="filename" value="<?= htmlspecialchars($archivo["filename"]) ?>">
+
+                                <button
+                                    type="submit"
+                                    class="wal-action-button wal-action-button-danger"
+                                    onclick="return confirm('¿Desea programar el borrado de este archivo WAL? Se eliminará después de 24 horas.');">
+                                    Borrar en 24h
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </article>
             <?php endforeach; ?>
