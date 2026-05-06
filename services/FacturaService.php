@@ -401,6 +401,45 @@ class FacturaService
         return null;
     }
 
+
+    public function eliminarFactura(int $idFactura): array
+    {
+        try {
+            if ($idFactura <= 0) {
+                return [
+                    "success" => false,
+                    "message" => "Factura inválida.",
+                ];
+            }
+
+            $this->connection->beginTransaction();
+
+            $statement = $this->connection->prepare("
+            CALL eliminar_factura_sistema(:id_factura)
+        ");
+
+            $statement->execute([
+                ":id_factura" => $idFactura,
+            ]);
+
+            $this->connection->commit();
+
+            return [
+                "success" => true,
+                "message" => "Factura eliminada correctamente y stock restaurado.",
+            ];
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+
+            return [
+                "success" => false,
+                "message" => "Error al eliminar la factura: " . $exception->getMessage(),
+            ];
+        }
+    }
+
     private function convertirArrayPostgres(array $valores): string
     {
         $valores = array_map("intval", $valores);
@@ -410,5 +449,177 @@ class FacturaService
         );
 
         return "{" . implode(",", $valores) . "}";
+    }
+
+    public function obtenerFacturaParaEditar(int $idFactura): ?array
+    {
+        $statement = $this->connection->prepare("
+        SELECT *
+        FROM obtener_factura_para_impresion(:id_factura)
+        LIMIT 1
+    ");
+
+        $statement->execute([
+            ":id_factura" => $idFactura,
+        ]);
+
+        $factura = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $factura ?: null;
+    }
+
+    public function obtenerDetallesFacturaParaEditar(int $idFactura): array
+    {
+        $statement = $this->connection->prepare("
+        SELECT *
+        FROM obtener_detalles_factura_edicion(:id_factura)
+    ");
+
+        $statement->execute([
+            ":id_factura" => $idFactura,
+        ]);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerClienteFacturaParaEditar(int $idCliente): ?array
+    {
+        $statement = $this->connection->prepare("
+        SELECT *
+        FROM obtener_cliente_factura_edicion(:id_cliente)
+        LIMIT 1
+    ");
+
+        $statement->execute([
+            ":id_cliente" => $idCliente,
+        ]);
+
+        $cliente = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $cliente ?: null;
+    }
+
+    public function obtenerLimiteClienteFugazParaVista(): float
+    {
+        return $this->obtenerLimiteClienteFugaz();
+    }
+
+    public function editarFactura(int $idFactura, array $post, array $user): array
+    {
+        try {
+            if ($idFactura <= 0) {
+                return [
+                    "success" => false,
+                    "message" => "Factura inválida.",
+                ];
+            }
+
+            $tipoClienteVenta = $this->normalizarTipoClienteVenta(
+                $post["tipo_cliente_venta"] ?? TIPO_CLIENTE_HABITUAL
+            );
+
+            $idCliente = $this->resolverIdCliente($post, $tipoClienteVenta);
+            $idUsuario = isset($post["id_usuario"]) ? (int)$post["id_usuario"] : (int)$user["id_usuario"];
+            $idSeccion = $this->resolverIdSeccion($post, $user);
+            $fecha = trim((string)($post["fecha"] ?? ""));
+            $descuentoGlobal = trim((string)($post["descuento_global"] ?? "0"));
+            $nombreClienteFugaz = trim((string)($post["nombre_cliente_fugaz"] ?? ""));
+
+            $items = $this->obtenerItemsDesdePost($post);
+
+            if ($fecha === "") {
+                return [
+                    "success" => false,
+                    "message" => "La fecha de la factura es obligatoria.",
+                ];
+            }
+
+            if ($tipoClienteVenta === TIPO_CLIENTE_FUGAZ && $nombreClienteFugaz === "") {
+                return [
+                    "success" => false,
+                    "message" => "Debe escribir el nombre del cliente fugaz.",
+                ];
+            }
+
+            $error = $this->validarDatosFactura(
+                $idCliente,
+                $idSeccion,
+                $items,
+                $descuentoGlobal
+            );
+
+            if ($error !== null) {
+                return [
+                    "success" => false,
+                    "message" => $error,
+                ];
+            }
+
+            $productosMap = $this->obtenerProductosMap($items);
+
+            $totales = $this->calcularTotales(
+                $items,
+                $productosMap,
+                (float)$descuentoGlobal
+            );
+
+            $errorClienteFugaz = $this->validarLimiteClienteFugaz(
+                $tipoClienteVenta,
+                $totales["total"]
+            );
+
+            if ($errorClienteFugaz !== null) {
+                return [
+                    "success" => false,
+                    "message" => $errorClienteFugaz,
+                ];
+            }
+
+            $this->connection->beginTransaction();
+
+            $statement = $this->connection->prepare("
+            CALL editar_factura_sistema(
+                :id_factura,
+                :fecha,
+                :id_cliente,
+                :id_usuario,
+                :id_seccion,
+                :tipo_cliente_venta,
+                :nombre_cliente_fugaz,
+                :descuento_global,
+                :iva,
+                CAST(:items AS JSONB)
+            )
+        ");
+
+            $statement->execute([
+                ":id_factura" => $idFactura,
+                ":fecha" => date("Y-m-d H:i:s", strtotime($fecha)),
+                ":id_cliente" => $idCliente,
+                ":id_usuario" => $idUsuario,
+                ":id_seccion" => $idSeccion,
+                ":tipo_cliente_venta" => $tipoClienteVenta,
+                ":nombre_cliente_fugaz" => $tipoClienteVenta === TIPO_CLIENTE_FUGAZ ? $nombreClienteFugaz : null,
+                ":descuento_global" => (float)$descuentoGlobal,
+                ":iva" => IVA_RATE,
+                ":items" => json_encode($items, JSON_THROW_ON_ERROR),
+            ]);
+
+            $this->connection->commit();
+
+            return [
+                "success" => true,
+                "message" => "Factura actualizada correctamente.",
+            ];
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+
+            return [
+                "success" => false,
+                "message" => "Error al editar la factura: " . $exception->getMessage(),
+            ];
+        }
     }
 }

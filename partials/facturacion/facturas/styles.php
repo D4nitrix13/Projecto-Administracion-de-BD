@@ -471,4 +471,16 @@
             min-width: 780px;
         }
     }
+
+    .btn-accion-editar {
+        background: #eef2ff;
+        color: #4338ca;
+        border-color: #c7d2fe;
+    }
+
+    .btn-accion-editar:hover {
+        background: #c7d2fe;
+        border-color: #a5b4fc;
+        color: #3730a3;
+    }
 </style>

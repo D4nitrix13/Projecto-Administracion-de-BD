@@ -44,7 +44,11 @@
                                 class="btn-accion btn-accion-detalle">
                                 Ver detalles
                             </a>
-
+                            <a
+                                href="editar_factura.php?id=<?= urlencode((string)$factura["id_factura"]) ?>"
+                                class="btn-accion btn-accion-detalle">
+                                Editar
+                            </a>
                             <a
                                 href="eliminar_factura.php?id=<?= (int)$factura["id_factura"] ?>"
                                 class="btn-accion btn-accion-eliminar"
