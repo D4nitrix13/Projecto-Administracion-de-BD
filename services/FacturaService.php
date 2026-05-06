@@ -344,11 +344,50 @@ class FacturaService
         return (int)$statement->fetchColumn();
     }
 
+    private function obtenerLimiteClienteFugaz(): float
+    {
+        $archivoConfiguracion = __DIR__ . "/../configuracion_sistema.json";
+        $limitePorDefecto = 1000.00;
+
+        if (!is_file($archivoConfiguracion)) {
+            file_put_contents(
+                $archivoConfiguracion,
+                json_encode(
+                    ["limite_de_venta_cliente_fugaz" => $limitePorDefecto],
+                    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+                ),
+                LOCK_EX
+            );
+
+            return $limitePorDefecto;
+        }
+
+        $contenido = file_get_contents($archivoConfiguracion);
+
+        if ($contenido === false || trim($contenido) === "") {
+            return $limitePorDefecto;
+        }
+
+        $configuracion = json_decode($contenido, true);
+
+        if (!is_array($configuracion)) {
+            return $limitePorDefecto;
+        }
+
+        $limite = $configuracion["limite_de_venta_cliente_fugaz"] ?? $limitePorDefecto;
+
+        if (!is_numeric($limite) || (float)$limite <= 0) {
+            return $limitePorDefecto;
+        }
+
+        return (float)$limite;
+    }
+
     private function validarLimiteClienteFugaz(
         string $tipoClienteVenta,
         float $total
     ): ?string {
-        $limiteClienteFugaz = 1000.00;
+        $limiteClienteFugaz = $this->obtenerLimiteClienteFugaz();
 
         if (
             $tipoClienteVenta === TIPO_CLIENTE_FUGAZ &&

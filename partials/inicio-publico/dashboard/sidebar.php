@@ -126,6 +126,12 @@ function isActivePage(string $page, string $currentPage): string
                     </a>
 
                     <a
+                        href="limite_de_venta_cliente_fugaz.php"
+                        class="sidebar-sublink <?= isActivePage("limite_de_venta_cliente_fugaz.php", $currentPage) ?>">
+                        Límite de venta cliente fugaz
+                    </a>
+
+                    <a
                         href="backups_manuales.php"
                         class="sidebar-sublink <?= isActivePage("backups_manuales.php", $currentPage) ?>">
                         Backups manuales

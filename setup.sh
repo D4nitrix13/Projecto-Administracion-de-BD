@@ -21,6 +21,10 @@ cat > storage/system/backup_schedule.json <<'EOF'
 }
 EOF
 
+echo '{
+    "limite_cliente_fugaz": 1000.00
+}' > storage/system/configuracion_sistema.json
+
 echo "[]" > storage/system/maintenance_history.json
 echo "[]" > backups/logs/delete_queue.json
 
