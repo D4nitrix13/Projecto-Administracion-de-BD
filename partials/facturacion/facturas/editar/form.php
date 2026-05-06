@@ -8,59 +8,61 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
 <form method="POST" class="factura-edit-card" id="facturaEditForm">
     <input type="hidden" name="id_factura" value="<?= (int)$idFactura ?>">
 
-    <div class="factura-edit-grid">
-        <label class="factura-edit-field">
-            <span>Fecha</span>
-            <input
-                type="datetime-local"
-                name="fecha"
-                value="<?= htmlspecialchars(facturaEditarFechaInput($factura["fecha"] ?? null)) ?>">
-        </label>
+    <section class="factura-edit-block">
+        <div class="factura-edit-grid">
+            <label class="factura-edit-field">
+                <span>Fecha</span>
+                <input
+                    type="datetime-local"
+                    name="fecha"
+                    value="<?= htmlspecialchars(facturaEditarFechaInput($factura["fecha"] ?? null)) ?>">
+            </label>
 
-        <label class="factura-edit-field">
-            <span>Trabajador / usuario</span>
+            <label class="factura-edit-field">
+                <span>Trabajador / usuario</span>
 
-            <input
-                type="hidden"
-                name="id_usuario"
-                id="facturaEditUsuarioId"
-                value="<?= $idUsuarioActual ?>">
+                <input
+                    type="hidden"
+                    name="id_usuario"
+                    id="facturaEditUsuarioId"
+                    value="<?= $idUsuarioActual ?>">
 
-            <input
-                type="text"
-                id="facturaEditUsuarioFiltro"
-                placeholder="Filtrar trabajador..."
-                autocomplete="off">
+                <input
+                    type="text"
+                    id="facturaEditUsuarioFiltro"
+                    placeholder="Filtrar trabajador..."
+                    autocomplete="off">
 
-            <div class="factura-edit-filter-list" id="facturaEditUsuarioLista"></div>
-        </label>
+                <div class="factura-edit-filter-list" id="facturaEditUsuarioLista"></div>
+            </label>
 
-        <label class="factura-edit-field">
-            <span>Sección</span>
-            <select name="id_seccion">
-                <?php foreach ($secciones as $seccion): ?>
-                    <option
-                        value="<?= (int)$seccion["id_seccion"] ?>"
-                        <?= (int)$seccion["id_seccion"] === $idSeccionActual ? "selected" : "" ?>>
-                        <?= htmlspecialchars($seccion["nombre"] ?? "Sección") ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
+            <label class="factura-edit-field">
+                <span>Sección</span>
+                <select name="id_seccion">
+                    <?php foreach ($secciones as $seccion): ?>
+                        <option
+                            value="<?= (int)$seccion["id_seccion"] ?>"
+                            <?= (int)$seccion["id_seccion"] === $idSeccionActual ? "selected" : "" ?>>
+                            <?= htmlspecialchars($seccion["nombre"] ?? "Sección") ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
 
-        <label class="factura-edit-field">
-            <span>Descuento global</span>
-            <input
-                type="number"
-                name="descuento_global"
-                id="facturaEditDescuentoGlobal"
-                min="0"
-                step="0.01"
-                value="<?= htmlspecialchars((string)($factura["descuento"] ?? "0")) ?>">
-        </label>
-    </div>
+            <label class="factura-edit-field">
+                <span>Descuento global</span>
+                <input
+                    type="text"
+                    name="descuento_global"
+                    id="facturaEditDescuentoGlobal"
+                    class="factura-edit-decimal"
+                    inputmode="decimal"
+                    value="<?= htmlspecialchars((string)($factura["descuento"] ?? "0")) ?>">
+            </label>
+        </div>
+    </section>
 
-    <div class="factura-edit-section">
+    <section class="factura-edit-section">
         <h2>Cliente</h2>
 
         <div class="factura-edit-client-type">
@@ -95,7 +97,7 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             <input
                 type="text"
                 id="facturaEditClienteFiltro"
-                placeholder="Filtrar cliente..."
+                placeholder="Filtrar cliente por nombre, teléfono o identificación..."
                 autocomplete="off">
 
             <div class="factura-edit-filter-list" id="facturaEditClienteLista"></div>
@@ -109,13 +111,13 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
                 value="<?= htmlspecialchars((string)($factura["nombre_cliente_fugaz"] ?? "")) ?>"
                 placeholder="Ejemplo: Cliente rápido">
         </label>
-    </div>
+    </section>
 
-    <div class="factura-edit-section">
+    <section class="factura-edit-section">
         <div class="factura-edit-section-title">
             <div>
                 <h2>Productos</h2>
-                <p>Edite cantidades, descuentos o agregue nuevos productos.</p>
+                <p>Seleccione productos, revise stock disponible y ajuste cantidades o descuentos.</p>
             </div>
 
             <button
@@ -127,7 +129,7 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         </div>
 
         <div id="facturaEditProductos" class="factura-edit-products"></div>
-    </div>
+    </section>
 
     <aside class="factura-edit-summary">
         <div>
@@ -180,6 +182,21 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+    }
+
+    function limpiarEntero(valor) {
+        return String(valor || "").replace(/[^\d]/g, "");
+    }
+
+    function limpiarDecimal(valor) {
+        let limpio = String(valor || "").replace(",", ".").replace(/[^\d.]/g, "");
+        const partes = limpio.split(".");
+
+        if (partes.length > 2) {
+            limpio = partes.shift() + "." + partes.join("");
+        }
+
+        return limpio;
     }
 
     function nombrePersona(item) {
@@ -320,45 +337,53 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         const producto = detalle ? buscarProducto(detalle.id_producto) : null;
         const productoTexto = producto ? nombreProducto(producto) : "";
         const stockActual = producto ? stockProductoEdicion(producto.id_producto) : 0;
+        const precioActual = producto ? precioProducto(producto) : 0;
 
         row.innerHTML = `
         <input type="hidden" name="id_producto[]" class="id-producto" value="${idProducto}">
 
-        <div class="factura-edit-field">
-            <span>Producto</span>
-            <input
-                type="text"
-                class="producto-filtro"
-                value="${productoTexto}"
-                placeholder="Filtrar producto..."
-                autocomplete="off">
+        <div class="factura-edit-product-main">
+            <label class="factura-edit-field factura-edit-product-search">
+                <span>Producto</span>
+                <input
+                    type="text"
+                    class="producto-filtro"
+                    value="${productoTexto}"
+                    placeholder="Filtrar producto por código o nombre..."
+                    autocomplete="off">
+                <div class="factura-edit-filter-list producto-lista"></div>
+            </label>
 
-            <small class="factura-edit-stock-info">
-                Stock disponible para edición: <strong>${stockActual}</strong>
-            </small>
+            <div class="factura-edit-product-meta">
+                <div>
+                    <span>Stock disponible</span>
+                    <strong class="stock-disponible">${stockActual}</strong>
+                </div>
 
-            <div class="factura-edit-filter-list producto-lista"></div>
+                <div>
+                    <span>Precio unitario</span>
+                    <strong class="precio-unitario">${money(precioActual)}</strong>
+                </div>
+            </div>
         </div>
 
-        <label class="factura-edit-field">
+        <label class="factura-edit-field factura-edit-qty-field">
             <span>Cantidad</span>
             <input
-                type="number"
+                type="text"
                 name="cantidad[]"
-                class="cantidad"
-                min="1"
-                step="1"
+                class="cantidad factura-edit-integer"
+                inputmode="numeric"
                 value="${detalle ? detalle.cantidad : 1}">
         </label>
 
-        <label class="factura-edit-field">
+        <label class="factura-edit-field factura-edit-discount-field">
             <span>Descuento</span>
             <input
-                type="number"
+                type="text"
                 name="descuento_linea[]"
-                class="descuento-linea"
-                min="0"
-                step="0.01"
+                class="descuento-linea factura-edit-decimal"
+                inputmode="decimal"
                 value="${detalle ? detalle.descuento_linea : "0.00"}">
         </label>
 
@@ -368,7 +393,7 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             <small class="factura-edit-line-warning"></small>
         </div>
 
-        <button type="button" class="factura-edit-btn factura-edit-btn-danger">
+        <button type="button" class="factura-edit-btn factura-edit-btn-danger factura-edit-remove-btn">
             Quitar
         </button>
     `;
@@ -376,7 +401,8 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         const input = row.querySelector(".producto-filtro");
         const hidden = row.querySelector(".id-producto");
         const lista = row.querySelector(".producto-lista");
-        const stockInfo = row.querySelector(".factura-edit-stock-info strong");
+        const stockInfo = row.querySelector(".stock-disponible");
+        const precioInfo = row.querySelector(".precio-unitario");
 
         input.addEventListener("input", () => {
             hidden.value = "";
@@ -402,13 +428,14 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
 
                 button.innerHTML = `
                 <strong>${nombreProducto(producto)}</strong>
-                <small>Precio: ${money(precioProducto(producto))} · Stock: ${stockProductoEdicion(producto.id_producto)}</small>
+                <small>Precio: ${money(precioProducto(producto))} · Stock disponible: ${stockProductoEdicion(producto.id_producto)}</small>
             `;
 
                 button.addEventListener("click", () => {
                     hidden.value = producto.id_producto;
                     input.value = nombreProducto(producto);
                     stockInfo.textContent = stockProductoEdicion(producto.id_producto);
+                    precioInfo.textContent = money(precioProducto(producto));
                     lista.innerHTML = "";
                     calcularTotales();
                 });
@@ -417,13 +444,23 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             });
         });
 
-        row.querySelector(".factura-edit-btn-danger").addEventListener("click", () => {
+        row.querySelector(".factura-edit-remove-btn").addEventListener("click", () => {
             row.remove();
             calcularTotales();
         });
 
-        row.querySelectorAll("input").forEach(input => {
-            input.addEventListener("input", calcularTotales);
+        row.querySelectorAll(".factura-edit-integer").forEach(input => {
+            input.addEventListener("input", () => {
+                input.value = limpiarEntero(input.value);
+                calcularTotales();
+            });
+        });
+
+        row.querySelectorAll(".factura-edit-decimal").forEach(input => {
+            input.addEventListener("input", () => {
+                input.value = limpiarDecimal(input.value);
+                calcularTotales();
+            });
         });
 
         contenedor.appendChild(row);
@@ -474,9 +511,13 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             if (producto) {
                 const disponible = stockProductoEdicion(id);
                 const solicitadoTotal = cantidadesPorProducto[id] || 0;
+                const subtotalLinea = precio * cantidad;
 
                 if (solicitadoTotal > disponible) {
                     warning.textContent = `Stock insuficiente. Disponible: ${disponible}`;
+                    row.classList.add("factura-edit-row-error");
+                } else if (descuento > subtotalLinea) {
+                    warning.textContent = "El descuento supera el subtotal.";
                     row.classList.add("factura-edit-row-error");
                 } else {
                     warning.textContent = "";
@@ -573,6 +614,13 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         if (detallesIniciales.length === 0) {
             crearFilaProducto();
         }
+
+        document.querySelectorAll(".factura-edit-decimal").forEach(input => {
+            input.addEventListener("input", () => {
+                input.value = limpiarDecimal(input.value);
+                calcularTotales();
+            });
+        });
 
         document.getElementById("facturaEditAgregarProducto").addEventListener("click", () => crearFilaProducto());
         document.getElementById("facturaEditDescuentoGlobal").addEventListener("input", calcularTotales);
