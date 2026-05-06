@@ -149,7 +149,7 @@ require_once __DIR__ . "/helpers/format.php";
 
                 <?php if (($user["rol"] ?? "") === "Administrador"): ?>
                     <a href="trabajadores.php">Trabajadores</a>
-                    <a href="respaldo_bd.php">Respaldos</a>
+                    <a href="programar_backups.php">Programar backups</a>
                 <?php endif; ?>
             </article>
         </section>
