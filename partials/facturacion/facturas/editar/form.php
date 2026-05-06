@@ -52,11 +52,12 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             <label class="factura-edit-field">
                 <span>Descuento global</span>
                 <input
-                    type="text"
+                    type="number"
                     name="descuento_global"
                     id="facturaEditDescuentoGlobal"
-                    class="factura-edit-decimal"
-                    inputmode="decimal"
+                    class="factura-edit-number-decimal"
+                    min="0"
+                    step="0.01"
                     value="<?= htmlspecialchars((string)($factura["descuento"] ?? "0")) ?>">
             </label>
         </div>
@@ -184,19 +185,46 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         });
     }
 
-    function limpiarEntero(valor) {
-        return String(valor || "").replace(/[^\d]/g, "");
-    }
+    function bloquearCaracteresNoNumericos(event, permiteDecimal = false) {
+        const teclasPermitidas = [
+            "Backspace",
+            "Delete",
+            "Tab",
+            "ArrowLeft",
+            "ArrowRight",
+            "ArrowUp",
+            "ArrowDown",
+            "Home",
+            "End"
+        ];
 
-    function limpiarDecimal(valor) {
-        let limpio = String(valor || "").replace(",", ".").replace(/[^\d.]/g, "");
-        const partes = limpio.split(".");
-
-        if (partes.length > 2) {
-            limpio = partes.shift() + "." + partes.join("");
+        if (teclasPermitidas.includes(event.key)) {
+            return;
         }
 
-        return limpio;
+        if (permiteDecimal && event.key === "." && !event.currentTarget.value.includes(".")) {
+            return;
+        }
+
+        if (!/^\d$/.test(event.key)) {
+            event.preventDefault();
+        }
+    }
+
+    function normalizarNumeroInput(input, permiteDecimal = false) {
+        if (permiteDecimal) {
+            let valor = input.value.replace(",", ".").replace(/[^\d.]/g, "");
+            const partes = valor.split(".");
+
+            if (partes.length > 2) {
+                valor = partes.shift() + "." + partes.join("");
+            }
+
+            input.value = valor;
+            return;
+        }
+
+        input.value = input.value.replace(/[^\d]/g, "");
     }
 
     function nombrePersona(item) {
@@ -370,32 +398,36 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         <label class="factura-edit-field factura-edit-qty-field">
             <span>Cantidad</span>
             <input
-                type="text"
+                type="number"
                 name="cantidad[]"
-                class="cantidad factura-edit-integer"
-                inputmode="numeric"
+                class="cantidad factura-edit-number-integer"
+                min="1"
+                step="1"
                 value="${detalle ? detalle.cantidad : 1}">
         </label>
 
         <label class="factura-edit-field factura-edit-discount-field">
             <span>Descuento</span>
             <input
-                type="text"
+                type="number"
                 name="descuento_linea[]"
-                class="descuento-linea factura-edit-decimal"
-                inputmode="decimal"
+                class="descuento-linea factura-edit-number-decimal"
+                min="0"
+                step="0.01"
                 value="${detalle ? detalle.descuento_linea : "0.00"}">
         </label>
 
-        <div class="factura-edit-line-total">
-            <span>Total línea</span>
-            <strong>C$ 0.00</strong>
-            <small class="factura-edit-line-warning"></small>
-        </div>
+        <div class="factura-edit-line-actions">
+            <div class="factura-edit-line-total">
+                <span>Total línea</span>
+                <strong>C$ 0.00</strong>
+                <small class="factura-edit-line-warning"></small>
+            </div>
 
-        <button type="button" class="factura-edit-btn factura-edit-btn-danger factura-edit-remove-btn">
-            Quitar
-        </button>
+            <button type="button" class="factura-edit-btn factura-edit-btn-danger factura-edit-remove-btn">
+                Quitar
+            </button>
+        </div>
     `;
 
         const input = row.querySelector(".producto-filtro");
@@ -449,16 +481,18 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             calcularTotales();
         });
 
-        row.querySelectorAll(".factura-edit-integer").forEach(input => {
+        row.querySelectorAll(".factura-edit-number-integer").forEach(input => {
+            input.addEventListener("keydown", event => bloquearCaracteresNoNumericos(event, false));
             input.addEventListener("input", () => {
-                input.value = limpiarEntero(input.value);
+                normalizarNumeroInput(input, false);
                 calcularTotales();
             });
         });
 
-        row.querySelectorAll(".factura-edit-decimal").forEach(input => {
+        row.querySelectorAll(".factura-edit-number-decimal").forEach(input => {
+            input.addEventListener("keydown", event => bloquearCaracteresNoNumericos(event, true));
             input.addEventListener("input", () => {
-                input.value = limpiarDecimal(input.value);
+                normalizarNumeroInput(input, true);
                 calcularTotales();
             });
         });
@@ -497,13 +531,43 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         document.querySelectorAll(".factura-edit-product-row").forEach(row => {
             const id = row.querySelector(".id-producto").value;
             const producto = buscarProducto(id);
-            const cantidad = Number(row.querySelector(".cantidad").value || 0);
-            const descuento = Number(row.querySelector(".descuento-linea").value || 0);
-            const precio = producto ? precioProducto(producto) : 0;
-            const totalLinea = Math.max((precio * cantidad) - descuento, 0);
+            const cantidadInput = row.querySelector(".cantidad");
+            const descuentoInput = row.querySelector(".descuento-linea");
             const warning = row.querySelector(".factura-edit-line-warning");
 
-            subtotal += precio * cantidad;
+            let cantidad = Number(cantidadInput.value || 0);
+            const descuento = Number(descuentoInput.value || 0);
+            const precio = producto ? precioProducto(producto) : 0;
+
+            if (producto) {
+                const disponible = stockProductoEdicion(id);
+                const cantidadOtros = (cantidadesPorProducto[id] || 0) - cantidad;
+                const maximoPermitidoFila = Math.max(disponible - cantidadOtros, 0);
+
+                cantidadInput.max = String(maximoPermitidoFila);
+
+                if (cantidad > maximoPermitidoFila) {
+                    cantidad = maximoPermitidoFila;
+                    cantidadInput.value = String(maximoPermitidoFila);
+                }
+
+                if (cantidad < 1 && maximoPermitidoFila > 0) {
+                    cantidad = 1;
+                    cantidadInput.value = "1";
+                }
+
+                if (maximoPermitidoFila <= 0) {
+                    cantidad = 0;
+                    cantidadInput.value = "0";
+                }
+            } else {
+                cantidadInput.removeAttribute("max");
+            }
+
+            const subtotalLinea = precio * cantidad;
+            const totalLinea = Math.max(subtotalLinea - descuento, 0);
+
+            subtotal += subtotalLinea;
             descuentoLineas += descuento;
 
             row.querySelector(".factura-edit-line-total strong").textContent = money(totalLinea);
@@ -511,7 +575,6 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             if (producto) {
                 const disponible = stockProductoEdicion(id);
                 const solicitadoTotal = cantidadesPorProducto[id] || 0;
-                const subtotalLinea = precio * cantidad;
 
                 if (solicitadoTotal > disponible) {
                     warning.textContent = `Stock insuficiente. Disponible: ${disponible}`;
@@ -615,9 +678,10 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             crearFilaProducto();
         }
 
-        document.querySelectorAll(".factura-edit-decimal").forEach(input => {
+        document.querySelectorAll(".factura-edit-number-decimal").forEach(input => {
+            input.addEventListener("keydown", event => bloquearCaracteresNoNumericos(event, true));
             input.addEventListener("input", () => {
-                input.value = limpiarDecimal(input.value);
+                normalizarNumeroInput(input, true);
                 calcularTotales();
             });
         });

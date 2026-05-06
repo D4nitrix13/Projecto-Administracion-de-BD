@@ -223,9 +223,9 @@
 
     .factura-edit-product-row {
         display: grid;
-        grid-template-columns: minmax(360px, 1fr) 110px 130px 140px 92px;
+        grid-template-columns: minmax(420px, 1fr) 110px 130px minmax(210px, 240px);
         gap: 12px;
-        align-items: stretch;
+        align-items: end;
         padding: 14px;
         border: 1px solid #e5e7eb;
         border-radius: 16px;
@@ -273,48 +273,68 @@
 
     .factura-edit-qty-field,
     .factura-edit-discount-field {
-        align-content: start;
+        align-content: end;
+    }
+
+    .factura-edit-line-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 88px;
+        gap: 10px;
+        align-items: end;
     }
 
     .factura-edit-line-total {
-        min-height: 86px;
-        display: grid;
-        align-content: center;
-        gap: 4px;
-        padding: 10px 12px;
-        border: 1px solid #e5e7eb;
+        min-height: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 3px;
+        padding: 9px 12px;
+        border: 1px solid #dbe3ee;
         border-radius: 12px;
         background: #ffffff;
     }
 
     .factura-edit-line-total span {
         color: #6b7280;
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         font-weight: 900;
         text-transform: uppercase;
+        letter-spacing: 0.025em;
+        white-space: nowrap;
     }
 
     .factura-edit-line-total strong {
         color: #111827;
-        font-size: 0.95rem;
+        font-size: 0.96rem;
+        line-height: 1.2;
     }
 
     .factura-edit-line-warning {
         display: block;
-        margin-top: 4px;
         color: #b91c1c;
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         font-weight: 800;
+        line-height: 1.25;
     }
 
     .factura-edit-remove-btn {
-        min-height: 86px;
-        align-self: stretch;
+        min-height: 42px;
+        height: 42px;
+        width: 88px;
+        padding: 0 12px;
+        border-radius: 12px;
+        align-self: end;
     }
 
     .factura-edit-row-error {
         border-color: #fecaca;
         background: #fff1f2;
+    }
+
+    .factura-edit-row-error .factura-edit-line-total {
+        border-color: #fecaca;
+        background: #fff7f7;
     }
 
     .factura-edit-summary {
@@ -410,9 +430,37 @@
         background: #fecaca;
     }
 
-    @media (max-width: 1280px) {
+    @media (max-width: 1380px) {
         .factura-edit-product-row {
-            grid-template-columns: minmax(280px, 1fr) 100px 120px 130px 86px;
+            grid-template-columns: minmax(340px, 1fr) 105px 120px minmax(200px, 220px);
+        }
+
+        .factura-edit-line-actions {
+            grid-template-columns: minmax(0, 1fr) 84px;
+        }
+
+        .factura-edit-remove-btn {
+            width: 84px;
+        }
+    }
+
+    @media (max-width: 1180px) {
+        .factura-edit-product-row {
+            grid-template-columns: 1fr 1fr;
+            align-items: stretch;
+        }
+
+        .factura-edit-product-main {
+            grid-column: 1 / -1;
+        }
+
+        .factura-edit-line-actions {
+            grid-column: 1 / -1;
+            grid-template-columns: minmax(0, 1fr) 120px;
+        }
+
+        .factura-edit-remove-btn {
+            width: 120px;
         }
     }
 
@@ -421,19 +469,6 @@
         .factura-edit-grid,
         .factura-edit-summary {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .factura-edit-product-row {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .factura-edit-product-main {
-            grid-column: 1 / -1;
-        }
-
-        .factura-edit-line-total,
-        .factura-edit-remove-btn {
-            min-height: 64px;
         }
     }
 
@@ -447,7 +482,8 @@
         .factura-edit-grid,
         .factura-edit-summary,
         .factura-edit-product-row,
-        .factura-edit-product-meta {
+        .factura-edit-product-meta,
+        .factura-edit-line-actions {
             grid-template-columns: 1fr;
         }
 
@@ -457,6 +493,7 @@
             align-items: stretch;
         }
 
+        .factura-edit-remove-btn,
         .factura-edit-btn {
             width: 100%;
         }

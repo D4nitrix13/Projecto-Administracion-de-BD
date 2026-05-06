@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 // * Stored function or procedure has been executed
 
 class ClienteRepository
@@ -92,15 +95,38 @@ class ClienteRepository
         $statement = $this->connection->query("
             SELECT
                 id_cliente,
-                nombres,
-                apellidos,
+                nombre,
                 telefono,
-                direccion,
                 identificacion,
                 tipo_cliente
             FROM listar_clientes_habituales()
+            ORDER BY nombre ASC
         ");
 
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        $clientes = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(static function (array $cliente): array {
+            $nombreCompleto = trim((string)($cliente["nombre"] ?? ""));
+            $partesNombre = preg_split('/\s+/', $nombreCompleto) ?: [];
+
+            $nombres = $nombreCompleto;
+            $apellidos = "";
+
+            if (count($partesNombre) >= 2) {
+                $nombres = array_shift($partesNombre);
+                $apellidos = implode(" ", $partesNombre);
+            }
+
+            return [
+                "id_cliente" => (int)$cliente["id_cliente"],
+                "nombres" => $nombres,
+                "apellidos" => $apellidos,
+                "nombre" => $nombreCompleto,
+                "telefono" => $cliente["telefono"] ?? "",
+                "direccion" => "",
+                "identificacion" => $cliente["identificacion"] ?? "",
+                "tipo_cliente" => $cliente["tipo_cliente"] ?? "",
+            ];
+        }, $clientes);
     }
 }
