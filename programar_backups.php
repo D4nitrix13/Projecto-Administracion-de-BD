@@ -12,6 +12,7 @@ $user = $_SESSION["user"];
 
 $scheduleDir = __DIR__ . "/storage/system";
 $scheduleFile = $scheduleDir . "/backup_schedule.json";
+$historyFile = $scheduleDir . "/maintenance_history.json";
 
 $error = null;
 $success = null;
@@ -75,6 +76,18 @@ function asegurarArchivoProgramacionBackup(string $scheduleDir, string $schedule
             LOCK_EX
         );
     }
+}
+
+function asegurarArchivoHistorialMantenimiento(string $historyFile): void
+{
+    if (!is_file($historyFile)) {
+        file_put_contents($historyFile, "[]", LOCK_EX);
+    }
+}
+
+function reiniciarHistorialMantenimiento(string $historyFile): void
+{
+    file_put_contents($historyFile, "[]", LOCK_EX);
 }
 
 function leerProgramacionBackup(string $scheduleFile): array
@@ -182,6 +195,7 @@ function obtenerTextoFrecuencia(int $valor, string $unidad, array $unidadesInter
 }
 
 asegurarArchivoProgramacionBackup($scheduleDir, $scheduleFile);
+asegurarArchivoHistorialMantenimiento($historyFile);
 
 $schedule = leerProgramacionBackup($scheduleFile);
 
@@ -229,6 +243,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         guardarProgramacionBackup($scheduleFile, $schedule);
 
         $success = "La programación fue restablecida a backup completo cada semana.";
+    }
+
+    if ($action === "reset_history") {
+        reiniciarHistorialMantenimiento($historyFile);
+
+        $success = "El historial de mantenimiento fue reiniciado correctamente.";
     }
 }
 
@@ -346,6 +366,30 @@ $typeDescription = obtenerDescripcionTipoBackup($type);
                             class="programar-danger-button"
                             onclick="return confirm('¿Desea restablecer la programación por defecto?');">
                             Restablecer programación
+                        </button>
+                    </form>
+                </article>
+
+                <article class="programar-card programar-danger-card">
+                    <div class="programar-card-header">
+                        <div>
+                            <span class="programar-kicker programar-kicker-danger">Historial</span>
+                            <h2>Reiniciar historial</h2>
+                        </div>
+                    </div>
+
+                    <p class="programar-card-text">
+                        Limpia el archivo de historial de mantenimiento y deja el registro vacío.
+                    </p>
+
+                    <form method="POST">
+                        <input type="hidden" name="action" value="reset_history">
+
+                        <button
+                            type="submit"
+                            class="programar-danger-button"
+                            onclick="return confirm('¿Desea reiniciar el historial de mantenimiento? Esta acción no se puede deshacer.');">
+                            Reiniciar historial
                         </button>
                     </form>
                 </article>

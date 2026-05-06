@@ -3,9 +3,7 @@
     <article class="restore-card">
         <div class="restore-card-header">
             <div>
-                <span class="restore-badge restore-badge-danger">
-                    Restauración
-                </span>
+                <span class="restore-badge restore-badge-danger">Restauración</span>
 
                 <h2>Seleccionar respaldo</h2>
 
@@ -32,11 +30,9 @@
                 <input type="hidden" name="action" value="restore">
 
                 <div class="restore-field">
-                    <label for="archivo">Archivo de respaldo</label>
+                    <label>Archivo de respaldo</label>
 
-                    <select name="archivo" id="archivo" required>
-                        <option value="">Seleccione un archivo .sql</option>
-
+                    <div class="restore-backup-list">
                         <?php foreach ($archivos as $archivo): ?>
                             <?php
                             $nombre = $archivo["nombre"] ?? "";
@@ -47,15 +43,30 @@
                             ?>
 
                             <?php if (!$pendiente): ?>
-                                <option value="<?= htmlspecialchars($nombre) ?>">
-                                    <?= htmlspecialchars($tipo) ?> —
-                                    <?= htmlspecialchars($nombre) ?> —
-                                    <?= htmlspecialchars($tamano) ?> —
-                                    <?= htmlspecialchars($fecha) ?>
-                                </option>
+                                <label class="restore-backup-option">
+                                    <input
+                                        type="radio"
+                                        name="archivo"
+                                        value="<?= htmlspecialchars($nombre) ?>"
+                                        required>
+
+                                    <span class="restore-backup-content">
+                                        <strong>
+                                            <?= htmlspecialchars($tipo) ?>
+                                        </strong>
+
+                                        <small>
+                                            <?= htmlspecialchars($nombre) ?>
+                                        </small>
+
+                                        <em>
+                                            <?= htmlspecialchars($tamano) ?> — <?= htmlspecialchars($fecha) ?>
+                                        </em>
+                                    </span>
+                                </label>
                             <?php endif; ?>
                         <?php endforeach; ?>
-                    </select>
+                    </div>
 
                     <small>
                         Solo se muestran respaldos disponibles. Los archivos con borrado programado no se recomiendan para restauración.
@@ -105,9 +116,7 @@
     <aside class="restore-side">
 
         <article class="restore-side-card">
-            <span class="restore-badge restore-badge-info">
-                Información
-            </span>
+            <span class="restore-badge restore-badge-info">Información</span>
 
             <h2>¿Qué hace esta opción?</h2>
 
@@ -134,9 +143,7 @@
         </article>
 
         <article class="restore-side-card restore-side-danger">
-            <span class="restore-badge restore-badge-danger">
-                Precaución
-            </span>
+            <span class="restore-badge restore-badge-danger">Precaución</span>
 
             <h2>Antes de restaurar</h2>
 

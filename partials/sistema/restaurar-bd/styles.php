@@ -331,4 +331,72 @@
             padding: 20px;
         }
     }
+
+    .restore-backup-list {
+        display: grid;
+        gap: 10px;
+        max-height: 360px;
+        overflow-y: auto;
+        padding: 6px;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: #f8fafc;
+    }
+
+    .restore-backup-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .restore-backup-option:hover {
+        border-color: #bfdbfe;
+        background: #eff6ff;
+    }
+
+    .restore-backup-option input {
+        width: 18px;
+        height: 18px;
+        margin-top: 3px;
+        accent-color: #dc2626;
+        flex: 0 0 auto;
+    }
+
+    .restore-backup-option:has(input:checked) {
+        border-color: #dc2626;
+        background: #fff1f2;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10);
+    }
+
+    .restore-backup-content {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .restore-backup-content strong {
+        color: #111827;
+        font-size: 0.92rem;
+        font-weight: 900;
+    }
+
+    .restore-backup-content small {
+        color: #334155;
+        font-size: 0.84rem;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .restore-backup-content em {
+        color: #64748b;
+        font-size: 0.8rem;
+        font-style: normal;
+        line-height: 1.4;
+    }
 </style>
