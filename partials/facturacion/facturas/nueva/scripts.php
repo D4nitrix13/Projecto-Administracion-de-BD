@@ -1,7 +1,39 @@
+<?php
+$rutasConfiguracionSistema = [
+    __DIR__ . "/../storage/system/configuracion_sistema.json",
+    __DIR__ . "/../../storage/system/configuracion_sistema.json",
+    dirname(__DIR__) . "/storage/system/configuracion_sistema.json",
+    dirname(__DIR__, 2) . "/storage/system/configuracion_sistema.json",
+    $_SERVER["DOCUMENT_ROOT"] . "/storage/system/configuracion_sistema.json",
+];
+
+$limiteClienteFugaz = 1000.00;
+$rutaConfiguracionEncontrada = null;
+
+foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
+    if (!is_file($rutaConfiguracionSistema)) {
+        continue;
+    }
+
+    $contenidoConfiguracion = file_get_contents($rutaConfiguracionSistema);
+    $configuracionSistema = json_decode($contenidoConfiguracion, true);
+
+    if (
+        json_last_error() === JSON_ERROR_NONE &&
+        isset($configuracionSistema["limite_de_venta_cliente_fugaz"]) &&
+        is_numeric($configuracionSistema["limite_de_venta_cliente_fugaz"])
+    ) {
+        $limiteClienteFugaz = (float) $configuracionSistema["limite_de_venta_cliente_fugaz"];
+        $rutaConfiguracionEncontrada = $rutaConfiguracionSistema;
+        break;
+    }
+}
+?>
+
 <script>
     (function() {
         const IVA_RATE = 0.15;
-        const LIMITE_CLIENTE_FUGAZ = 1000.00;
+        const LIMITE_CLIENTE_FUGAZ = <?php echo json_encode($limiteClienteFugaz, JSON_NUMERIC_CHECK); ?>;
 
         const productos = JSON.parse(
             document.getElementById("productos-data").textContent
@@ -256,7 +288,6 @@
 
         function normalizeDecimalInput(input) {
             let value = input.value ?? "";
-
             value = value.replace(/[^0-9.]/g, "");
 
             const parts = value.split(".");

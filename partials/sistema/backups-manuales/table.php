@@ -43,7 +43,9 @@ if (!function_exists("formatearFechaBonitaRespaldo")) {
         $mes = $meses[(int)date("n", $timestamp) - 1];
         $anio = date("Y", $timestamp);
         $hora = date("h:i:s", $timestamp);
-        $periodo = strtolower(date("A", $timestamp)) === "am" ? "a.m." : "p.m.";
+        $periodo = strtolower(date("A", $timestamp)) === "am"
+            ? "a.m."
+            : "p.m.";
 
         return "{$diaSemana} {$dia} de {$mes} {$anio} - {$hora} {$periodo}";
     }
@@ -80,22 +82,48 @@ if (!function_exists("obtenerTituloAmigableRespaldo")) {
 if (!function_exists("obtenerSubtituloAmigableRespaldo")) {
     function obtenerSubtituloAmigableRespaldo(array $archivo): string
     {
-        $nombre = pathinfo($archivo["nombre"] ?? "", PATHINFO_FILENAME);
+        $nombre = pathinfo(
+            $archivo["nombre"] ?? "",
+            PATHINFO_FILENAME
+        );
 
-        $nombre = preg_replace('/_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/', '', $nombre);
+        $nombre = preg_replace(
+            '/_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/',
+            '',
+            $nombre
+        );
+
         $nombre = str_replace(
-            ["backup_manual_", "backup_full_", "backup_diff_"],
+            [
+                "backup_manual_",
+                "backup_full_",
+                "backup_diff_"
+            ],
             "",
             $nombre
         );
+
         $nombre = str_replace("_", " ", $nombre);
         $nombre = trim($nombre);
 
-        if ($nombre === "" || $nombre === "pandas estampados y kitsune") {
-            return "Base de datos principal del sistema";
+        if ($nombre === "") {
+            return "Backup";
         }
 
         return ucwords($nombre);
+    }
+}
+
+if (!function_exists("obtenerDescripcionRespaldo")) {
+    function obtenerDescripcionRespaldo(array $archivo): string
+    {
+        return trim(
+            (string)(
+                $archivo["descripcion"]
+                ?? $archivo["mensaje"]
+                ?? ""
+            )
+        );
     }
 }
 
@@ -114,6 +142,7 @@ sort($tiposDisponibles);
 ?>
 
 <section class="backup-history">
+
     <div class="backup-history-header">
         <div>
             <h2>Archivos de respaldo disponibles</h2>
@@ -128,211 +157,247 @@ sort($tiposDisponibles);
         </span>
     </div>
 
-    <?php if (empty($archivos)): ?>
-        <div class="backup-empty">
-            <strong>No hay respaldos generados todavía.</strong>
-            <p>Cuando genere un respaldo, aparecerá en esta sección.</p>
-        </div>
-    <?php else: ?>
-        <section class="backup-filter-panel">
-            <div class="backup-filter-header">
-                <div>
-                    <span class="backup-filter-badge">Filtros</span>
+    <section class="backup-filter-panel">
 
-                    <h3>Buscar respaldo</h3>
+        <div class="backup-filter-header">
+            <div>
+                <span class="backup-filter-badge">
+                    Filtros
+                </span>
 
-                    <p>
-                        Use los filtros para encontrar respaldos por nombre, tipo, estado, fecha o tamaño.
-                    </p>
-                </div>
+                <h3>Buscar respaldo</h3>
 
-                <button type="button" class="backup-filter-clear" id="backupClearFilters">
-                    Limpiar filtros
-                </button>
+                <p>
+                    Filtre por nombre, descripción,
+                    tipo o estado.
+                </p>
             </div>
 
-            <div class="backup-filter-grid">
-                <div class="backup-filter-field backup-filter-field-large">
-                    <label for="backupSearchInput">Buscar por nombre</label>
+            <button
+                type="button"
+                class="backup-filter-clear"
+                id="backupClearFilters">
 
-                    <input
-                        type="search"
-                        id="backupSearchInput"
-                        class="input"
-                        placeholder="Ej. respaldo manual, pandas, mayo, full">
-                </div>
+                Limpiar filtros
+            </button>
+        </div>
 
-                <div class="backup-filter-field">
-                    <label for="backupTypeFilter">Tipo</label>
+        <div class="backup-filter-grid">
 
-                    <select id="backupTypeFilter" class="input">
-                        <option value="">Todos los tipos</option>
+            <div class="backup-filter-field backup-filter-field-large">
+                <label for="backupSearchInput">
+                    Buscar
+                </label>
 
-                        <?php foreach ($tiposDisponibles as $tipo): ?>
-                            <option value="<?= htmlspecialchars(mb_strtolower($tipo)) ?>">
+                <input
+                    type="search"
+                    id="backupSearchInput"
+                    class="input"
+                    placeholder="Buscar por nombre, tipo o descripción">
+            </div>
+
+            <div class="backup-filter-field">
+                <label for="backupTypeFilter">
+                    Tipo
+                </label>
+
+                <select id="backupTypeFilter" class="input">
+                    <option value="">
+                        Todos los tipos
+                    </option>
+
+                    <?php foreach ($tiposDisponibles as $tipo): ?>
+                        <option value="<?= htmlspecialchars(strtolower($tipo)) ?>">
+                            <?= htmlspecialchars($tipo) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="backup-filter-field">
+                <label for="backupStatusFilter">
+                    Estado
+                </label>
+
+                <select id="backupStatusFilter" class="input">
+                    <option value="">
+                        Todos los estados
+                    </option>
+
+                    <option value="disponible">
+                        Disponible
+                    </option>
+
+                    <option value="pendiente">
+                        Borrado programado
+                    </option>
+                </select>
+            </div>
+
+            <div class="backup-filter-field">
+                <label for="backupSortFilter">
+                    Ordenar por
+                </label>
+
+                <select id="backupSortFilter" class="input">
+                    <option value="date_desc">
+                        Más recientes primero
+                    </option>
+
+                    <option value="date_asc">
+                        Más antiguos primero
+                    </option>
+
+                    <option value="size_desc">
+                        Mayor tamaño primero
+                    </option>
+
+                    <option value="size_asc">
+                        Menor tamaño primero
+                    </option>
+                </select>
+            </div>
+
+        </div>
+    </section>
+
+    <div
+        class="backup-no-results"
+        id="backupNoResults"
+        hidden>
+
+        <strong>
+            No se encontraron respaldos.
+        </strong>
+
+        <p>
+            Pruebe otra búsqueda.
+        </p>
+    </div>
+
+    <div class="backup-files-grid" id="backupFilesGrid">
+
+        <?php foreach ($archivos as $archivo): ?>
+
+            <?php
+
+            $titulo = obtenerTituloAmigableRespaldo($archivo);
+            $subtitulo = obtenerSubtituloAmigableRespaldo($archivo);
+            $descripcion = obtenerDescripcionRespaldo($archivo);
+
+            $fechaBonita = formatearFechaBonitaRespaldo(
+                $archivo["fecha"] ?? null
+            );
+
+            $pendiente = (bool)(
+                $archivo["deletion_pending"] ?? false
+            );
+
+            $tipo = $archivo["tipo"] ?? "Manual";
+
+            $nombreReal = $archivo["nombre"] ?? "";
+
+            $timestamp = strtotime(
+                $archivo["fecha"] ?? ""
+            );
+
+            $timestamp = $timestamp === false
+                ? 0
+                : $timestamp;
+
+            $tamanio = (int)(
+                $archivo["tamanio"] ?? 0
+            );
+
+            ?>
+
+            <article
+                class="backup-file-card"
+                data-backup-card
+                data-search="<?= htmlspecialchars(strtolower(
+                                    $titulo . " " .
+                                        $subtitulo . " " .
+                                        $descripcion . " " .
+                                        $nombreReal
+                                )) ?>"
+                data-type="<?= htmlspecialchars(strtolower($tipo)) ?>"
+                data-status="<?= $pendiente ? 'pendiente' : 'disponible' ?>"
+                data-date="<?= $timestamp ?>"
+                data-size="<?= $tamanio ?>">
+
+                <div class="backup-file-main">
+
+                    <div class="backup-file-icon">
+                        SQL
+                    </div>
+
+                    <div class="backup-file-info">
+
+                        <div class="backup-file-topline">
+
+                            <h3 class="backup-file-title">
+                                <?= htmlspecialchars($titulo) ?>
+                            </h3>
+
+                            <span class="backup-status <?= $pendiente
+                                                            ? 'backup-status-warning'
+                                                            : 'backup-status-ok' ?>">
+
+                                <?= $pendiente
+                                    ? 'Borrado programado'
+                                    : 'Disponible' ?>
+
+                            </span>
+
+                        </div>
+
+                        <p class="backup-file-subtitle">
+                            <?= htmlspecialchars($subtitulo) ?>
+                        </p>
+
+                        <p class="backup-file-original-name">
+                            <strong>Descripción:</strong>
+
+                            <?= $descripcion !== ""
+                                ? htmlspecialchars($descripcion)
+                                : 'Sin descripción registrada para este respaldo.' ?>
+                        </p>
+
+                        <p class="backup-file-original-name">
+                            <strong>Archivo real:</strong>
+
+                            <?= htmlspecialchars($nombreReal) ?>
+                        </p>
+
+                        <div class="backup-file-meta">
+
+                            <span class="backup-chip">
                                 <?= htmlspecialchars($tipo) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                            </span>
 
-                <div class="backup-filter-field">
-                    <label for="backupStatusFilter">Estado</label>
+                            <span class="backup-chip">
+                                <?= htmlspecialchars(
+                                    formatearTamanoRespaldo($tamanio)
+                                ) ?>
+                            </span>
 
-                    <select id="backupStatusFilter" class="input">
-                        <option value="">Todos los estados</option>
-                        <option value="disponible">Disponible</option>
-                        <option value="pendiente">Borrado programado</option>
-                    </select>
-                </div>
+                            <span class="backup-chip">
+                                .sql
+                            </span>
 
-                <div class="backup-filter-field">
-                    <label for="backupSortFilter">Ordenar por</label>
-
-                    <select id="backupSortFilter" class="input">
-                        <option value="date_desc">Más recientes primero</option>
-                        <option value="date_asc">Más antiguos primero</option>
-                        <option value="size_desc">Mayor tamaño primero</option>
-                        <option value="size_asc">Menor tamaño primero</option>
-                        <option value="name_asc">Nombre A-Z</option>
-                        <option value="name_desc">Nombre Z-A</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-
-        <div class="backup-no-results" id="backupNoResults" hidden>
-            <strong>No se encontraron respaldos.</strong>
-            <p>Pruebe con otro nombre, tipo de respaldo o estado.</p>
-        </div>
-
-        <div class="backup-files-grid" id="backupFilesGrid">
-            <?php foreach ($archivos as $archivo): ?>
-                <?php
-                $titulo = obtenerTituloAmigableRespaldo($archivo);
-                $subtitulo = obtenerSubtituloAmigableRespaldo($archivo);
-                $fechaBonita = formatearFechaBonitaRespaldo($archivo["fecha"] ?? null);
-                $fechaBorrado = formatearFechaBonitaRespaldo($archivo["deletion_at"] ?? null);
-                $pendiente = (bool)($archivo["deletion_pending"] ?? false);
-                $tipo = $archivo["tipo"] ?? "Manual";
-                $nombreReal = $archivo["nombre"] ?? "";
-                $fechaOriginal = $archivo["fecha"] ?? "";
-                $timestamp = strtotime($fechaOriginal);
-                $timestamp = $timestamp === false ? 0 : $timestamp;
-                $tamanio = (int)($archivo["tamanio"] ?? 0);
-                $estadoFiltro = $pendiente ? "pendiente" : "disponible";
-                $textoBusqueda = mb_strtolower(
-                    $titulo . " " .
-                        $subtitulo . " " .
-                        $nombreReal . " " .
-                        $tipo . " " .
-                        $fechaBonita . " " .
-                        formatearTamanoRespaldo($tamanio)
-                );
-                ?>
-
-                <article
-                    class="backup-file-card <?= $pendiente ? "backup-file-card-pending" : "" ?>"
-                    data-backup-card
-                    data-search="<?= htmlspecialchars($textoBusqueda) ?>"
-                    data-type="<?= htmlspecialchars(mb_strtolower($tipo)) ?>"
-                    data-status="<?= htmlspecialchars($estadoFiltro) ?>"
-                    data-date="<?= htmlspecialchars((string)$timestamp) ?>"
-                    data-size="<?= htmlspecialchars((string)$tamanio) ?>"
-                    data-name="<?= htmlspecialchars(mb_strtolower($subtitulo . " " . $nombreReal)) ?>">
-
-                    <div class="backup-file-main">
-                        <div class="backup-file-icon">
-                            SQL
-                        </div>
-
-                        <div class="backup-file-info">
-                            <div class="backup-file-topline">
-                                <h3 class="backup-file-title">
-                                    <?= htmlspecialchars($titulo) ?>
-                                </h3>
-
-                                <span class="backup-status <?= $pendiente ? "backup-status-warning" : "backup-status-ok" ?>">
-                                    <?= $pendiente ? "Borrado programado" : "Disponible" ?>
-                                </span>
-                            </div>
-
-                            <p class="backup-file-subtitle">
-                                <?= htmlspecialchars($subtitulo) ?>
-                            </p>
-
-                            <p class="backup-file-original-name" title="<?= htmlspecialchars($nombreReal) ?>">
-                                Archivo real: <?= htmlspecialchars($nombreReal) ?>
-                            </p>
-
-                            <div class="backup-file-meta">
-                                <span class="backup-chip"><?= htmlspecialchars($tipo) ?></span>
-                                <span class="backup-chip"><?= htmlspecialchars(formatearTamanoRespaldo($tamanio)) ?></span>
-                                <span class="backup-chip">.sql</span>
-                            </div>
                         </div>
                     </div>
+                </div>
+            </article>
 
-                    <div class="backup-file-side">
-                        <div class="backup-file-date-block">
-                            <span class="backup-file-date-label">Generado el</span>
+        <?php endforeach; ?>
 
-                            <strong class="backup-file-date">
-                                <?= htmlspecialchars($fechaBonita) ?>
-                            </strong>
-                        </div>
-
-                        <?php if ($pendiente): ?>
-                            <div class="backup-delete-box">
-                                <strong>Este archivo será eliminado automáticamente</strong>
-                                <p><?= htmlspecialchars($fechaBorrado) ?></p>
-                            </div>
-                        <?php else: ?>
-                            <div class="backup-delete-box backup-delete-box-neutral">
-                                <strong>Borrado seguro</strong>
-                                <p>Si lo elimina, quedará en espera durante 24 horas antes de borrarse definitivamente.</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="backup-file-actions">
-                        <a
-                            href="descargar_respaldo.php?archivo=<?= urlencode($nombreReal) ?>"
-                            class="backup-action-btn backup-action-btn-primary">
-                            Descargar
-                        </a>
-
-                        <?php if ($pendiente): ?>
-                            <form method="POST" class="backup-inline-form">
-                                <input type="hidden" name="action" value="cancel_delete">
-                                <input type="hidden" name="archivo" value="<?= htmlspecialchars($nombreReal) ?>">
-
-                                <button type="submit" class="backup-action-btn backup-action-btn-dark">
-                                    Cancelar borrado
-                                </button>
-                            </form>
-                        <?php else: ?>
-                            <form method="POST" class="backup-inline-form">
-                                <input type="hidden" name="action" value="schedule_delete">
-                                <input type="hidden" name="archivo" value="<?= htmlspecialchars($nombreReal) ?>">
-
-                                <button
-                                    type="submit"
-                                    class="backup-action-btn backup-action-btn-danger"
-                                    onclick="return confirm('¿Desea programar el borrado de este respaldo dentro de 24 horas?');">
-                                    Programar borrado
-                                </button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                </article>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+    </div>
 </section>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
+
         const searchInput = document.getElementById("backupSearchInput");
         const typeFilter = document.getElementById("backupTypeFilter");
         const statusFilter = document.getElementById("backupStatusFilter");
@@ -342,113 +407,104 @@ sort($tiposDisponibles);
         const visibleCount = document.getElementById("backupVisibleCount");
         const noResults = document.getElementById("backupNoResults");
 
-        if (
-            !searchInput ||
-            !typeFilter ||
-            !statusFilter ||
-            !sortFilter ||
-            !clearButton ||
-            !filesGrid ||
-            !visibleCount ||
-            !noResults
-        ) {
-            return;
-        }
+        const cards = Array.from(
+            document.querySelectorAll("[data-backup-card]")
+        );
 
-        const cards = Array.from(filesGrid.querySelectorAll("[data-backup-card]"));
-
-        const normalizeText = (value) => {
-            return value
-                .toString()
+        const normalize = (value) => {
+            return String(value || "")
                 .toLowerCase()
                 .normalize("NFD")
                 .replace(/[\u0300-\u036f]/g, "")
                 .trim();
         };
 
-        const updateVisibleCount = (count) => {
-            visibleCount.textContent = `${count} archivo(s)`;
-        };
+        function applyFilters() {
 
-        const sortCards = () => {
-            const sortValue = sortFilter.value;
-
-            const sortedCards = [...cards].sort((a, b) => {
-                const dateA = Number(a.dataset.date || 0);
-                const dateB = Number(b.dataset.date || 0);
-                const sizeA = Number(a.dataset.size || 0);
-                const sizeB = Number(b.dataset.size || 0);
-                const nameA = a.dataset.name || "";
-                const nameB = b.dataset.name || "";
-
-                switch (sortValue) {
-                    case "date_asc":
-                        return dateA - dateB;
-
-                    case "size_desc":
-                        return sizeB - sizeA;
-
-                    case "size_asc":
-                        return sizeA - sizeB;
-
-                    case "name_asc":
-                        return nameA.localeCompare(nameB);
-
-                    case "name_desc":
-                        return nameB.localeCompare(nameA);
-
-                    case "date_desc":
-                    default:
-                        return dateB - dateA;
-                }
-            });
-
-            sortedCards.forEach((card) => filesGrid.appendChild(card));
-        };
-
-        const applyFilters = () => {
-            const searchValue = normalizeText(searchInput.value);
-            const typeValue = normalizeText(typeFilter.value);
-            const statusValue = normalizeText(statusFilter.value);
+            const search = normalize(searchInput.value);
+            const type = normalize(typeFilter.value);
+            const status = normalize(statusFilter.value);
 
             let visible = 0;
 
             cards.forEach((card) => {
-                const cardSearch = normalizeText(card.dataset.search || "");
-                const cardType = normalizeText(card.dataset.type || "");
-                const cardStatus = normalizeText(card.dataset.status || "");
 
-                const matchesSearch = searchValue === "" || cardSearch.includes(searchValue);
-                const matchesType = typeValue === "" || cardType === typeValue;
-                const matchesStatus = statusValue === "" || cardStatus === statusValue;
+                const cardSearch = normalize(
+                    card.dataset.search
+                );
 
-                const shouldShow = matchesSearch && matchesType && matchesStatus;
+                const cardType = normalize(
+                    card.dataset.type
+                );
 
-                card.hidden = !shouldShow;
+                const cardStatus = normalize(
+                    card.dataset.status
+                );
 
-                if (shouldShow) {
+                const matchSearch =
+                    search === "" ||
+                    cardSearch.includes(search);
+
+                const matchType =
+                    type === "" ||
+                    cardType === type;
+
+                const matchStatus =
+                    status === "" ||
+                    cardStatus === status;
+
+                const show =
+                    matchSearch &&
+                    matchType &&
+                    matchStatus;
+
+                card.style.display = show ?
+                    "" :
+                    "none";
+
+                if (show) {
                     visible++;
                 }
             });
 
-            updateVisibleCount(visible);
+            visibleCount.textContent =
+                `${visible} archivo(s)`;
+
             noResults.hidden = visible > 0;
-            sortCards();
-        };
+        }
 
-        searchInput.addEventListener("input", applyFilters);
-        typeFilter.addEventListener("change", applyFilters);
-        statusFilter.addEventListener("change", applyFilters);
-        sortFilter.addEventListener("change", applyFilters);
+        searchInput.addEventListener(
+            "input",
+            applyFilters
+        );
 
-        clearButton.addEventListener("click", () => {
-            searchInput.value = "";
-            typeFilter.value = "";
-            statusFilter.value = "";
-            sortFilter.value = "date_desc";
+        typeFilter.addEventListener(
+            "change",
+            applyFilters
+        );
 
-            applyFilters();
-        });
+        statusFilter.addEventListener(
+            "change",
+            applyFilters
+        );
+
+        sortFilter.addEventListener(
+            "change",
+            applyFilters
+        );
+
+        clearButton.addEventListener(
+            "click",
+            () => {
+
+                searchInput.value = "";
+                typeFilter.value = "";
+                statusFilter.value = "";
+                sortFilter.value = "date_desc";
+
+                applyFilters();
+            }
+        );
 
         applyFilters();
     });

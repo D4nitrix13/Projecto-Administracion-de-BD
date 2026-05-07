@@ -5,7 +5,7 @@
         <h2>Generar respaldo</h2>
 
         <p>
-            Cree un archivo .sql con el estado actual de la base de datos.
+            Cree un archivo .sql con el estado actual de la base de datos y agregue una descripción para identificarlo mejor.
         </p>
     </div>
 
@@ -28,14 +28,18 @@
         </div>
 
         <div class="form-group">
-            <label class="label">Descripción</label>
+            <label class="label">Descripción del respaldo</label>
 
             <input
                 type="text"
                 name="mensaje"
                 class="input"
                 maxlength="255"
-                placeholder="Ej. Antes de importar catálogo nuevo">
+                placeholder="Ej. Respaldo antes de importar catálogo nuevo">
+
+            <p class="dashboard-muted backup-help">
+                Esta descripción aparecerá en la lista para identificar el motivo del respaldo.
+            </p>
         </div>
 
         <button type="submit" class="backup-btn backup-btn-primary">

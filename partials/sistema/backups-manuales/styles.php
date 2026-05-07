@@ -860,4 +860,17 @@
             white-space: normal;
         }
     }
+
+    .backup-form .form-group {
+        grid-template-rows: auto 44px auto;
+    }
+
+    .backup-form input.input {
+        height: 44px;
+        min-height: 44px;
+    }
+
+    .backup-form textarea.input {
+        min-height: 44px;
+    }
 </style>

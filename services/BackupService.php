@@ -9,6 +9,7 @@ class BackupService
     private string $diffBackupDir;
     private string $logsDir;
     private string $deleteQueueFile;
+    private string $metadataFile;
 
     public function __construct(PDO $connection, string $backupDir)
     {
@@ -20,9 +21,11 @@ class BackupService
         $this->diffBackupDir = $this->backupDir . "/diff";
         $this->logsDir = $this->backupDir . "/logs";
         $this->deleteQueueFile = $this->logsDir . "/delete_queue.json";
+        $this->metadataFile = dirname($this->backupDir) . "/storage/system/backup_metadata.json";
 
         $this->asegurarDirectorios();
         $this->asegurarArchivoCola();
+        $this->asegurarArchivoMetadata();
     }
 
     public function generarRespaldoManual(
@@ -37,10 +40,14 @@ class BackupService
         }
 
         $fecha = date("Y-m-d_H-i-s");
+        $fechaLegible = date("Y-m-d H:i:s");
+
         $nombreArchivo = "backup_manual_{$nombreBase}_{$fecha}.sql";
         $rutaTemporal = $this->manualBackupDir . "/" . $nombreArchivo . ".tmp";
         $rutaFinal = $this->manualBackupDir . "/" . $nombreArchivo;
         $logFile = $this->logsDir . "/backup_manual_{$fecha}.log";
+
+        $descripcion = trim((string)$mensajePersonalizado);
 
         $dbHost = getenv("DB_HOST") ?: "postgres";
         $dbPort = getenv("DB_PORT") ?: "5432";
@@ -86,11 +93,20 @@ class BackupService
 
         rename($rutaTemporal, $rutaFinal);
 
+        $this->guardarMetadataRespaldo($nombreArchivo, [
+            "descripcion" => $descripcion,
+            "usuario_id" => $idUsuario,
+            "tipo" => "Manual",
+            "archivo" => $nombreArchivo,
+            "ruta" => $rutaFinal,
+            "created_at" => $fechaLegible,
+        ]);
+
         $mensajeLog = [
-            "Fecha: " . date("Y-m-d H:i:s"),
+            "Fecha: " . $fechaLegible,
             "Usuario ID: " . ($idUsuario !== null ? (string)$idUsuario : "No disponible"),
             "Archivo: " . $rutaFinal,
-            "Descripción: " . trim((string)$mensajePersonalizado),
+            "Descripción: " . ($descripcion !== "" ? $descripcion : "Sin descripción"),
             "Estado: respaldo manual generado correctamente",
         ];
 
@@ -155,6 +171,7 @@ class BackupService
         $this->eliminarRespaldosProgramados();
 
         $cola = $this->leerColaEliminacion();
+        $metadata = $this->leerMetadataRespaldos();
         $archivos = [];
 
         foreach ($this->obtenerDirectoriosBusqueda() as $directorio => $tipo) {
@@ -165,12 +182,17 @@ class BackupService
             foreach (glob($directorio . "/*.sql") ?: [] as $filepath) {
                 $nombre = basename($filepath);
                 $pendiente = isset($cola[$nombre]);
+                $datosMetadata = $metadata[$nombre] ?? [];
 
                 $archivos[] = [
                     "nombre" => $nombre,
                     "fecha" => date("Y-m-d H:i:s", filemtime($filepath)),
                     "tamanio" => filesize($filepath),
                     "tipo" => $tipo,
+                    "descripcion" => trim((string)($datosMetadata["descripcion"] ?? "")),
+                    "mensaje" => trim((string)($datosMetadata["descripcion"] ?? "")),
+                    "usuario_id" => $datosMetadata["usuario_id"] ?? null,
+                    "metadata_created_at" => $datosMetadata["created_at"] ?? null,
                     "deletion_pending" => $pendiente,
                     "deletion_at" => $pendiente ? ($cola[$nombre]["delete_at"] ?? null) : null,
                 ];
@@ -263,6 +285,8 @@ class BackupService
                     @unlink($filepath);
                 }
 
+                $this->eliminarMetadataRespaldo($archivo);
+
                 unset($cola[$archivo]);
                 $huboCambios = true;
             }
@@ -310,6 +334,7 @@ class BackupService
                 $this->fullBackupDir,
                 $this->diffBackupDir,
                 $this->logsDir,
+                dirname($this->metadataFile),
             ] as $directorio
         ) {
             if (!is_dir($directorio)) {
@@ -325,6 +350,18 @@ class BackupService
         if (!is_file($this->deleteQueueFile)) {
             file_put_contents(
                 $this->deleteQueueFile,
+                json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+        }
+    }
+
+    private function asegurarArchivoMetadata(): void
+    {
+        $this->asegurarDirectorios();
+
+        if (!is_file($this->metadataFile)) {
+            file_put_contents(
+                $this->metadataFile,
                 json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             );
         }
@@ -353,6 +390,64 @@ class BackupService
             $this->deleteQueueFile,
             json_encode($cola, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
+    }
+
+    private function leerMetadataRespaldos(): array
+    {
+        $this->asegurarArchivoMetadata();
+
+        $contenido = file_get_contents($this->metadataFile);
+
+        if ($contenido === false || trim($contenido) === "") {
+            return [];
+        }
+
+        $data = json_decode($contenido, true);
+
+        return is_array($data) ? $data : [];
+    }
+
+    private function guardarMetadataRespaldos(array $metadata): void
+    {
+        $this->asegurarArchivoMetadata();
+
+        file_put_contents(
+            $this->metadataFile,
+            json_encode($metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+    private function guardarMetadataRespaldo(string $archivo, array $datos): void
+    {
+        $archivo = basename($archivo);
+
+        if ($archivo === "") {
+            return;
+        }
+
+        $metadata = $this->leerMetadataRespaldos();
+        $metadata[$archivo] = $datos;
+
+        $this->guardarMetadataRespaldos($metadata);
+    }
+
+    private function eliminarMetadataRespaldo(string $archivo): void
+    {
+        $archivo = basename($archivo);
+
+        if ($archivo === "") {
+            return;
+        }
+
+        $metadata = $this->leerMetadataRespaldos();
+
+        if (!isset($metadata[$archivo])) {
+            return;
+        }
+
+        unset($metadata[$archivo]);
+
+        $this->guardarMetadataRespaldos($metadata);
     }
 
     private function normalizarNombreArchivo(?string $nombre): string
