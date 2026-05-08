@@ -475,4 +475,321 @@
             min-width: 860px;
         }
     }
+
+    .invoice-payment-divider {
+        width: 100%;
+        height: 1px;
+        background: #e2e8f0;
+        margin: 22px 0;
+    }
+
+    .invoice-payment-section {
+        display: grid;
+        gap: 18px;
+    }
+
+    .invoice-payment-header h3 {
+        margin: 0 0 6px;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .invoice-payment-header p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .invoice-payment-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .invoice-payment-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .invoice-payment-card {
+        padding: 16px;
+        border-radius: 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+    .invoice-payment-card span {
+        display: block;
+        margin-bottom: 8px;
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .invoice-payment-card strong {
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .invoice-payment-status.pending {
+        color: #b45309;
+    }
+
+    .invoice-payment-status.partial {
+        color: #2563eb;
+    }
+
+    .invoice-payment-status.paid {
+        color: #15803d;
+    }
+
+    .invoice-payment-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid #fed7aa;
+        background: linear-gradient(135deg,
+                #fff7ed 0%,
+                #ffffff 100%);
+    }
+
+    .invoice-payment-warning-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: #ffedd5;
+        color: #c2410c;
+        font-weight: 900;
+    }
+
+    .invoice-payment-warning strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #9a3412;
+        font-size: 0.9rem;
+    }
+
+    .invoice-payment-warning p {
+        margin: 0;
+        color: #7c2d12;
+        font-size: 0.84rem;
+        line-height: 1.45;
+    }
+
+    @media (max-width: 900px) {
+
+        .invoice-payment-grid,
+        .invoice-payment-summary {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .invoice-checkout-section {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.85fr) minmax(420px, 1.15fr);
+        gap: 22px;
+        align-items: stretch;
+        margin-top: 8px;
+    }
+
+    .invoice-summary-card,
+    .invoice-payment-card-main {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        background: #ffffff;
+        padding: 22px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .invoice-summary-header,
+    .invoice-payment-header {
+        margin-bottom: 18px;
+    }
+
+    .invoice-summary-header span,
+    .invoice-payment-header span {
+        display: inline-flex;
+        margin-bottom: 8px;
+        color: #2563eb;
+        font-size: 0.76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .invoice-summary-header h3,
+    .invoice-payment-header h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.15rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+
+    .invoice-payment-header p {
+        margin: 8px 0 0;
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .invoice-total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+        color: #374151;
+        font-size: 0.95rem;
+    }
+
+    .invoice-total-row span {
+        color: #6b7280;
+        font-weight: 800;
+    }
+
+    .invoice-total-row strong {
+        color: #111827;
+        font-weight: 900;
+    }
+
+    .invoice-total-final {
+        margin-top: 10px;
+        padding-top: 18px;
+        border-bottom: none;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .invoice-total-final span {
+        color: #111827;
+        font-size: 1.05rem;
+        font-weight: 900;
+    }
+
+    .invoice-total-final strong {
+        color: #2563eb;
+        font-size: 1.5rem;
+        font-weight: 900;
+    }
+
+    .invoice-payment-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .invoice-payment-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .invoice-payment-mini-card {
+        padding: 16px;
+        border-radius: 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+    .invoice-payment-mini-card span {
+        display: block;
+        margin-bottom: 8px;
+        color: #64748b;
+        font-size: 0.74rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .invoice-payment-mini-card strong {
+        display: block;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .invoice-payment-status.pending {
+        color: #b45309;
+    }
+
+    .invoice-payment-status.partial {
+        color: #2563eb;
+    }
+
+    .invoice-payment-status.paid {
+        color: #15803d;
+    }
+
+    .invoice-payment-warning {
+        margin-top: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+    }
+
+    .invoice-payment-warning-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: #ffedd5;
+        color: #c2410c;
+        font-weight: 900;
+    }
+
+    .invoice-payment-warning strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #9a3412;
+        font-size: 0.92rem;
+    }
+
+    .invoice-payment-warning p {
+        margin: 0;
+        color: #7c2d12;
+        font-size: 0.86rem;
+        line-height: 1.45;
+    }
+
+    @media (max-width: 1100px) {
+        .invoice-checkout-section {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 760px) {
+
+        .invoice-summary-card,
+        .invoice-payment-card-main {
+            padding: 18px;
+        }
+
+        .invoice-payment-grid,
+        .invoice-payment-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .invoice-total-final strong {
+            font-size: 1.3rem;
+        }
+    }
 </style>

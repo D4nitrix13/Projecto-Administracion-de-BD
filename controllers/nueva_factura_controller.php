@@ -41,6 +41,8 @@ function obtenerDatosNuevaFactura(): array
     $descuentoGlobal = "0.00";
     $tipoClienteVenta = TIPO_CLIENTE_HABITUAL;
     $nombreClienteFugaz = "";
+    $montoPagado = "0.00";
+    $fechaEntregaEstimada = "";
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $resultado = $facturaService->registrarFactura($_POST, $user);
@@ -58,6 +60,8 @@ function obtenerDatosNuevaFactura(): array
         $descuentoGlobal = $_POST["descuento_global"] ?? "0.00";
         $tipoClienteVenta = $_POST["tipo_cliente_venta"] ?? TIPO_CLIENTE_HABITUAL;
         $nombreClienteFugaz = $_POST["nombre_cliente_fugaz"] ?? "";
+        $montoPagado = $_POST["monto_pagado"] ?? "0.00";
+        $fechaEntregaEstimada = $_POST["fecha_entrega_estimada"] ?? "";
     }
 
     $textoSubtitulo = obtenerTextoSubtituloNuevaFactura($idRol);
@@ -74,6 +78,8 @@ function obtenerDatosNuevaFactura(): array
         "descuentoGlobal" => $descuentoGlobal,
         "tipoClienteVenta" => $tipoClienteVenta,
         "nombreClienteFugaz" => $nombreClienteFugaz,
+        "montoPagado" => $montoPagado,
+        "fechaEntregaEstimada" => $fechaEntregaEstimada,
         "textoSubtitulo" => $textoSubtitulo,
     ];
 }

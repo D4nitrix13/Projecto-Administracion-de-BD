@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict IPo8UeqAx0mPIZWw3JBTqnjpQS1FCLwZQscpseFFx1B2YeffO1FWckoqPPaGwD5
+\restrict y787Pzyhd6oy6rDEjal4xbAgXzG2p5Hl4D1QUvYHFfS53ea1ET66FcmCDcFJb15
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg12+1)
@@ -33,6 +33,10 @@ ALTER TABLE IF EXISTS ONLY public.detallecompra DROP CONSTRAINT IF EXISTS fk_det
 ALTER TABLE IF EXISTS ONLY public.compra DROP CONSTRAINT IF EXISTS fk_compra_usuario;
 ALTER TABLE IF EXISTS ONLY public.compra DROP CONSTRAINT IF EXISTS fk_compra_proveedor;
 ALTER TABLE IF EXISTS ONLY public.auditoria DROP CONSTRAINT IF EXISTS fk_auditoria_usuario;
+DROP TRIGGER IF EXISTS trg_auditar_delete_proveedor ON public.proveedor;
+DROP TRIGGER IF EXISTS trg_auditar_delete_producto ON public.producto;
+DROP TRIGGER IF EXISTS trg_auditar_delete_cliente ON public.cliente;
+DROP TRIGGER IF EXISTS trg_auditar_delete_categoria ON public.categoria;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS usuario_pkey;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS usuario_email_key;
 ALTER TABLE IF EXISTS ONLY public.seccion DROP CONSTRAINT IF EXISTS seccion_pkey;
@@ -146,6 +150,7 @@ DROP FUNCTION IF EXISTS public.listar_categorias_producto();
 DROP FUNCTION IF EXISTS public.listar_categorias_ordenadas();
 DROP FUNCTION IF EXISTS public.listar_categorias_form_producto();
 DROP FUNCTION IF EXISTS public.listar_categorias_catalogo();
+DROP FUNCTION IF EXISTS public.fn_auditar_delete_generico();
 DROP FUNCTION IF EXISTS public.eliminar_usuario_sistema(p_id_usuario integer, p_id_usuario_actual integer);
 DROP FUNCTION IF EXISTS public.eliminar_proveedor_sistema(p_id_proveedor integer);
 DROP FUNCTION IF EXISTS public.eliminar_producto_sistema(p_id_producto integer);
@@ -1495,6 +1500,49 @@ BEGIN
 
     RETURN QUERY
     SELECT v_filas_afectadas;
+END;
+$$;
+
+
+--
+-- Name: fn_auditar_delete_generico(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fn_auditar_delete_generico() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    registro_json JSONB;
+    registro_id TEXT;
+BEGIN
+    registro_json := row_to_json(OLD)::jsonb;
+
+    registro_id := COALESCE(
+        registro_json ->> 'id_cliente',
+        registro_json ->> 'id_producto',
+        registro_json ->> 'id_proveedor',
+        registro_json ->> 'id_factura',
+        registro_json ->> 'id_compra',
+        registro_json ->> 'id_usuario',
+        registro_json ->> 'id_categoria'
+    );
+
+    INSERT INTO auditoria (
+        tabla_afectada,
+        accion,
+        registro_id,
+        datos_anteriores,
+        fecha
+    )
+    VALUES (
+        TG_TABLE_NAME,
+        'DELETE',
+        registro_id,
+        registro_json,
+        NOW()
+    );
+
+    RETURN OLD;
 END;
 $$;
 
@@ -4951,6 +4999,34 @@ ALTER TABLE ONLY public.usuario
 
 
 --
+-- Name: categoria trg_auditar_delete_categoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_auditar_delete_categoria AFTER DELETE ON public.categoria FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_delete_generico();
+
+
+--
+-- Name: cliente trg_auditar_delete_cliente; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_auditar_delete_cliente AFTER DELETE ON public.cliente FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_delete_generico();
+
+
+--
+-- Name: producto trg_auditar_delete_producto; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_auditar_delete_producto AFTER DELETE ON public.producto FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_delete_generico();
+
+
+--
+-- Name: proveedor trg_auditar_delete_proveedor; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_auditar_delete_proveedor AFTER DELETE ON public.proveedor FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_delete_generico();
+
+
+--
 -- Name: auditoria fk_auditoria_usuario; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5066,5 +5142,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict IPo8UeqAx0mPIZWw3JBTqnjpQS1FCLwZQscpseFFx1B2YeffO1FWckoqPPaGwD5
+\unrestrict y787Pzyhd6oy6rDEjal4xbAgXzG2p5Hl4D1QUvYHFfS53ea1ET66FcmCDcFJb15
 

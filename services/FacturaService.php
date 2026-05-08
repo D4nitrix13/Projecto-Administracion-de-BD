@@ -61,6 +61,29 @@ class FacturaService
                 ];
             }
 
+            $montoPagado = $this->normalizarMontoPagado($post["monto_pagado"] ?? "0");
+            $fechaEntregaEstimada = trim((string)($post["fecha_entrega_estimada"] ?? ""));
+
+            $errorPagoProduccion = $this->validarPagoProduccion(
+                $montoPagado,
+                $totales["total"],
+                $fechaEntregaEstimada
+            );
+
+            if ($errorPagoProduccion !== null) {
+                return [
+                    "success" => false,
+                    "message" => $errorPagoProduccion,
+                    "id_factura" => null,
+                ];
+            }
+
+            $datosPagoProduccion = $this->calcularDatosPagoProduccion(
+                $montoPagado,
+                $totales["total"],
+                $fechaEntregaEstimada
+            );
+
             $this->connection->beginTransaction();
 
             $idFactura = $this->insertarFactura(
@@ -70,7 +93,8 @@ class FacturaService
                 $tipoClienteVenta,
                 trim($post["nombre_cliente_fugaz"] ?? ""),
                 $totales,
-                $items
+                $items,
+                $datosPagoProduccion
             );
 
             $this->connection->commit();
@@ -80,7 +104,7 @@ class FacturaService
                 "message" => "Factura registrada correctamente.",
                 "id_factura" => $idFactura,
             ];
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             if ($this->connection->inTransaction()) {
                 $this->connection->rollBack();
             }
@@ -294,11 +318,11 @@ class FacturaService
         $descuentoFactura = $descuentoTotalLineas + $descuentoGlobal;
         $baseImponible = max(0.0, $subtotal - $descuentoFactura);
         $impuesto = round($baseImponible * IVA_RATE, 2);
-        $total = $baseImponible + $impuesto;
+        $total = round($baseImponible + $impuesto, 2);
 
         return [
-            "subtotal" => $subtotal,
-            "descuento" => $descuentoFactura,
+            "subtotal" => round($subtotal, 2),
+            "descuento" => round($descuentoFactura, 2),
             "impuesto" => $impuesto,
             "total" => $total,
         ];
@@ -311,7 +335,8 @@ class FacturaService
         string $tipoClienteVenta,
         string $nombreClienteFugaz,
         array $totales,
-        array $items
+        array $items,
+        array $datosPagoProduccion
     ): int {
         $statement = $this->connection->prepare("
             SELECT registrar_factura_sistema(
@@ -341,46 +366,153 @@ class FacturaService
             ":items" => json_encode($items, JSON_THROW_ON_ERROR),
         ]);
 
-        return (int)$statement->fetchColumn();
+        $idFactura = (int)$statement->fetchColumn();
+
+        if ($idFactura <= 0) {
+            throw new Exception("No se pudo obtener el identificador de la factura registrada.");
+        }
+
+        $this->actualizarPagoProduccionFactura($idFactura, $datosPagoProduccion);
+
+        return $idFactura;
+    }
+
+    private function normalizarMontoPagado(mixed $valor): float
+    {
+        $valor = trim((string)$valor);
+
+        if ($valor === "" || !is_numeric($valor)) {
+            return 0.0;
+        }
+
+        return round(max(0.0, (float)$valor), 2);
+    }
+
+    private function validarPagoProduccion(
+        float $montoPagado,
+        float $total,
+        string $fechaEntregaEstimada
+    ): ?string {
+        if ($total <= 0) {
+            return "El total de la factura debe ser mayor que cero.";
+        }
+
+        if ($fechaEntregaEstimada === "") {
+            return "Debe seleccionar una fecha estimada de entrega.";
+        }
+
+        $timestampEntrega = strtotime($fechaEntregaEstimada);
+
+        if ($timestampEntrega === false) {
+            return "La fecha estimada de entrega no es válida.";
+        }
+
+        $fechaHoy = strtotime(date("Y-m-d"));
+
+        if ($timestampEntrega < $fechaHoy) {
+            return "La fecha estimada de entrega no puede ser anterior a hoy.";
+        }
+
+        $minimoRequerido = round($total * 0.50, 2);
+
+        if ($montoPagado < $minimoRequerido) {
+            return "El cliente debe pagar al menos el 50% del total para iniciar la producción. Mínimo requerido: C$ "
+                . number_format($minimoRequerido, 2);
+        }
+
+        if ($montoPagado > $total) {
+            return "El monto pagado no puede ser mayor al total de la factura.";
+        }
+
+        return null;
+    }
+
+    private function calcularDatosPagoProduccion(
+        float $montoPagado,
+        float $total,
+        string $fechaEntregaEstimada
+    ): array {
+        $saldoPendiente = round(max(0.0, $total - $montoPagado), 2);
+        $porcentajePagado = $total > 0
+            ? round(($montoPagado / $total) * 100, 2)
+            : 0.0;
+
+        $estadoPago = $saldoPendiente <= 0.01 ? "Pagado" : "Parcial";
+
+        return [
+            "monto_pagado" => round($montoPagado, 2),
+            "saldo_pendiente" => $saldoPendiente,
+            "porcentaje_pagado" => $porcentajePagado,
+            "estado_pago" => $estadoPago,
+            "estado_produccion" => "En producción",
+            "fecha_entrega_estimada" => date("Y-m-d", strtotime($fechaEntregaEstimada)),
+        ];
+    }
+
+    private function actualizarPagoProduccionFactura(
+        int $idFactura,
+        array $datosPagoProduccion
+    ): void {
+        $statement = $this->connection->prepare("
+            UPDATE factura
+            SET
+                monto_pagado = :monto_pagado,
+                saldo_pendiente = :saldo_pendiente,
+                porcentaje_pagado = :porcentaje_pagado,
+                estado_pago = :estado_pago,
+                estado_produccion = :estado_produccion,
+                fecha_orden_produccion = CURRENT_TIMESTAMP,
+                fecha_entrega_estimada = :fecha_entrega_estimada
+            WHERE id_factura = :id_factura
+        ");
+
+        $statement->execute([
+            ":id_factura" => $idFactura,
+            ":monto_pagado" => $datosPagoProduccion["monto_pagado"],
+            ":saldo_pendiente" => $datosPagoProduccion["saldo_pendiente"],
+            ":porcentaje_pagado" => $datosPagoProduccion["porcentaje_pagado"],
+            ":estado_pago" => $datosPagoProduccion["estado_pago"],
+            ":estado_produccion" => $datosPagoProduccion["estado_produccion"],
+            ":fecha_entrega_estimada" => $datosPagoProduccion["fecha_entrega_estimada"],
+        ]);
     }
 
     private function obtenerLimiteClienteFugaz(): float
     {
-        $archivoConfiguracion = __DIR__ . "/../configuracion_sistema.json";
+        $rutasConfiguracion = [
+            __DIR__ . "/../storage/system/configuracion_sistema.json",
+            dirname(__DIR__) . "/storage/system/configuracion_sistema.json",
+            $_SERVER["DOCUMENT_ROOT"] . "/storage/system/configuracion_sistema.json",
+            __DIR__ . "/../configuracion_sistema.json",
+        ];
+
         $limitePorDefecto = 1000.00;
 
-        if (!is_file($archivoConfiguracion)) {
-            file_put_contents(
-                $archivoConfiguracion,
-                json_encode(
-                    ["limite_de_venta_cliente_fugaz" => $limitePorDefecto],
-                    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
-                ),
-                LOCK_EX
-            );
+        foreach ($rutasConfiguracion as $archivoConfiguracion) {
+            if (!is_file($archivoConfiguracion)) {
+                continue;
+            }
 
-            return $limitePorDefecto;
+            $contenido = file_get_contents($archivoConfiguracion);
+
+            if ($contenido === false || trim($contenido) === "") {
+                continue;
+            }
+
+            $configuracion = json_decode($contenido, true);
+
+            if (!is_array($configuracion)) {
+                continue;
+            }
+
+            $limite = $configuracion["limite_de_venta_cliente_fugaz"] ?? $limitePorDefecto;
+
+            if (is_numeric($limite) && (float)$limite > 0) {
+                return (float)$limite;
+            }
         }
 
-        $contenido = file_get_contents($archivoConfiguracion);
-
-        if ($contenido === false || trim($contenido) === "") {
-            return $limitePorDefecto;
-        }
-
-        $configuracion = json_decode($contenido, true);
-
-        if (!is_array($configuracion)) {
-            return $limitePorDefecto;
-        }
-
-        $limite = $configuracion["limite_de_venta_cliente_fugaz"] ?? $limitePorDefecto;
-
-        if (!is_numeric($limite) || (float)$limite <= 0) {
-            return $limitePorDefecto;
-        }
-
-        return (float)$limite;
+        return $limitePorDefecto;
     }
 
     private function validarLimiteClienteFugaz(
@@ -401,7 +533,6 @@ class FacturaService
         return null;
     }
 
-
     public function eliminarFactura(int $idFactura): array
     {
         try {
@@ -415,8 +546,8 @@ class FacturaService
             $this->connection->beginTransaction();
 
             $statement = $this->connection->prepare("
-            CALL eliminar_factura_sistema(:id_factura)
-        ");
+                CALL eliminar_factura_sistema(:id_factura)
+            ");
 
             $statement->execute([
                 ":id_factura" => $idFactura,
@@ -454,10 +585,10 @@ class FacturaService
     public function obtenerFacturaParaEditar(int $idFactura): ?array
     {
         $statement = $this->connection->prepare("
-        SELECT *
-        FROM obtener_factura_para_impresion(:id_factura)
-        LIMIT 1
-    ");
+            SELECT *
+            FROM obtener_factura_para_impresion(:id_factura)
+            LIMIT 1
+        ");
 
         $statement->execute([
             ":id_factura" => $idFactura,
@@ -471,9 +602,9 @@ class FacturaService
     public function obtenerDetallesFacturaParaEditar(int $idFactura): array
     {
         $statement = $this->connection->prepare("
-        SELECT *
-        FROM obtener_detalles_factura_edicion(:id_factura)
-    ");
+            SELECT *
+            FROM obtener_detalles_factura_edicion(:id_factura)
+        ");
 
         $statement->execute([
             ":id_factura" => $idFactura,
@@ -485,10 +616,10 @@ class FacturaService
     public function obtenerClienteFacturaParaEditar(int $idCliente): ?array
     {
         $statement = $this->connection->prepare("
-        SELECT *
-        FROM obtener_cliente_factura_edicion(:id_cliente)
-        LIMIT 1
-    ");
+            SELECT *
+            FROM obtener_cliente_factura_edicion(:id_cliente)
+            LIMIT 1
+        ");
 
         $statement->execute([
             ":id_cliente" => $idCliente,
@@ -578,19 +709,19 @@ class FacturaService
             $this->connection->beginTransaction();
 
             $statement = $this->connection->prepare("
-            CALL editar_factura_sistema(
-                :id_factura,
-                :fecha,
-                :id_cliente,
-                :id_usuario,
-                :id_seccion,
-                :tipo_cliente_venta,
-                :nombre_cliente_fugaz,
-                :descuento_global,
-                :iva,
-                CAST(:items AS JSONB)
-            )
-        ");
+                CALL editar_factura_sistema(
+                    :id_factura,
+                    :fecha,
+                    :id_cliente,
+                    :id_usuario,
+                    :id_seccion,
+                    :tipo_cliente_venta,
+                    :nombre_cliente_fugaz,
+                    :descuento_global,
+                    :iva,
+                    CAST(:items AS JSONB)
+                )
+            ");
 
             $statement->execute([
                 ":id_factura" => $idFactura,

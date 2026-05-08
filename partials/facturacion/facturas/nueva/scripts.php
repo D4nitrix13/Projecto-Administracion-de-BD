@@ -56,8 +56,63 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
         const clientePickerInput = document.getElementById("cliente-picker-input");
         const clienteHiddenInput = document.getElementById("id_cliente");
 
+        const montoPagadoInput = document.getElementById("monto_pagado");
+        const fechaEntregaEstimadaInput = document.getElementById("fecha_entrega_estimada");
+        const minimoRequeridoView = document.getElementById("minimo-requerido-view");
+        const saldoPendienteView = document.getElementById("saldo-pendiente-view");
+        const estadoPagoView = document.getElementById("estado-pago-view");
+        const paymentWarning = document.getElementById("invoice-payment-warning");
+
         function formatMoney(value) {
             return `C$ ${value.toFixed(2)}`;
+        }
+
+        function actualizarResumenPago(total) {
+            if (!montoPagadoInput) {
+                return;
+            }
+
+            let montoPagado = parseFloat(montoPagadoInput.value || "0");
+
+            if (Number.isNaN(montoPagado) || montoPagado < 0) {
+                montoPagado = 0;
+            }
+
+            if (montoPagado > total) {
+                montoPagado = total;
+                montoPagadoInput.value = total.toFixed(2);
+            }
+
+            const minimoRequerido = total * 0.50;
+            const saldoPendiente = Math.max(0, total - montoPagado);
+
+            if (minimoRequeridoView) {
+                minimoRequeridoView.textContent = formatMoney(minimoRequerido);
+            }
+
+            if (saldoPendienteView) {
+                saldoPendienteView.textContent = formatMoney(saldoPendiente);
+            }
+
+            if (estadoPagoView) {
+                estadoPagoView.classList.remove("pending", "partial", "paid");
+
+                if (montoPagado <= 0) {
+                    estadoPagoView.textContent = "Pendiente";
+                    estadoPagoView.classList.add("pending");
+                } else if (montoPagado >= total && total > 0) {
+                    estadoPagoView.textContent = "Pagado";
+                    estadoPagoView.classList.add("paid");
+                } else {
+                    estadoPagoView.textContent = "Parcial";
+                    estadoPagoView.classList.add("partial");
+                }
+            }
+
+            if (paymentWarning) {
+                paymentWarning.style.display =
+                    total > 0 && montoPagado < minimoRequerido ? "flex" : "none";
+            }
         }
 
         function normalizarTexto(texto) {
@@ -288,6 +343,8 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
 
         function normalizeDecimalInput(input) {
             let value = input.value ?? "";
+
+            value = value.replace(",", ".");
             value = value.replace(/[^0-9.]/g, "");
 
             const parts = value.split(".");
@@ -411,6 +468,8 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
             document.getElementById("impuesto-view").textContent = formatMoney(impuesto);
             document.getElementById("total-view").textContent = formatMoney(total);
 
+            actualizarResumenPago(total);
+
             return total;
         }
 
@@ -429,8 +488,8 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                 return;
             }
 
-            if (permitirDecimal && event.key === ".") {
-                if (event.target.value.includes(".")) {
+            if (permitirDecimal && (event.key === "." || event.key === ",")) {
+                if (event.target.value.includes(".") || event.target.value.includes(",")) {
                     event.preventDefault();
                 }
 
@@ -569,6 +628,25 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
             });
         }
 
+        if (montoPagadoInput) {
+            montoPagadoInput.addEventListener("keydown", event => {
+                bloquearNumeroInvalido(event, true);
+            });
+
+            montoPagadoInput.addEventListener("input", () => {
+                normalizeDecimalInput(montoPagadoInput);
+                recalcTotals();
+            });
+
+            montoPagadoInput.addEventListener("blur", () => {
+                if (montoPagadoInput.value.trim() === "") {
+                    montoPagadoInput.value = "0";
+                }
+
+                recalcTotals();
+            });
+        }
+
         if (form) {
             form.addEventListener("submit", event => {
                 const filas = tbody.querySelectorAll(".item-row");
@@ -593,6 +671,36 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                 }
 
                 const totalFactura = recalcTotals();
+
+                const montoPagado = parseFloat(montoPagadoInput?.value || "0");
+                const minimoRequerido = totalFactura * 0.50;
+
+                if (Number.isNaN(montoPagado) || montoPagado < minimoRequerido) {
+                    event.preventDefault();
+
+                    alert(
+                        "El cliente debe pagar al menos el 50% del total para iniciar la producción.\n\n" +
+                        "Mínimo requerido: " + formatMoney(minimoRequerido)
+                    );
+
+                    return;
+                }
+
+                if (montoPagado > totalFactura) {
+                    event.preventDefault();
+
+                    alert("El monto pagado no puede ser mayor al total de la factura.");
+
+                    return;
+                }
+
+                if (fechaEntregaEstimadaInput && fechaEntregaEstimadaInput.value.trim() === "") {
+                    event.preventDefault();
+
+                    alert("Debe seleccionar una fecha estimada de entrega.");
+
+                    return;
+                }
 
                 if (
                     selectTipoCliente &&
