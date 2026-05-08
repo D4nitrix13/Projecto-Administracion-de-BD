@@ -12,8 +12,9 @@
             $stockClass = obtenerClaseStockCatalogo($stock);
             $stockLabel = obtenerTextoStockCatalogo($stock);
 
-            $tieneImagen = !empty($producto["imagen"]) &&
-                is_file(__DIR__ . "/../../uploads/productos/" . $producto["imagen"]);
+            $rutaImagenProducto = __DIR__ . "/../../../uploads/productos/" . ($producto["imagen"] ?? "");
+
+            $tieneImagen = !empty($producto["imagen"]) && is_file($rutaImagenProducto);
 
             $urlWhatsApp = obtenerUrlWhatsAppCatalogo($numeroWhatsApp, $producto);
             ?>
