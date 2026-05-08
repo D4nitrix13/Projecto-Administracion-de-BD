@@ -25,18 +25,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($action === "restore") {
         $archivo = trim($_POST["archivo"] ?? "");
         $confirmacion = trim($_POST["confirmacion"] ?? "");
+        $forzarRestauracion = trim($_POST["forzar_restauracion"] ?? "") === "FORZAR";
 
         if ($archivo === "") {
             $error = "Debe seleccionar un archivo de respaldo.";
         } elseif ($confirmacion !== "RESTAURAR") {
             $error = "Para confirmar la restauración debe escribir exactamente RESTAURAR.";
         } else {
-            $resultado = $backupService->restaurarDesdeArchivo($archivo);
+            $analisisRestauracion = $backupService->analizarRestauracion($archivo);
 
-            if ($resultado["success"]) {
-                $success = $resultado["message"];
+            if (!$analisisRestauracion["success"]) {
+                $error = $analisisRestauracion["message"];
+            } elseif (!$analisisRestauracion["es_ultimo"] && !$forzarRestauracion) {
+                $error = "No es recomendable restaurar este respaldo porque no es el más reciente. Si desea continuar, escriba exactamente FORZAR en el campo de confirmación avanzada.";
             } else {
-                $error = $resultado["message"];
+                $resultado = $backupService->restaurarDesdeArchivo($archivo, $forzarRestauracion);
+
+                if ($resultado["success"]) {
+                    $success = $resultado["message"];
+                } else {
+                    $error = $resultado["message"];
+                }
             }
         }
     }

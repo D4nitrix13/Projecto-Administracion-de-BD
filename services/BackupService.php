@@ -118,7 +118,7 @@ class BackupService
         ];
     }
 
-    public function restaurarDesdeArchivo(string $archivo): array
+    public function restaurarDesdeArchivo(string $archivo, bool $forzarRestauracion = false): array
     {
         $archivo = basename($archivo);
         $filepath = $this->obtenerRutaRespaldo($archivo);
@@ -134,6 +134,19 @@ class BackupService
             return [
                 "success" => false,
                 "message" => "Solo se permiten archivos de respaldo con extensión .sql.",
+            ];
+        }
+
+        $analisisRestauracion = $this->analizarRestauracion($archivo);
+
+        if (!$analisisRestauracion["success"]) {
+            return $analisisRestauracion;
+        }
+
+        if (!$analisisRestauracion["es_ultimo"] && !$forzarRestauracion) {
+            return [
+                "success" => false,
+                "message" => "Este respaldo no es el más reciente. Para restaurarlo debe escribir exactamente FORZAR en la confirmación avanzada.",
             ];
         }
 
@@ -164,6 +177,68 @@ class BackupService
             $dbPass,
             $dbName
         );
+    }
+
+    public function analizarRestauracion(string $archivo): array
+    {
+        $archivo = basename($archivo);
+        $filepath = $this->obtenerRutaRespaldo($archivo);
+
+        if ($filepath === null) {
+            return [
+                "success" => false,
+                "message" => "Archivo de respaldo no encontrado.",
+            ];
+        }
+
+        if (!str_ends_with(strtolower($archivo), ".sql")) {
+            return [
+                "success" => false,
+                "message" => "Solo se permiten archivos de respaldo con extensión .sql.",
+            ];
+        }
+
+        $respaldosDisponibles = array_values(array_filter(
+            $this->listarRespaldos(),
+            fn(array $respaldo): bool => empty($respaldo["deletion_pending"])
+        ));
+
+        if (empty($respaldosDisponibles)) {
+            return [
+                "success" => false,
+                "message" => "No hay respaldos disponibles para comparar.",
+            ];
+        }
+
+        usort(
+            $respaldosDisponibles,
+            fn(array $a, array $b): int => strcmp((string)$b["fecha"], (string)$a["fecha"])
+        );
+
+        $ultimo = $respaldosDisponibles[0];
+
+        $fechaSeleccionadaTimestamp = filemtime($filepath);
+        $rutaUltimo = $this->obtenerRutaRespaldo((string)$ultimo["nombre"]);
+        $fechaUltimoTimestamp = $rutaUltimo !== null ? filemtime($rutaUltimo) : null;
+
+        if ($fechaSeleccionadaTimestamp === false || $fechaUltimoTimestamp === null || $fechaUltimoTimestamp === false) {
+            return [
+                "success" => false,
+                "message" => "No se pudo validar la fecha del respaldo seleccionado.",
+            ];
+        }
+
+        $esUltimo = $archivo === $ultimo["nombre"] || $fechaSeleccionadaTimestamp >= $fechaUltimoTimestamp;
+
+        return [
+            "success" => true,
+            "message" => null,
+            "es_ultimo" => $esUltimo,
+            "archivo_seleccionado" => $archivo,
+            "fecha_seleccionada" => date("Y-m-d H:i:s", $fechaSeleccionadaTimestamp),
+            "archivo_ultimo" => $ultimo["nombre"],
+            "fecha_ultimo" => $ultimo["fecha"],
+        ];
     }
 
     public function listarRespaldos(): array

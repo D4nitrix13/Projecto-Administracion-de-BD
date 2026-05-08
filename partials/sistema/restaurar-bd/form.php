@@ -26,6 +26,17 @@
                 </a>
             </div>
         <?php else: ?>
+            <?php
+            $archivosDisponibles = array_values(array_filter(
+                $archivos,
+                fn(array $item): bool => empty($item["deletion_pending"])
+            ));
+
+            $ultimoRespaldo = $archivosDisponibles[0] ?? null;
+            $ultimoNombre = $ultimoRespaldo["nombre"] ?? "";
+            $ultimoFecha = restaurarFormatearFecha($ultimoRespaldo["fecha"] ?? null);
+            ?>
+
             <form method="POST" class="restore-form">
                 <input type="hidden" name="action" value="restore">
 
@@ -71,13 +82,18 @@
                                     $tamano = restaurarFormatearTamano((int)($archivo["tamanio"] ?? 0));
                                     $pendiente = (bool)($archivo["deletion_pending"] ?? false);
                                     $tipoFiltro = strtolower($tipo);
+                                    $esUltimo = $nombre !== "" && $nombre === $ultimoNombre;
                                     ?>
 
                                     <?php if (!$pendiente): ?>
                                         <tr
                                             class="restore-backup-row"
                                             data-name="<?= htmlspecialchars(strtolower($nombre)) ?>"
-                                            data-type="<?= htmlspecialchars($tipoFiltro) ?>">
+                                            data-type="<?= htmlspecialchars($tipoFiltro) ?>"
+                                            data-is-latest="<?= $esUltimo ? "1" : "0" ?>"
+                                            data-readable-date="<?= htmlspecialchars($fecha) ?>"
+                                            data-latest-name="<?= htmlspecialchars($ultimoNombre) ?>"
+                                            data-latest-date="<?= htmlspecialchars($ultimoFecha) ?>">
 
                                             <td class="restore-radio-cell">
                                                 <input
@@ -128,6 +144,35 @@
                     <p>
                         Esta acción reemplazará los datos actuales. Antes de restaurar, asegúrese de haber generado un respaldo reciente.
                     </p>
+                </div>
+
+                <div class="restore-old-backup-warning" id="restoreOldBackupWarning" hidden>
+                    <strong>Este respaldo no es el más reciente</strong>
+
+                    <p id="restoreOldBackupText">
+                        Está intentando restaurar un respaldo anterior al último disponible.
+                    </p>
+
+                    <ul>
+                        <li>Puede perder registros, facturas, clientes, productos o movimientos creados después de esa fecha.</li>
+                        <li>No se recomienda restaurar respaldos antiguos si existe uno más reciente.</li>
+                        <li>Use esta opción solo si necesita regresar el sistema a un estado anterior específico.</li>
+                    </ul>
+
+                    <div class="restore-field">
+                        <label for="forzar_restauracion">Confirmación avanzada</label>
+
+                        <input
+                            type="text"
+                            name="forzar_restauracion"
+                            id="forzar_restauracion"
+                            autocomplete="off"
+                            placeholder="Escriba FORZAR para restaurar un respaldo antiguo">
+
+                        <small>
+                            Solo complete este campo si desea restaurar un respaldo que no es el más reciente.
+                        </small>
+                    </div>
                 </div>
 
                 <div class="restore-field">
@@ -188,6 +233,11 @@
                     <span>Confirmación requerida</span>
                     <strong>RESTAURAR</strong>
                 </div>
+
+                <div>
+                    <span>Confirmación avanzada</span>
+                    <strong>FORZAR si el respaldo no es el más reciente</strong>
+                </div>
             </div>
         </article>
 
@@ -201,6 +251,7 @@
                 <li>Confirme que el archivo no esté vacío.</li>
                 <li>Genere un respaldo nuevo antes de reemplazar datos.</li>
                 <li>No cierre el sistema mientras la restauración se ejecuta.</li>
+                <li>Evite restaurar respaldos antiguos si existe uno más reciente.</li>
             </ul>
         </article>
 
@@ -214,6 +265,50 @@
         const typeFilter = document.getElementById("restoreTypeFilter");
         const rows = Array.from(document.querySelectorAll(".restore-backup-row"));
         const noResults = document.getElementById("restoreNoResults");
+        const oldBackupWarning = document.getElementById("restoreOldBackupWarning");
+        const oldBackupText = document.getElementById("restoreOldBackupText");
+        const forceInput = document.getElementById("forzar_restauracion");
+
+        function updateOldBackupWarning(row) {
+            if (!row || !oldBackupWarning || !oldBackupText || !forceInput) {
+                return;
+            }
+
+            const isLatest = row.dataset.isLatest === "1";
+            const selectedName = row.querySelector(".restore-file-name")?.textContent.trim() || "respaldo seleccionado";
+            const selectedDate = row.dataset.readableDate || "fecha no disponible";
+            const latestName = row.dataset.latestName || "último respaldo";
+            const latestDate = row.dataset.latestDate || "fecha no disponible";
+
+            if (isLatest) {
+                oldBackupWarning.hidden = true;
+                forceInput.value = "";
+                forceInput.required = false;
+                return;
+            }
+
+            oldBackupWarning.hidden = false;
+            forceInput.required = true;
+
+            oldBackupText.textContent =
+                "Seleccionó " + selectedName +
+                " con fecha " + selectedDate +
+                " El respaldo más reciente disponible es " + latestName +
+                " con fecha " + latestDate + ".";
+        }
+
+        function clearOldBackupWarningIfNoSelection() {
+            const selectedRow = rows.find(function(row) {
+                const radio = row.querySelector("input[type='radio']");
+                return radio && radio.checked;
+            });
+
+            if (!selectedRow && oldBackupWarning && forceInput) {
+                oldBackupWarning.hidden = true;
+                forceInput.value = "";
+                forceInput.required = false;
+            }
+        }
 
         function applyFilters() {
             const searchValue = searchInput.value.trim().toLowerCase();
@@ -244,6 +339,7 @@
             });
 
             noResults.style.display = visibleCount === 0 ? "table-row" : "none";
+            clearOldBackupWarningIfNoSelection();
         }
 
         rows.forEach(function(row) {
@@ -261,6 +357,7 @@
                 });
 
                 row.classList.add("is-selected");
+                updateOldBackupWarning(row);
             });
         });
 

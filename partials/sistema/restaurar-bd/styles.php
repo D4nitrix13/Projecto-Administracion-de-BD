@@ -148,6 +148,40 @@
         line-height: 1.5;
     }
 
+    .restore-old-backup-warning {
+        border: 1px solid #f59e0b;
+        border-radius: 14px;
+        padding: 16px;
+        background: #fffbeb;
+    }
+
+    .restore-old-backup-warning strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #92400e;
+        font-size: 0.95rem;
+        font-weight: 900;
+    }
+
+    .restore-old-backup-warning p {
+        margin: 0 0 10px;
+        color: #78350f;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .restore-old-backup-warning ul {
+        margin: 0 0 14px;
+        padding-left: 18px;
+        color: #78350f;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .restore-old-backup-warning[hidden] {
+        display: none;
+    }
+
     .restore-actions {
         display: flex;
         align-items: center;
