@@ -14,6 +14,16 @@
         </div>
     </header>
 
+    <section class="invoice-status-row">
+        <span class="print-status print-status-payment">
+            Pago: <?= htmlspecialchars($factura["estado_pago"] ?? "Pendiente") ?>
+        </span>
+
+        <span class="print-status print-status-production">
+            Producción: <?= htmlspecialchars($factura["estado_produccion"] ?? "Pendiente") ?>
+        </span>
+    </section>
+
     <section class="invoice-info-grid">
         <article class="invoice-info-box">
             <h3>Cliente</h3>
@@ -62,6 +72,46 @@
             <div class="invoice-info-row">
                 <span>Tipo</span>
                 <strong><?= htmlspecialchars($factura["tipo_cliente_venta"] ?? "Habitual") ?></strong>
+            </div>
+        </article>
+    </section>
+
+    <section class="invoice-info-grid">
+        <article class="invoice-info-box">
+            <h3>Pago</h3>
+
+            <div class="invoice-info-row">
+                <span>Pagado</span>
+                <strong>C$ <?= number_format((float)($factura["monto_pagado"] ?? 0), 2) ?></strong>
+            </div>
+
+            <div class="invoice-info-row">
+                <span>Saldo</span>
+                <strong>C$ <?= number_format((float)($factura["saldo_pendiente"] ?? 0), 2) ?></strong>
+            </div>
+
+            <div class="invoice-info-row">
+                <span>Avance</span>
+                <strong><?= number_format((float)($factura["porcentaje_pagado"] ?? 0), 2) ?>%</strong>
+            </div>
+        </article>
+
+        <article class="invoice-info-box">
+            <h3>Producción</h3>
+
+            <div class="invoice-info-row">
+                <span>Estimada</span>
+                <strong><?= htmlspecialchars($fechaEntregaEstimada) ?></strong>
+            </div>
+
+            <div class="invoice-info-row">
+                <span>Real</span>
+                <strong><?= htmlspecialchars($fechaEntregaReal) ?></strong>
+            </div>
+
+            <div class="invoice-info-row">
+                <span>Estado</span>
+                <strong><?= htmlspecialchars($factura["estado_produccion"] ?? "Pendiente") ?></strong>
             </div>
         </article>
     </section>
@@ -120,7 +170,10 @@
     <section class="invoice-footer-grid">
         <div class="invoice-note">
             <strong>Nota</strong>
-            <p>Documento generado por el sistema de facturación e inventario.</p>
+            <p>
+                Documento generado por el sistema de facturación e inventario.
+                Conserve esta factura como respaldo de la venta y seguimiento del pedido.
+            </p>
         </div>
 
         <div class="invoice-totals">
@@ -131,12 +184,22 @@
 
             <div>
                 <span>Descuento</span>
-                <strong>C$ <?= number_format((float)$factura["descuento"], 2) ?></strong>
+                <strong>- C$ <?= number_format((float)$factura["descuento"], 2) ?></strong>
             </div>
 
             <div>
                 <span>IVA</span>
                 <strong>C$ <?= number_format((float)$factura["impuesto"], 2) ?></strong>
+            </div>
+
+            <div>
+                <span>Pagado</span>
+                <strong>C$ <?= number_format((float)($factura["monto_pagado"] ?? 0), 2) ?></strong>
+            </div>
+
+            <div>
+                <span>Saldo</span>
+                <strong>C$ <?= number_format((float)($factura["saldo_pendiente"] ?? 0), 2) ?></strong>
             </div>
 
             <div class="invoice-total-final">

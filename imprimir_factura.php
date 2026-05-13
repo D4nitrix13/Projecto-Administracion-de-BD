@@ -22,7 +22,9 @@ $empresaDireccion     = $viewData["empresaDireccion"];
 $empresaTelefono      = $viewData["empresaTelefono"];
 $nombreClienteMostrar = $viewData["nombreClienteMostrar"];
 $esFugaz              = $viewData["esFugaz"];
-$fechaFactura         = $viewData["fechaFactura"];
+$fechaFactura = $viewData["fechaFactura"];
+$fechaEntregaEstimada = $viewData["fechaEntregaEstimada"] ?? "No definida";
+$fechaEntregaReal = $viewData["fechaEntregaReal"] ?? "No registrada";
 
 ?>
 

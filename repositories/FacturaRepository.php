@@ -147,27 +147,38 @@ class FacturaRepository
     public function obtenerFacturaParaImpresion(int $idFactura): ?array
     {
         $statement = $this->connection->prepare("
-            SELECT
-                id_factura,
-                fecha,
-                id_cliente,
-                id_usuario,
-                id_seccion,
-                subtotal,
-                descuento,
-                impuesto,
-                total,
-                tipo_cliente_venta,
-                nombre_cliente_fugaz,
-                cli_nombres,
-                cli_apellidos,
-                cli_telefono,
-                cli_direccion,
-                cli_identificacion,
-                usuario_nombre,
-                seccion_nombre
-            FROM obtener_factura_para_impresion(:id_factura)
-        ");
+        SELECT
+            fp.id_factura,
+            fp.fecha,
+            fp.id_cliente,
+            fp.id_usuario,
+            fp.id_seccion,
+            fp.subtotal,
+            fp.descuento,
+            fp.impuesto,
+            fp.total,
+            fp.tipo_cliente_venta,
+            fp.nombre_cliente_fugaz,
+            fp.cli_nombres,
+            fp.cli_apellidos,
+            fp.cli_telefono,
+            fp.cli_direccion,
+            fp.cli_identificacion,
+            fp.usuario_nombre,
+            fp.seccion_nombre,
+
+            f.monto_pagado,
+            f.saldo_pendiente,
+            f.porcentaje_pagado,
+            f.estado_pago,
+            f.estado_produccion,
+            f.fecha_orden_produccion,
+            f.fecha_entrega_estimada,
+            f.fecha_entrega_real
+        FROM obtener_factura_para_impresion(:id_factura) AS fp
+        INNER JOIN factura f ON f.id_factura = fp.id_factura
+        LIMIT 1
+    ");
 
         $statement->execute([
             ":id_factura" => $idFactura,

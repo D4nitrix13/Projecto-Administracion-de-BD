@@ -1,50 +1,53 @@
 <?php
-
 session_start();
-
-$pageTitle = "Facturas - Panda Estampados / Kitsune";
 
 require_once __DIR__ . "/includes/auth_guard.php";
 require_once __DIR__ . "/controllers/facturas_controller.php";
 
 requireLogin();
 
-$viewData = obtenerDatosFacturas();
+$datos = obtenerDatosFacturas();
 
-$user              = $viewData["user"];
-$idRol             = $viewData["idRol"];
-$facturas          = $viewData["facturas"];
-$secciones         = $viewData["secciones"];
-$usuariosFiltro    = $viewData["usuariosFiltro"];
-$busqueda          = $viewData["busqueda"];
-$seccionFiltroInt  = $viewData["seccionFiltroInt"];
-$usuarioFiltroInt  = $viewData["usuarioFiltroInt"];
-$fechaDesde        = $viewData["fechaDesde"];
-$fechaHasta        = $viewData["fechaHasta"];
-$textoSubtitulo    = $viewData["textoSubtitulo"];
-$flashSuccess      = $viewData["flashSuccess"];
-$flashError        = $viewData["flashError"];
+$user = $datos["user"];
+$idRol = $datos["idRol"];
+$facturas = $datos["facturas"];
+$secciones = $datos["secciones"];
+$usuariosFiltro = $datos["usuariosFiltro"];
 
+$busqueda = $datos["busqueda"] ?? "";
+$seccionFiltroInt = $datos["seccionFiltroInt"] ?? null;
+$usuarioFiltroInt = $datos["usuarioFiltroInt"] ?? null;
+$estadoPagoFiltro = $datos["estadoPagoFiltro"] ?? "";
+$estadoProduccionFiltro = $datos["estadoProduccionFiltro"] ?? "";
+$fechaDesde = $datos["fechaDesde"] ?? "";
+$fechaHasta = $datos["fechaHasta"] ?? "";
+
+$textoSubtitulo = $datos["textoSubtitulo"];
+$flashSuccess = $datos["flashSuccess"];
+$flashError = $datos["flashError"];
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 
-<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
-<?php require __DIR__ . "/partials/facturacion/facturas/styles.php"; ?>
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de facturas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+    <?php require __DIR__ . "/partials/facturacion/facturas/styles.php"; ?>
+</head>
 
 <body class="dashboard-body">
-
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar.php"; ?>
 
     <main class="dashboard-main">
-
         <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <?php require __DIR__ . "/partials/facturacion/facturas/header.php"; ?>
 
         <section class="dashboard-card">
-
             <?php require __DIR__ . "/partials/facturacion/facturas/alerts.php"; ?>
 
             <?php require __DIR__ . "/partials/facturacion/facturas/actions.php"; ?>
@@ -52,13 +55,10 @@ $flashError        = $viewData["flashError"];
             <?php require __DIR__ . "/partials/facturacion/facturas/filters.php"; ?>
 
             <?php require __DIR__ . "/partials/facturacion/facturas/table.php"; ?>
-
         </section>
-
     </main>
 
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
-
 </body>
 
 </html>

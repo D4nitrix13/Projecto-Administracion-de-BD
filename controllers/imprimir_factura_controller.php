@@ -39,7 +39,19 @@ function obtenerDatosImprimirFactura(): array
         ? ($factura["nombre_cliente_fugaz"] ?: "Cliente fugaz")
         : trim(($factura["cli_nombres"] ?? "") . " " . ($factura["cli_apellidos"] ?? ""));
 
+    if ($nombreClienteMostrar === "") {
+        $nombreClienteMostrar = "Cliente no registrado";
+    }
+
     $fechaFactura = date("d/m/Y H:i", strtotime($factura["fecha"] ?? "now"));
+
+    $fechaEntregaEstimada = !empty($factura["fecha_entrega_estimada"])
+        ? date("d/m/Y", strtotime($factura["fecha_entrega_estimada"]))
+        : "No definida";
+
+    $fechaEntregaReal = !empty($factura["fecha_entrega_real"])
+        ? date("d/m/Y", strtotime($factura["fecha_entrega_real"]))
+        : "No registrada";
 
     return [
         "user" => $user,
@@ -51,6 +63,8 @@ function obtenerDatosImprimirFactura(): array
         "nombreClienteMostrar" => $nombreClienteMostrar,
         "esFugaz" => $esFugaz,
         "fechaFactura" => $fechaFactura,
+        "fechaEntregaEstimada" => $fechaEntregaEstimada,
+        "fechaEntregaReal" => $fechaEntregaReal,
     ];
 }
 
