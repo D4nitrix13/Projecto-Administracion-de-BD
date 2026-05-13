@@ -114,7 +114,7 @@ function invoiceTimelineEventClass(?string $tipoEvento): string
                                             <?= htmlspecialchars($estadoPagoAnterior) ?>
                                         </span>
                                     <?php else: ?>
-                                        <span class="invoice-empty-pill">Sin dato</span>
+                                        <span class="invoice-empty-pill">Inicial</span>
                                     <?php endif; ?>
 
                                     <strong>→</strong>
@@ -138,7 +138,7 @@ function invoiceTimelineEventClass(?string $tipoEvento): string
                                             <?= htmlspecialchars($estadoProduccionAnterior) ?>
                                         </span>
                                     <?php else: ?>
-                                        <span class="invoice-empty-pill">Sin dato</span>
+                                        <span class="invoice-empty-pill">Inicial</span>
                                     <?php endif; ?>
 
                                     <strong>→</strong>

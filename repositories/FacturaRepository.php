@@ -86,20 +86,33 @@ class FacturaRepository
     public function obtenerFacturaPorId(int $idFactura): ?array
     {
         $statement = $this->connection->prepare("
-            SELECT
-                id_factura,
-                fecha,
-                subtotal,
-                descuento,
-                impuesto,
-                total,
-                cliente,
-                telefono,
-                direccion,
-                usuario,
-                seccion
-            FROM obtener_factura_detalle_por_id(:id_factura)
-        ");
+        SELECT
+            fd.id_factura,
+            fd.fecha,
+            fd.subtotal,
+            fd.descuento,
+            fd.impuesto,
+            fd.total,
+            fd.cliente,
+            fd.telefono,
+            fd.direccion,
+            fd.usuario,
+            fd.seccion,
+
+            f.monto_pagado,
+            f.saldo_pendiente,
+            f.porcentaje_pagado,
+            f.estado_pago,
+            f.estado_produccion,
+            f.fecha_orden_produccion,
+            f.fecha_entrega_estimada,
+            f.fecha_entrega_real,
+            f.tipo_cliente_venta,
+            f.nombre_cliente_fugaz
+        FROM obtener_factura_detalle_por_id(:id_factura) AS fd
+        INNER JOIN factura f ON f.id_factura = fd.id_factura
+        LIMIT 1
+    ");
 
         $statement->execute([
             ":id_factura" => $idFactura,
