@@ -28,7 +28,7 @@ require __DIR__ . "/partials/inventario/productos/queries.php";
         <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <?php require __DIR__ . "/partials/inventario/productos/header.php"; ?>
-
+        <?php require __DIR__ . "/partials/inventario/productos/alerts.php"; ?>
         <section class="dashboard-card products-panel">
 
             <?php if ($flash_error): ?>

@@ -511,4 +511,36 @@
             flex-basis: 82px;
         }
     }
+
+    .products-alert {
+        display: grid;
+        gap: 4px;
+        margin: 0 0 18px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .products-alert strong {
+        font-size: 0.88rem;
+        font-weight: 900;
+    }
+
+    .products-alert span {
+        font-weight: 700;
+    }
+
+    .products-alert-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .products-alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
 </style>
