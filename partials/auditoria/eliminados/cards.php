@@ -131,7 +131,7 @@ function obtenerCamposResumenAuditoria(array $datos): array
 
                     <div class="audit-record-body">
                         <div class="audit-data-list">
-                            <?php foreach ($resumenDatos as $campo => $valor): ?>
+                            <?php foreach (array_slice($resumenDatos, 0, 4, true) as $campo => $valor): ?>
                                 <div class="audit-data-row">
                                     <span><?= htmlspecialchars((string)$campo) ?></span>
 

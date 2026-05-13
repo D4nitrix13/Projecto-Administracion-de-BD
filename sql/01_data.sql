@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Sri9v3gsI5fHli5XqYDmv8FUYf4tdYBuUK0FCyTpXs9Y1d2KlWQeaA0uofDIuyx
+\restrict DDeojN12CSVzLrAvfVb9RfYpoK4d7FYGZ0IEksOv0QmPYaugDXnqb5iuGZJNWfb
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg12+1)
@@ -195,14 +195,6 @@ DROP FUNCTION IF EXISTS public.actualizar_producto_edicion(p_id_producto integer
 DROP FUNCTION IF EXISTS public.actualizar_password_usuario_login(p_id_usuario integer, p_password_hash text);
 DROP FUNCTION IF EXISTS public.actualizar_cliente_sistema(p_id_cliente integer, p_nombres character varying, p_apellidos character varying, p_telefono character varying, p_direccion character varying, p_identificacion character varying, p_tipo_cliente character varying);
 DROP FUNCTION IF EXISTS public.actualizar_categoria(p_id_categoria integer, p_nombre character varying);
--- *not* dropping schema, since initdb creates it
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
-
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
@@ -3564,8 +3556,8 @@ CREATE TABLE public.factura (
     fecha_orden_produccion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     fecha_entrega_estimada date,
     fecha_entrega_real date,
-    CONSTRAINT chk_factura_estado_pago_valido CHECK (((estado_pago)::text = ANY ((ARRAY['Pendiente'::character varying, 'Parcial'::character varying, 'Pagado'::character varying])::text[]))),
-    CONSTRAINT chk_factura_estado_produccion_valido CHECK (((estado_produccion)::text = ANY ((ARRAY['Pendiente'::character varying, 'En producción'::character varying, 'Lista para entregar'::character varying, 'Entregada'::character varying, 'Cancelada'::character varying])::text[]))),
+    CONSTRAINT chk_factura_estado_pago_valido CHECK (((estado_pago)::text = ANY (ARRAY[('Pendiente'::character varying)::text, ('Parcial'::character varying)::text, ('Pagado'::character varying)::text]))),
+    CONSTRAINT chk_factura_estado_produccion_valido CHECK (((estado_produccion)::text = ANY (ARRAY[('Pendiente'::character varying)::text, ('En producción'::character varying)::text, ('Lista para entregar'::character varying)::text, ('Entregada'::character varying)::text, ('Cancelada'::character varying)::text]))),
     CONSTRAINT chk_factura_monto_pagado_no_negativo CHECK ((monto_pagado >= (0)::numeric)),
     CONSTRAINT chk_factura_porcentaje_pagado_rango CHECK (((porcentaje_pagado >= (0)::numeric) AND (porcentaje_pagado <= (100)::numeric))),
     CONSTRAINT chk_factura_saldo_pendiente_no_negativo CHECK ((saldo_pendiente >= (0)::numeric)),
@@ -3901,46 +3893,11 @@ ALTER TABLE ONLY public.usuario ALTER COLUMN id_usuario SET DEFAULT nextval('pub
 --
 
 COPY public.auditoria (id_auditoria, usuario, accion, tabla_afectada, descripcion, fecha_registro, fecha, id_usuario, registro_id, datos_anteriores) FROM stdin;
-1	Leonel Messi	UPDATE	producto	Registro de auditoría generado para pruebas académicas #1	2026-05-06 09:24:52.990096	2026-02-02 08:00:00	1	\N	\N
-2	Daniel Pérez	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #2	2026-05-06 09:24:52.990096	2026-02-03 08:00:00	2	\N	\N
-3	Jeremy Pérez	INSERT	cliente	Registro de auditoría generado para pruebas académicas #3	2026-05-06 09:24:52.990096	2026-02-04 08:00:00	3	\N	\N
-4	Jhossep Ramos	UPDATE	factura	Registro de auditoría generado para pruebas académicas #4	2026-05-06 09:24:52.990096	2026-02-05 08:00:00	4	\N	\N
-5	Diego Torres	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #5	2026-05-06 09:24:52.990096	2026-02-06 08:00:00	5	\N	\N
-6	Carlos Núñez	INSERT	compra	Registro de auditoría generado para pruebas académicas #6	2026-05-06 09:24:52.990096	2026-02-07 08:00:00	6	\N	\N
-7	Mónica Larios	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #7	2026-05-06 09:24:52.990096	2026-02-08 08:00:00	7	\N	\N
-8	Esteban Rodríguez	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #8	2026-05-06 09:24:52.990096	2026-02-09 08:00:00	8	\N	\N
-9	Eduardo Molina	INSERT	producto	Registro de auditoría generado para pruebas académicas #9	2026-05-06 09:24:52.990096	2026-02-10 08:00:00	9	\N	\N
-10	Andy Sánchez	UPDATE	compra	Registro de auditoría generado para pruebas académicas #10	2026-05-06 09:24:52.990096	2026-02-11 08:00:00	10	\N	\N
-11	Sofía Gómez	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #11	2026-05-06 09:24:52.990096	2026-02-12 08:00:00	11	\N	\N
-12	Luis Torres	INSERT	factura	Registro de auditoría generado para pruebas académicas #12	2026-05-06 09:24:52.990096	2026-02-13 08:00:00	12	\N	\N
-13	Carla Bermúdez	UPDATE	producto	Registro de auditoría generado para pruebas académicas #13	2026-05-06 09:24:52.990096	2026-02-14 08:00:00	13	\N	\N
-14	Karla Medina	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #14	2026-05-06 09:24:52.990096	2026-02-15 08:00:00	14	\N	\N
-15	Wilmer Ruiz	INSERT	cliente	Registro de auditoría generado para pruebas académicas #15	2026-05-06 09:24:52.990096	2026-02-16 08:00:00	15	\N	\N
-16	Miguel Hernández	UPDATE	factura	Registro de auditoría generado para pruebas académicas #16	2026-05-06 09:24:52.990096	2026-02-17 08:00:00	16	\N	\N
-17	Paola López	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #17	2026-05-06 09:24:52.990096	2026-02-18 08:00:00	17	\N	\N
-18	Kevin Castillo	INSERT	compra	Registro de auditoría generado para pruebas académicas #18	2026-05-06 09:24:52.990096	2026-02-19 08:00:00	18	\N	\N
-19	María Fernández	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #19	2026-05-06 09:24:52.990096	2026-02-20 08:00:00	19	\N	\N
-20	Josefina Rivas	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #20	2026-05-06 09:24:52.990096	2026-02-21 08:00:00	20	\N	\N
-21	Roberto Gutiérrez	INSERT	producto	Registro de auditoría generado para pruebas académicas #21	2026-05-06 09:24:52.990096	2026-02-22 08:00:00	21	\N	\N
-22	Lucía Herrera	UPDATE	compra	Registro de auditoría generado para pruebas académicas #22	2026-05-06 09:24:52.990096	2026-02-23 08:00:00	22	\N	\N
-23	Brandon Morales	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #23	2026-05-06 09:24:52.990096	2026-02-24 08:00:00	23	\N	\N
-24	Andrea Vega	INSERT	factura	Registro de auditoría generado para pruebas académicas #24	2026-05-06 09:24:52.990096	2026-02-25 08:00:00	24	\N	\N
-25	Sergio Mairena	UPDATE	producto	Registro de auditoría generado para pruebas académicas #25	2026-05-06 09:24:52.990096	2026-02-26 08:00:00	25	\N	\N
-26	Julia Campos	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #26	2026-05-06 09:24:52.990096	2026-02-27 08:00:00	26	\N	\N
-27	Laura Castillo	INSERT	cliente	Registro de auditoría generado para pruebas académicas #27	2026-05-06 09:24:52.990096	2026-02-28 08:00:00	27	\N	\N
-28	Óscar Mejía	UPDATE	factura	Registro de auditoría generado para pruebas académicas #28	2026-05-06 09:24:52.990096	2026-03-01 08:00:00	28	\N	\N
-29	Carmen Rojas	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #29	2026-05-06 09:24:52.990096	2026-03-02 08:00:00	29	\N	\N
-30	Nidia Solís	INSERT	compra	Registro de auditoría generado para pruebas académicas #30	2026-05-06 09:24:52.990096	2026-03-03 08:00:00	30	\N	\N
-31	Leonel Messi	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #31	2026-05-06 09:24:52.990096	2026-03-04 08:00:00	1	\N	\N
-32	Daniel Pérez	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #32	2026-05-06 09:24:52.990096	2026-03-05 08:00:00	2	\N	\N
-33	Jeremy Pérez	INSERT	producto	Registro de auditoría generado para pruebas académicas #33	2026-05-06 09:24:52.990096	2026-03-06 08:00:00	3	\N	\N
-34	Jhossep Ramos	UPDATE	compra	Registro de auditoría generado para pruebas académicas #34	2026-05-06 09:24:52.990096	2026-03-07 08:00:00	4	\N	\N
-35	Diego Torres	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #35	2026-05-06 09:24:52.990096	2026-03-08 08:00:00	5	\N	\N
-36	Carlos Núñez	INSERT	factura	Registro de auditoría generado para pruebas académicas #36	2026-05-06 09:24:52.990096	2026-03-09 08:00:00	6	\N	\N
-37	Mónica Larios	UPDATE	producto	Registro de auditoría generado para pruebas académicas #37	2026-05-06 09:24:52.990096	2026-03-10 08:00:00	7	\N	\N
-38	Esteban Rodríguez	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #38	2026-05-06 09:24:52.990096	2026-03-11 08:00:00	8	\N	\N
-39	Eduardo Molina	INSERT	cliente	Registro de auditoría generado para pruebas académicas #39	2026-05-06 09:24:52.990096	2026-03-12 08:00:00	9	\N	\N
-40	Andy Sánchez	UPDATE	factura	Registro de auditoría generado para pruebas académicas #40	2026-05-06 09:24:52.990096	2026-03-13 08:00:00	10	\N	\N
+41	Sistema	DELETE	cliente	\N	2026-05-12 21:58:41.700417	2026-05-12 21:58:41.700417	\N	358	{"nombres": "Carlos Prueba", "telefono": "7777-1010", "apellidos": "Restauración", "direccion": "Managua, Nicaragua", "id_cliente": 358, "tipo_cliente": "Detallista", "fecha_registro": "2026-05-12", "identificacion": "PAP-CLI-001"}
+42	Sistema	DELETE	cliente	\N	2026-05-12 21:58:41.700417	2026-05-12 21:58:41.700417	\N	359	{"nombres": "María Papelera", "telefono": "7777-2020", "apellidos": "Temporal", "direccion": "León, Nicaragua", "id_cliente": 359, "tipo_cliente": "Mayorista", "fecha_registro": "2026-05-12", "identificacion": "PAP-CLI-002"}
+43	Sistema	DELETE	proveedor	\N	2026-05-12 21:58:41.703555	2026-05-12 21:58:41.703555	\N	11	{"email": "proveedor.papelera@test.com", "nombre": "Proveedor Prueba Papelera", "telefono": "8888-9090", "direccion": "Managua, Nicaragua", "id_proveedor": 11}
+44	Sistema	DELETE	categoria	\N	2026-05-12 21:58:41.704884	2026-05-12 21:58:41.704884	\N	11	{"nombre": "Prueba Papelera Categoría", "id_categoria": 11}
+45	Sistema	DELETE	producto	\N	2026-05-12 22:04:26.858734	2026-05-12 22:04:26.858734	\N	122	{"stock": 7, "codigo": "TEMP-PROD-001", "imagen": null, "nombre": "Producto temporal auditoria", "descripcion": "Producto creado para probar restauración.", "id_producto": 122, "id_categoria": 12, "id_proveedor": 12, "precio_venta": 240.00, "precio_compra": 120.00}
 \.
 
 
@@ -3959,6 +3916,7 @@ COPY public.categoria (id_categoria, nombre) FROM stdin;
 8	Bolsos
 9	Mousepads
 10	Accesorios personalizados
+12	Categoria Temporal Producto
 \.
 
 
@@ -5288,6 +5246,7 @@ COPY public.producto (id_producto, codigo, nombre, descripcion, imagen, id_categ
 118	P118	Poster Ilustrado A3 #118	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_692e2130300f13.79885065.jpg	8	8	522.50	749.50	3
 119	P119	Bolso Tote Personalizado #119	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56fdd0d4ab5.98973422.jpg	9	9	526.25	754.75	54
 120	P120	Mousepad Gamer Estampado #120	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_bd9ae845c714f7f64699fb75.jpg	10	10	530.00	760.00	4
+121	PAP-PROD-004	Bolso prueba papelera	Producto temporal adicional para probar registros eliminados.	\N	10	10	160.00	295.00	12
 \.
 
 
@@ -5306,6 +5265,7 @@ COPY public.proveedor (id_proveedor, nombre, telefono, email, direccion) FROM st
 8	Artes Gráficas Granada	2552-8820	contacto@artesgranada.com	Calle La Calzada, Granada
 9	Materiales Omega	2244-9910	omega@materiales.com	Bolonia, Managua
 10	Print House Nicaragua	2270-6543	ventas@printhouseni.com	Villa Fontana, Managua
+12	Proveedor Temporal Producto	8888-3030	proveedor.temporal@test.com	Managua
 \.
 
 
@@ -5372,21 +5332,21 @@ COPY public.usuario (id_usuario, nombre, email, password, id_rol, id_seccion) FR
 -- Name: auditoria_id_auditoria_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_auditoria_seq', 40, true);
+SELECT pg_catalog.setval('public.auditoria_id_auditoria_seq', 45, true);
 
 
 --
 -- Name: categoria_id_categoria_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.categoria_id_categoria_seq', 10, true);
+SELECT pg_catalog.setval('public.categoria_id_categoria_seq', 12, true);
 
 
 --
 -- Name: cliente_id_cliente_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.cliente_id_cliente_seq', 357, true);
+SELECT pg_catalog.setval('public.cliente_id_cliente_seq', 359, true);
 
 
 --
@@ -5428,14 +5388,14 @@ SELECT pg_catalog.setval('public.factura_id_factura_seq', 80, true);
 -- Name: producto_id_producto_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.producto_id_producto_seq', 120, true);
+SELECT pg_catalog.setval('public.producto_id_producto_seq', 122, true);
 
 
 --
 -- Name: proveedor_id_proveedor_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.proveedor_id_proveedor_seq', 10, true);
+SELECT pg_catalog.setval('public.proveedor_id_proveedor_seq', 12, true);
 
 
 --
@@ -5797,5 +5757,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Sri9v3gsI5fHli5XqYDmv8FUYf4tdYBuUK0FCyTpXs9Y1d2KlWQeaA0uofDIuyx
+\unrestrict DDeojN12CSVzLrAvfVb9RfYpoK4d7FYGZ0IEksOv0QmPYaugDXnqb5iuGZJNWfb
 

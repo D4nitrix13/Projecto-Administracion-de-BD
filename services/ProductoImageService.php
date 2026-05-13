@@ -27,13 +27,14 @@ class ProductoImageService
             ];
         }
 
-        // 
-        $maxBytes = 8 * 1024 * 1024;
+        $maxMegabytes = 10;
+        $maxBytes = $maxMegabytes * 1024 * 1024;
+        $maxSizeLabel = $maxMegabytes . "MB";
 
         if (($file["size"] ?? 0) > $maxBytes) {
             return [
                 "success" => false,
-                "message" => "La imagen excede el tamaño máximo permitido (8MB).",
+                "message" => "La imagen excede el tamaño máximo permitido ({$maxSizeLabel}).",
                 "imagen" => $imagenActual,
             ];
         }

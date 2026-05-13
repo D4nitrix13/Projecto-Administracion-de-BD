@@ -660,4 +660,33 @@
     .audit-summary-icon {
         display: none;
     }
+
+    .audit-record-grid {
+        align-items: start;
+    }
+
+    .audit-record {
+        height: auto;
+        align-self: start;
+    }
+
+    .audit-record-body {
+        padding-bottom: 14px;
+    }
+
+    .audit-record-footer {
+        margin-top: 0;
+    }
+
+    .audit-data-list {
+        margin-bottom: 10px;
+    }
+
+    .audit-technical {
+        margin-top: 8px;
+    }
+
+    .audit-json {
+        max-height: 180px;
+    }
 </style>

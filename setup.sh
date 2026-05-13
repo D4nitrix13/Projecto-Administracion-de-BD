@@ -54,3 +54,18 @@ chmod +x scripts/backup_logs.sh
 chmod +x scripts/mantenimiento_bd.sh
 
 docker compose -f docker/docker-compose.yml up -d --build
+
+docker compose -f docker/docker-compose.yml up -d --build
+
+echo "Esperando que PostgreSQL esté listo..."
+until docker exec pandas_bd pg_isready -U postgres -d pandas_estampados_y_kitsune >/dev/null 2>&1; do
+    sleep 2
+done
+
+echo "Cargando datos iniciales desde sql/01_data.sql..."
+docker exec -i pandas_bd psql \
+    -U postgres \
+    -d pandas_estampados_y_kitsune \
+    < sql/01_data.sql
+
+echo "Datos iniciales cargados correctamente."

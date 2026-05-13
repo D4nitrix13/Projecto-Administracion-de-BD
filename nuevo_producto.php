@@ -76,10 +76,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $errorFile = $file["error"];
 
         if ($errorFile === UPLOAD_ERR_OK) {
-            $maxBytes = 4 * 1024 * 1024;
+            $maxMegabytes = 10;
+            $maxBytes = $maxMegabytes * 1024 * 1024;
+            $maxSizeLabel = $maxMegabytes . "MB";
 
             if ($size > $maxBytes) {
-                $error = "La imagen excede el tamaño máximo permitido de 4 MB.";
+                $error = "La imagen excede el tamaño máximo permitido ({$maxSizeLabel}).";
             } else {
                 $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
                 $extPermitidas = ["jpg", "jpeg", "png", "gif", "webp"];
