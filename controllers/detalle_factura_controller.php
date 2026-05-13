@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../repositories/FacturaRepository.php";
+require_once __DIR__ . "/../repositories/FacturaEstadoHistorialRepository.php";
 
 function obtenerDatosDetalleFactura(): array
 {
@@ -10,6 +11,7 @@ function obtenerDatosDetalleFactura(): array
     $connection = require __DIR__ . "/../sql/db.php";
 
     $facturaRepository = new FacturaRepository($connection);
+    $historialRepository = new FacturaEstadoHistorialRepository($connection);
 
     $idFactura = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -28,10 +30,12 @@ function obtenerDatosDetalleFactura(): array
     }
 
     $detalles = $facturaRepository->obtenerDetalleFactura($idFactura);
+    $historialEstados = $historialRepository->obtenerHistorialPorFactura($idFactura);
 
     return [
         "user" => $user,
         "factura" => $factura,
         "detalles" => $detalles,
+        "historialEstados" => $historialEstados,
     ];
 }

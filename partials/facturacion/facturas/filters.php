@@ -1,3 +1,7 @@
+<?php
+$estadoPagoFiltro = $estadoPagoFiltro ?? "";
+$estadoProduccionFiltro = $estadoProduccionFiltro ?? "";
+?>
 <form method="get" class="proveedores-filtros-bar facturas-filtros-bar">
     <div class="filtro-item-full">
         <label for="q" class="label">Buscar</label>

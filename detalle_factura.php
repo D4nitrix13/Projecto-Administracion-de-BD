@@ -43,6 +43,8 @@ $detalles = $viewData["detalles"];
 
             <?php require __DIR__ . "/partials/facturacion/facturas/detalle/totals.php"; ?>
 
+            <?php require __DIR__ . "/partials/facturacion/facturas/detalle/timeline.php"; ?>
+
             <?php require __DIR__ . "/partials/facturacion/facturas/detalle/actions.php"; ?>
 
         </section>

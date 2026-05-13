@@ -58,6 +58,12 @@ function isActivePage(string $page, string $currentPage): string
                     class="sidebar-sublink <?= isActivePage("facturas.php", $currentPage) ?>">
                     Ver facturas
                 </a>
+
+                <a
+                    href="historial_estados_facturas.php"
+                    class="sidebar-sublink <?= isActivePage("historial_estados_facturas.php", $currentPage) ?>">
+                    Historial de estados
+                </a>
             </div>
 
             <div class="sidebar-group">
