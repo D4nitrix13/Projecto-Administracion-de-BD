@@ -428,4 +428,109 @@
             min-width: 720px;
         }
     }
+
+    .invoice-status-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 900;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .status-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    .status-info {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border-color: #bfdbfe;
+    }
+
+    .status-success {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+    }
+
+    .status-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    .invoice-payment-panel {
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 18px;
+    }
+
+    .invoice-payment-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .invoice-payment-item {
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        padding: 13px;
+    }
+
+    .invoice-payment-item span {
+        display: block;
+        color: #6b7280;
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .invoice-payment-item strong {
+        display: block;
+        color: #111827;
+        font-size: 0.95rem;
+        font-weight: 900;
+        line-height: 1.35;
+    }
+
+    .invoice-actions-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 1100px) {
+        .invoice-payment-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .invoice-payment-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .invoice-actions-group {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
 </style>
