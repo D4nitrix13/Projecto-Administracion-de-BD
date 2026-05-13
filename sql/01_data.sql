@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict PT7rX2Pllfnz69eDHhtPJezLhaFQD0d2Bc900c1Bo8p2nozufgUm0gBHAXkfn3Q
+\restrict a29NDPVUAPyZo7QKUrA2uf3rEbl7vCiib0wnLQxTQemzqfcwpypEtbY8UdvOH9Z
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg12+1)
@@ -33,10 +33,13 @@ ALTER TABLE IF EXISTS ONLY public.detallecompra DROP CONSTRAINT IF EXISTS fk_det
 ALTER TABLE IF EXISTS ONLY public.compra DROP CONSTRAINT IF EXISTS fk_compra_usuario;
 ALTER TABLE IF EXISTS ONLY public.compra DROP CONSTRAINT IF EXISTS fk_compra_proveedor;
 ALTER TABLE IF EXISTS ONLY public.auditoria DROP CONSTRAINT IF EXISTS fk_auditoria_usuario;
+ALTER TABLE IF EXISTS ONLY public.factura_estado_historial DROP CONSTRAINT IF EXISTS factura_estado_historial_id_factura_fkey;
+DROP TRIGGER IF EXISTS trg_factura_estado_historial ON public.factura;
 DROP TRIGGER IF EXISTS trg_auditar_delete_proveedor ON public.proveedor;
 DROP TRIGGER IF EXISTS trg_auditar_delete_producto ON public.producto;
 DROP TRIGGER IF EXISTS trg_auditar_delete_cliente ON public.cliente;
 DROP TRIGGER IF EXISTS trg_auditar_delete_categoria ON public.categoria;
+DROP INDEX IF EXISTS public.idx_factura_estado_historial_factura;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS usuario_pkey;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS usuario_email_key;
 ALTER TABLE IF EXISTS ONLY public.seccion DROP CONSTRAINT IF EXISTS seccion_pkey;
@@ -47,6 +50,7 @@ ALTER TABLE IF EXISTS ONLY public.proveedor DROP CONSTRAINT IF EXISTS proveedor_
 ALTER TABLE IF EXISTS ONLY public.producto DROP CONSTRAINT IF EXISTS producto_pkey;
 ALTER TABLE IF EXISTS ONLY public.producto DROP CONSTRAINT IF EXISTS producto_codigo_key;
 ALTER TABLE IF EXISTS ONLY public.factura DROP CONSTRAINT IF EXISTS factura_pkey;
+ALTER TABLE IF EXISTS ONLY public.factura_estado_historial DROP CONSTRAINT IF EXISTS factura_estado_historial_pkey;
 ALTER TABLE IF EXISTS ONLY public.detallefactura DROP CONSTRAINT IF EXISTS detallefactura_pkey;
 ALTER TABLE IF EXISTS ONLY public.detallecompra DROP CONSTRAINT IF EXISTS detallecompra_pkey;
 ALTER TABLE IF EXISTS ONLY public.compra DROP CONSTRAINT IF EXISTS compra_pkey;
@@ -59,6 +63,7 @@ ALTER TABLE IF EXISTS public.seccion ALTER COLUMN id_seccion DROP DEFAULT;
 ALTER TABLE IF EXISTS public.rol ALTER COLUMN id_rol DROP DEFAULT;
 ALTER TABLE IF EXISTS public.proveedor ALTER COLUMN id_proveedor DROP DEFAULT;
 ALTER TABLE IF EXISTS public.producto ALTER COLUMN id_producto DROP DEFAULT;
+ALTER TABLE IF EXISTS public.factura_estado_historial ALTER COLUMN id_historial DROP DEFAULT;
 ALTER TABLE IF EXISTS public.factura ALTER COLUMN id_factura DROP DEFAULT;
 ALTER TABLE IF EXISTS public.detallefactura ALTER COLUMN id_detalle DROP DEFAULT;
 ALTER TABLE IF EXISTS public.detallecompra ALTER COLUMN id_detalle DROP DEFAULT;
@@ -77,6 +82,8 @@ DROP TABLE IF EXISTS public.proveedor;
 DROP SEQUENCE IF EXISTS public.producto_id_producto_seq;
 DROP TABLE IF EXISTS public.producto;
 DROP SEQUENCE IF EXISTS public.factura_id_factura_seq;
+DROP SEQUENCE IF EXISTS public.factura_estado_historial_id_historial_seq;
+DROP TABLE IF EXISTS public.factura_estado_historial;
 DROP TABLE IF EXISTS public.factura;
 DROP SEQUENCE IF EXISTS public.detallefactura_id_detalle_seq;
 DROP TABLE IF EXISTS public.detallefactura;
@@ -93,6 +100,7 @@ DROP TABLE IF EXISTS public.auditoria;
 DROP FUNCTION IF EXISTS public.validar_factura_existe(p_id_factura integer);
 DROP FUNCTION IF EXISTS public.registrar_producto_formulario(p_codigo character varying, p_nombre character varying, p_descripcion text, p_imagen character varying, p_id_categoria integer, p_id_proveedor integer, p_precio_compra numeric, p_precio_venta numeric, p_stock integer);
 DROP PROCEDURE IF EXISTS public.registrar_producto(IN p_codigo character varying, IN p_nombre character varying, IN p_descripcion text, IN p_imagen character varying, IN p_id_categoria integer, IN p_id_proveedor integer, IN p_precio_compra numeric, IN p_precio_venta numeric, IN p_stock integer);
+DROP FUNCTION IF EXISTS public.registrar_historial_estado_factura();
 DROP FUNCTION IF EXISTS public.registrar_factura_sistema(p_id_cliente integer, p_id_usuario integer, p_id_seccion integer, p_subtotal numeric, p_descuento numeric, p_impuesto numeric, p_total numeric, p_tipo_cliente_venta character varying, p_nombre_cliente_fugaz character varying, p_items jsonb);
 DROP FUNCTION IF EXISTS public.registrar_cliente_sistema(p_nombres character varying, p_apellidos character varying, p_telefono character varying, p_direccion character varying, p_identificacion character varying, p_tipo_cliente character varying);
 DROP PROCEDURE IF EXISTS public.registrar_cliente(IN p_nombres character varying, IN p_apellidos character varying, IN p_telefono character varying, IN p_direccion character varying, IN p_identificacion character varying, IN p_tipo_cliente character varying);
@@ -3070,6 +3078,114 @@ $$;
 
 
 --
+-- Name: registrar_historial_estado_factura(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.registrar_historial_estado_factura() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_tipo_evento VARCHAR(80);
+    v_monto_abonado NUMERIC(12, 2);
+    v_comentario TEXT;
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO factura_estado_historial (
+            id_factura,
+            tipo_evento,
+            estado_pago_nuevo,
+            estado_produccion_nuevo,
+            monto_pagado_nuevo,
+            saldo_nuevo,
+            fecha_entrega_estimada_nueva,
+            comentario
+        ) VALUES (
+            NEW.id_factura,
+            'Factura creada',
+            NEW.estado_pago,
+            NEW.estado_produccion,
+            NEW.monto_pagado,
+            NEW.saldo_pendiente,
+            NEW.fecha_entrega_estimada,
+            'La factura fue registrada en el sistema.'
+        );
+
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+        v_tipo_evento := 'Factura actualizada';
+        v_monto_abonado := GREATEST(COALESCE(NEW.monto_pagado, 0) - COALESCE(OLD.monto_pagado, 0), 0);
+
+        IF COALESCE(NEW.monto_pagado, 0) <> COALESCE(OLD.monto_pagado, 0) THEN
+            v_tipo_evento := 'Pago actualizado';
+        END IF;
+
+        IF COALESCE(NEW.estado_produccion, '') <> COALESCE(OLD.estado_produccion, '') THEN
+            v_tipo_evento := 'Estado de producción actualizado';
+        END IF;
+
+        IF NEW.estado_produccion = 'Cancelada' AND OLD.estado_produccion IS DISTINCT FROM NEW.estado_produccion THEN
+            v_tipo_evento := 'Factura cancelada';
+
+            IF NEW.fecha_entrega_estimada IS NOT NULL AND CURRENT_DATE <= NEW.fecha_entrega_estimada THEN
+                v_comentario := 'El cliente canceló antes o en la fecha estimada de entrega.';
+            ELSE
+                v_comentario := 'El cliente canceló después de la fecha estimada de entrega.';
+            END IF;
+        ELSE
+            v_comentario := 'Cambio registrado automáticamente por el sistema.';
+        END IF;
+
+        IF
+            COALESCE(NEW.estado_pago, '') <> COALESCE(OLD.estado_pago, '')
+            OR COALESCE(NEW.estado_produccion, '') <> COALESCE(OLD.estado_produccion, '')
+            OR COALESCE(NEW.monto_pagado, 0) <> COALESCE(OLD.monto_pagado, 0)
+            OR COALESCE(NEW.saldo_pendiente, 0) <> COALESCE(OLD.saldo_pendiente, 0)
+            OR NEW.fecha_entrega_estimada IS DISTINCT FROM OLD.fecha_entrega_estimada
+        THEN
+            INSERT INTO factura_estado_historial (
+                id_factura,
+                tipo_evento,
+                estado_pago_anterior,
+                estado_pago_nuevo,
+                estado_produccion_anterior,
+                estado_produccion_nuevo,
+                monto_pagado_anterior,
+                monto_pagado_nuevo,
+                monto_abonado,
+                saldo_anterior,
+                saldo_nuevo,
+                fecha_entrega_estimada_anterior,
+                fecha_entrega_estimada_nueva,
+                comentario
+            ) VALUES (
+                NEW.id_factura,
+                v_tipo_evento,
+                OLD.estado_pago,
+                NEW.estado_pago,
+                OLD.estado_produccion,
+                NEW.estado_produccion,
+                OLD.monto_pagado,
+                NEW.monto_pagado,
+                v_monto_abonado,
+                OLD.saldo_pendiente,
+                NEW.saldo_pendiente,
+                OLD.fecha_entrega_estimada,
+                NEW.fecha_entrega_estimada,
+                v_comentario
+            );
+        END IF;
+
+        RETURN NEW;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: registrar_producto(character varying, character varying, text, character varying, integer, integer, numeric, numeric, integer); Type: PROCEDURE; Schema: public; Owner: -
 --
 
@@ -3452,6 +3568,50 @@ CREATE TABLE public.factura (
 
 
 --
+-- Name: factura_estado_historial; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.factura_estado_historial (
+    id_historial integer NOT NULL,
+    id_factura integer NOT NULL,
+    tipo_evento character varying(80) NOT NULL,
+    estado_pago_anterior character varying(50),
+    estado_pago_nuevo character varying(50),
+    estado_produccion_anterior character varying(80),
+    estado_produccion_nuevo character varying(80),
+    monto_pagado_anterior numeric(12,2),
+    monto_pagado_nuevo numeric(12,2),
+    monto_abonado numeric(12,2) DEFAULT 0,
+    saldo_anterior numeric(12,2),
+    saldo_nuevo numeric(12,2),
+    fecha_entrega_estimada_anterior date,
+    fecha_entrega_estimada_nueva date,
+    comentario text,
+    fecha_evento timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: factura_estado_historial_id_historial_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.factura_estado_historial_id_historial_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: factura_estado_historial_id_historial_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.factura_estado_historial_id_historial_seq OWNED BY public.factura_estado_historial.id_historial;
+
+
+--
 -- Name: factura_id_factura_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -3686,6 +3846,13 @@ ALTER TABLE ONLY public.detallefactura ALTER COLUMN id_detalle SET DEFAULT nextv
 --
 
 ALTER TABLE ONLY public.factura ALTER COLUMN id_factura SET DEFAULT nextval('public.factura_id_factura_seq'::regclass);
+
+
+--
+-- Name: factura_estado_historial id_historial; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.factura_estado_historial ALTER COLUMN id_historial SET DEFAULT nextval('public.factura_estado_historial_id_historial_seq'::regclass);
 
 
 --
@@ -4503,86 +4670,490 @@ COPY public.detallefactura (id_detalle, id_factura, id_producto, cantidad, preci
 --
 
 COPY public.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subtotal, descuento, impuesto, total, tipo_cliente_venta, nombre_cliente_fugaz, monto_pagado, saldo_pendiente, porcentaje_pagado, estado_pago, estado_produccion, fecha_orden_produccion, fecha_entrega_estimada, fecha_entrega_real) FROM stdin;
-1	2026-02-02 10:15:00	1	1	1	1041.25	0.00	156.19	1197.44	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-2	2026-02-03 11:15:00	2	2	2	786.50	0.00	117.98	904.48	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-3	2026-02-04 12:15:00	3	3	1	510.75	0.00	76.61	587.36	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-4	2026-02-05 13:15:00	4	4	2	902.00	0.00	135.30	1037.30	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-5	2026-02-06 14:15:00	5	5	1	1335.25	25.00	195.04	1495.29	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-6	2026-02-07 15:15:00	6	6	2	996.50	0.00	147.98	1134.48	Fugaz	José Ramírez	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-7	2026-02-08 09:15:00	7	7	1	636.75	0.00	95.51	732.26	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-8	2026-02-09 10:15:00	8	8	2	1112.00	0.00	166.80	1278.80	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-9	2026-02-10 11:15:00	9	9	1	1629.25	0.00	244.39	1873.64	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-10	2026-02-11 12:15:00	10	10	2	1206.50	25.00	177.23	1358.73	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-11	2026-02-12 13:15:00	11	11	1	762.75	0.00	114.41	877.16	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-12	2026-02-13 14:15:00	12	12	2	1322.00	0.00	196.80	1508.80	Fugaz	Carlos Mendoza	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-13	2026-02-14 15:15:00	13	13	1	1923.25	0.00	286.99	2200.24	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-14	2026-02-15 09:15:00	14	14	2	1416.50	0.00	212.48	1628.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-15	2026-02-16 10:15:00	15	15	1	888.75	25.00	129.56	993.31	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-16	2026-02-17 11:15:00	16	16	2	1532.00	0.00	229.80	1761.80	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-17	2026-02-18 12:15:00	17	17	1	2217.25	0.00	332.59	2549.84	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-18	2026-02-19 13:15:00	18	18	2	1626.50	0.00	243.98	1870.48	Fugaz	José Ramírez	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-19	2026-02-20 14:15:00	19	19	1	1014.75	0.00	150.71	1155.46	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-20	2026-02-21 15:15:00	20	20	2	1742.00	25.00	256.05	1963.05	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-21	2026-02-22 09:15:00	21	21	1	2511.25	0.00	376.69	2887.94	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-22	2026-02-23 10:15:00	22	22	2	1836.50	0.00	275.48	2111.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-23	2026-02-24 11:15:00	23	23	1	1140.75	0.00	171.11	1311.86	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-24	2026-02-25 12:15:00	24	24	2	1952.00	0.00	292.80	2244.80	Fugaz	Carlos Mendoza	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-25	2026-02-26 13:15:00	25	25	1	2805.25	25.00	417.04	3197.29	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-26	2026-02-27 14:15:00	26	26	2	2046.50	0.00	305.48	2341.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-27	2026-02-28 15:15:00	27	27	1	1266.75	0.00	188.51	1445.26	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-28	2026-03-01 09:15:00	28	28	2	2162.00	0.00	324.30	2486.30	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-29	2026-03-02 10:15:00	29	29	1	3099.25	0.00	464.89	3564.14	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-30	2026-03-03 11:15:00	30	30	2	2256.50	25.00	334.73	2566.23	Fugaz	José Ramírez	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-31	2026-03-04 12:15:00	31	1	1	1392.75	0.00	208.91	1601.66	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-32	2026-03-05 13:15:00	32	2	2	2372.00	0.00	355.80	2727.80	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-33	2026-03-06 14:15:00	33	3	1	3393.25	0.00	507.49	3890.74	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-34	2026-03-07 15:15:00	34	4	2	2466.50	0.00	368.48	2824.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-35	2026-03-08 09:15:00	35	5	1	1518.75	25.00	224.06	1717.81	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-36	2026-03-09 10:15:00	36	6	2	2582.00	0.00	387.30	2969.30	Fugaz	Carlos Mendoza	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-37	2026-03-10 11:15:00	37	7	1	3687.25	0.00	553.09	4240.34	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-38	2026-03-11 12:15:00	38	8	2	2676.50	0.00	401.48	3077.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-39	2026-03-12 13:15:00	39	9	1	1644.75	0.00	246.71	1891.46	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-40	2026-03-13 14:15:00	40	10	2	2792.00	25.00	413.55	3170.55	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-41	2026-03-14 15:15:00	41	11	1	3981.25	0.00	595.69	4566.94	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-42	2026-03-15 09:15:00	42	12	2	2886.50	0.00	432.98	3319.48	Fugaz	José Ramírez	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-43	2026-03-16 10:15:00	43	13	1	1770.75	0.00	265.61	2036.36	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-44	2026-03-17 11:15:00	44	14	2	3002.00	0.00	450.30	3452.30	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-45	2026-03-18 12:15:00	45	15	1	4275.25	25.00	637.54	4887.79	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-46	2026-03-19 13:15:00	46	16	2	3096.50	0.00	464.48	3560.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-47	2026-03-20 14:15:00	47	17	1	1896.75	0.00	283.01	2169.76	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-48	2026-03-21 15:15:00	48	18	2	3212.00	0.00	480.30	3682.30	Fugaz	Carlos Mendoza	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-49	2026-03-22 09:15:00	49	19	1	4569.25	0.00	685.39	5254.64	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-50	2026-03-23 10:15:00	50	20	2	3306.50	25.00	492.23	3773.73	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-51	2026-03-24 11:15:00	51	21	1	2022.75	0.00	303.41	2326.16	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-52	2026-03-25 12:15:00	52	22	2	3422.00	0.00	513.30	3935.30	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-53	2026-03-26 13:15:00	53	23	1	4863.25	0.00	729.49	5592.74	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-54	2026-03-27 14:15:00	54	24	2	3516.50	0.00	525.98	4032.48	Fugaz	José Ramírez	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-55	2026-03-28 15:15:00	55	25	1	2148.75	25.00	317.06	2430.81	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-56	2026-03-29 09:15:00	56	26	2	3632.00	0.00	544.80	4176.80	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-57	2026-03-30 10:15:00	57	27	1	5157.25	0.00	773.59	5930.84	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-58	2026-03-31 11:15:00	58	28	2	3726.50	0.00	558.98	4285.48	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-59	2026-04-01 12:15:00	59	29	1	2274.75	0.00	341.21	2615.96	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-60	2026-04-02 13:15:00	60	30	2	692.00	25.00	100.05	767.05	Fugaz	Carlos Mendoza	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-61	2026-04-03 14:15:00	61	1	1	1041.25	0.00	154.69	1185.94	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-62	2026-04-04 15:15:00	62	2	2	786.50	0.00	116.48	892.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-63	2026-04-05 09:15:00	63	3	1	510.75	0.00	76.61	587.36	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-64	2026-04-06 10:15:00	64	4	2	902.00	0.00	135.30	1037.30	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-65	2026-04-07 11:15:00	65	5	1	1335.25	25.00	196.54	1506.79	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-66	2026-04-08 12:15:00	66	6	2	996.50	0.00	149.48	1145.98	Fugaz	José Ramírez	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-67	2026-04-09 13:15:00	67	7	1	636.75	0.00	95.51	732.26	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-68	2026-04-10 14:15:00	68	8	2	1112.00	0.00	165.30	1267.30	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-69	2026-04-11 15:15:00	69	9	1	1629.25	0.00	242.89	1862.14	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-70	2026-04-12 09:15:00	70	10	2	1206.50	25.00	177.23	1358.73	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-71	2026-04-13 10:15:00	71	11	1	762.75	0.00	114.41	877.16	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-72	2026-04-14 11:15:00	72	12	2	1322.00	0.00	198.30	1520.30	Fugaz	Carlos Mendoza	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-73	2026-04-15 12:15:00	73	13	1	1923.25	0.00	288.49	2211.74	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-74	2026-04-16 13:15:00	74	14	2	1416.50	0.00	212.48	1628.98	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-75	2026-04-17 14:15:00	75	15	1	888.75	25.00	128.06	981.81	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-76	2026-04-18 15:15:00	76	16	2	1532.00	0.00	228.30	1750.30	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-77	2026-04-19 09:15:00	77	17	1	2217.25	0.00	332.59	2549.84	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-78	2026-04-20 10:15:00	78	18	2	1626.50	0.00	243.98	1870.48	Fugaz	José Ramírez	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-79	2026-04-21 11:15:00	79	19	1	1014.75	0.00	152.21	1166.96	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
-80	2026-04-22 12:15:00	80	20	2	1742.00	25.00	257.55	1974.55	Habitual	\N	0.00	0.00	0.00	Pendiente	Pendiente	2026-05-07 21:29:38.690887	\N	\N
+26	2026-02-27 14:15:00	26	26	2	2046.50	0.00	305.48	2341.98	Habitual	\N	1756.49	585.49	75.00	Parcial	En producción	2026-02-27 14:45:00	2026-03-02	\N
+27	2026-02-28 15:15:00	27	27	1	1266.75	0.00	188.51	1445.26	Habitual	\N	1083.95	361.31	75.00	Parcial	En producción	2026-02-28 15:45:00	2026-03-04	\N
+28	2026-03-01 09:15:00	28	28	2	2162.00	0.00	324.30	2486.30	Habitual	\N	1864.73	621.57	75.00	Parcial	En producción	2026-03-01 09:45:00	2026-03-06	\N
+29	2026-03-02 10:15:00	29	29	1	3099.25	0.00	464.89	3564.14	Habitual	\N	1782.07	1782.07	50.00	Parcial	Lista para entregar	2026-03-02 10:45:00	2026-03-08	\N
+30	2026-03-03 11:15:00	30	30	2	2256.50	25.00	334.73	2566.23	Fugaz	José Ramírez	1283.12	1283.11	50.00	Parcial	Lista para entregar	2026-03-03 11:45:00	2026-03-05	\N
+31	2026-03-04 12:15:00	31	1	1	1392.75	0.00	208.91	1601.66	Habitual	\N	800.83	800.83	50.00	Parcial	Lista para entregar	2026-03-04 12:45:00	2026-03-07	\N
+32	2026-03-05 13:15:00	32	2	2	2372.00	0.00	355.80	2727.80	Habitual	\N	1363.90	1363.90	50.00	Parcial	Lista para entregar	2026-03-05 13:45:00	2026-03-09	\N
+33	2026-03-06 14:15:00	33	3	1	3393.25	0.00	507.49	3890.74	Habitual	\N	1945.37	1945.37	50.00	Parcial	Lista para entregar	2026-03-06 14:45:00	2026-03-11	\N
+34	2026-03-07 15:15:00	34	4	2	2466.50	0.00	368.48	2824.98	Habitual	\N	1412.49	1412.49	50.00	Parcial	Lista para entregar	2026-03-07 15:45:00	2026-03-13	\N
+35	2026-03-08 09:15:00	35	5	1	1518.75	25.00	224.06	1717.81	Habitual	\N	858.91	858.90	50.00	Parcial	Lista para entregar	2026-03-08 09:45:00	2026-03-10	\N
+36	2026-03-09 10:15:00	36	6	2	2582.00	0.00	387.30	2969.30	Fugaz	Carlos Mendoza	1484.65	1484.65	50.00	Parcial	Lista para entregar	2026-03-09 10:45:00	2026-03-12	\N
+37	2026-03-10 11:15:00	37	7	1	3687.25	0.00	553.09	4240.34	Habitual	\N	2120.17	2120.17	50.00	Parcial	Lista para entregar	2026-03-10 11:45:00	2026-03-14	\N
+38	2026-03-11 12:15:00	38	8	2	2676.50	0.00	401.48	3077.98	Habitual	\N	1538.99	1538.99	50.00	Parcial	Lista para entregar	2026-03-11 12:45:00	2026-03-16	\N
+39	2026-03-12 13:15:00	39	9	1	1644.75	0.00	246.71	1891.46	Habitual	\N	0.00	1891.46	0.00	Pendiente	En producción	2026-03-12 13:45:00	2026-03-18	\N
+40	2026-03-13 14:15:00	40	10	2	2792.00	25.00	413.55	3170.55	Habitual	\N	0.00	3170.55	0.00	Pendiente	En producción	2026-03-13 14:45:00	2026-03-15	\N
+41	2026-03-14 15:15:00	41	11	1	3981.25	0.00	595.69	4566.94	Habitual	\N	0.00	4566.94	0.00	Pendiente	En producción	2026-03-14 15:45:00	2026-03-17	\N
+42	2026-03-15 09:15:00	42	12	2	2886.50	0.00	432.98	3319.48	Fugaz	José Ramírez	0.00	3319.48	0.00	Pendiente	En producción	2026-03-15 09:45:00	2026-03-19	\N
+43	2026-03-16 10:15:00	43	13	1	1770.75	0.00	265.61	2036.36	Habitual	\N	0.00	2036.36	0.00	Pendiente	En producción	2026-03-16 10:45:00	2026-03-21	\N
+44	2026-03-17 11:15:00	44	14	2	3002.00	0.00	450.30	3452.30	Habitual	\N	0.00	3452.30	0.00	Pendiente	En producción	2026-03-17 11:45:00	2026-03-23	\N
+45	2026-03-18 12:15:00	45	15	1	4275.25	25.00	637.54	4887.79	Habitual	\N	0.00	4887.79	0.00	Pendiente	En producción	2026-03-18 12:45:00	2026-03-20	\N
+46	2026-03-19 13:15:00	46	16	2	3096.50	0.00	464.48	3560.98	Habitual	\N	0.00	3560.98	0.00	Pendiente	En producción	2026-03-19 13:45:00	2026-03-22	\N
+47	2026-03-20 14:15:00	47	17	1	1896.75	0.00	283.01	2169.76	Habitual	\N	0.00	2169.76	0.00	Pendiente	En producción	2026-03-20 14:45:00	2026-03-24	\N
+48	2026-03-21 15:15:00	48	18	2	3212.00	0.00	480.30	3682.30	Fugaz	Carlos Mendoza	0.00	3682.30	0.00	Pendiente	En producción	2026-03-21 15:45:00	2026-03-26	\N
+49	2026-03-22 09:15:00	49	19	1	4569.25	0.00	685.39	5254.64	Habitual	\N	0.00	5254.64	0.00	Pendiente	Pendiente	2026-03-22 09:45:00	2026-03-28	\N
+50	2026-03-23 10:15:00	50	20	2	3306.50	25.00	492.23	3773.73	Habitual	\N	0.00	3773.73	0.00	Pendiente	Pendiente	2026-03-23 10:45:00	2026-03-25	\N
+51	2026-03-24 11:15:00	51	21	1	2022.75	0.00	303.41	2326.16	Habitual	\N	0.00	2326.16	0.00	Pendiente	Pendiente	2026-03-24 11:45:00	2026-03-27	\N
+52	2026-03-25 12:15:00	52	22	2	3422.00	0.00	513.30	3935.30	Habitual	\N	0.00	3935.30	0.00	Pendiente	Pendiente	2026-03-25 12:45:00	2026-03-29	\N
+53	2026-03-26 13:15:00	53	23	1	4863.25	0.00	729.49	5592.74	Habitual	\N	0.00	5592.74	0.00	Pendiente	Pendiente	2026-03-26 13:45:00	2026-03-31	\N
+54	2026-03-27 14:15:00	54	24	2	3516.50	0.00	525.98	4032.48	Fugaz	José Ramírez	0.00	4032.48	0.00	Pendiente	Pendiente	2026-03-27 14:45:00	2026-04-02	\N
+55	2026-03-28 15:15:00	55	25	1	2148.75	25.00	317.06	2430.81	Habitual	\N	0.00	2430.81	0.00	Pendiente	Pendiente	2026-03-28 15:45:00	2026-03-30	\N
+56	2026-03-29 09:15:00	56	26	2	3632.00	0.00	544.80	4176.80	Habitual	\N	0.00	4176.80	0.00	Pendiente	Pendiente	2026-03-29 09:45:00	2026-04-01	\N
+57	2026-03-30 10:15:00	57	27	1	5157.25	0.00	773.59	5930.84	Habitual	\N	2075.79	3855.05	35.00	Parcial	Cancelada	2026-03-30 10:45:00	2026-04-03	\N
+58	2026-03-31 11:15:00	58	28	2	3726.50	0.00	558.98	4285.48	Habitual	\N	1499.92	2785.56	35.00	Parcial	Cancelada	2026-03-31 11:45:00	2026-04-05	\N
+59	2026-04-01 12:15:00	59	29	1	2274.75	0.00	341.21	2615.96	Habitual	\N	915.59	1700.37	35.00	Parcial	Cancelada	2026-04-01 12:45:00	2026-04-07	\N
+60	2026-04-02 13:15:00	60	30	2	692.00	25.00	100.05	767.05	Fugaz	Carlos Mendoza	268.47	498.58	35.00	Parcial	Cancelada	2026-04-02 13:45:00	2026-04-04	\N
+61	2026-04-03 14:15:00	61	1	1	1041.25	0.00	154.69	1185.94	Habitual	\N	415.08	770.86	35.00	Parcial	Cancelada	2026-04-03 14:45:00	2026-04-06	\N
+62	2026-04-04 15:15:00	62	2	2	786.50	0.00	116.48	892.98	Habitual	\N	312.54	580.44	35.00	Parcial	Cancelada	2026-04-04 15:45:00	2026-04-08	\N
+63	2026-04-05 09:15:00	63	3	1	510.75	0.00	76.61	587.36	Habitual	\N	0.00	587.36	0.00	Pendiente	Cancelada	2026-04-05 09:45:00	2026-04-10	\N
+64	2026-04-06 10:15:00	64	4	2	902.00	0.00	135.30	1037.30	Habitual	\N	0.00	1037.30	0.00	Pendiente	Cancelada	2026-04-06 10:45:00	2026-04-12	\N
+65	2026-04-07 11:15:00	65	5	1	1335.25	25.00	196.54	1506.79	Habitual	\N	0.00	1506.79	0.00	Pendiente	Cancelada	2026-04-07 11:45:00	2026-04-09	\N
+66	2026-04-08 12:15:00	66	6	2	996.50	0.00	149.48	1145.98	Fugaz	José Ramírez	0.00	1145.98	0.00	Pendiente	Cancelada	2026-04-08 12:45:00	2026-04-11	\N
+67	2026-04-09 13:15:00	67	7	1	636.75	0.00	95.51	732.26	Habitual	\N	732.26	0.00	100.00	Pagado	En producción	2026-04-09 13:45:00	2026-04-13	\N
+68	2026-04-10 14:15:00	68	8	2	1112.00	0.00	165.30	1267.30	Habitual	\N	1267.30	0.00	100.00	Pagado	En producción	2026-04-10 14:45:00	2026-04-15	\N
+69	2026-04-11 15:15:00	69	9	1	1629.25	0.00	242.89	1862.14	Habitual	\N	1862.14	0.00	100.00	Pagado	En producción	2026-04-11 15:45:00	2026-04-17	\N
+70	2026-04-12 09:15:00	70	10	2	1206.50	25.00	177.23	1358.73	Habitual	\N	1358.73	0.00	100.00	Pagado	En producción	2026-04-12 09:45:00	2026-04-14	\N
+71	2026-04-13 10:15:00	71	11	1	762.75	0.00	114.41	877.16	Habitual	\N	789.44	87.72	90.00	Parcial	Entregada	2026-04-13 10:45:00	2026-04-16	2026-04-17
+72	2026-04-14 11:15:00	72	12	2	1322.00	0.00	198.30	1520.30	Fugaz	Carlos Mendoza	1368.27	152.03	90.00	Parcial	Entregada	2026-04-14 11:45:00	2026-04-18	2026-04-19
+73	2026-04-15 12:15:00	73	13	1	1923.25	0.00	288.49	2211.74	Habitual	\N	1990.57	221.17	90.00	Parcial	Entregada	2026-04-15 12:45:00	2026-04-20	2026-04-21
+74	2026-04-16 13:15:00	74	14	2	1416.50	0.00	212.48	1628.98	Habitual	\N	1466.08	162.90	90.00	Parcial	Entregada	2026-04-16 13:45:00	2026-04-22	2026-04-23
+75	2026-04-17 14:15:00	75	15	1	888.75	25.00	128.06	981.81	Habitual	\N	883.63	98.18	90.00	Parcial	Entregada	2026-04-17 14:45:00	2026-04-19	2026-04-20
+76	2026-04-18 15:15:00	76	16	2	1532.00	0.00	228.30	1750.30	Habitual	\N	1750.30	0.00	100.00	Pagado	Cancelada	2026-04-18 15:45:00	2026-04-21	\N
+77	2026-04-19 09:15:00	77	17	1	2217.25	0.00	332.59	2549.84	Habitual	\N	2549.84	0.00	100.00	Pagado	Cancelada	2026-04-19 09:45:00	2026-04-23	\N
+78	2026-04-20 10:15:00	78	18	2	1626.50	0.00	243.98	1870.48	Fugaz	José Ramírez	1870.48	0.00	100.00	Pagado	Cancelada	2026-04-20 10:45:00	2026-04-25	\N
+79	2026-04-21 11:15:00	79	19	1	1014.75	0.00	152.21	1166.96	Habitual	\N	1166.96	0.00	100.00	Pagado	Cancelada	2026-04-21 11:45:00	2026-04-27	\N
+1	2026-02-02 10:15:00	1	1	1	1041.25	0.00	156.19	1197.44	Habitual	\N	1197.44	0.00	100.00	Pagado	Entregada	2026-02-02 10:45:00	2026-02-05	2026-02-05
+2	2026-02-03 11:15:00	2	2	2	786.50	0.00	117.98	904.48	Habitual	\N	904.48	0.00	100.00	Pagado	Entregada	2026-02-03 11:45:00	2026-02-07	2026-02-07
+3	2026-02-04 12:15:00	3	3	1	510.75	0.00	76.61	587.36	Habitual	\N	587.36	0.00	100.00	Pagado	Entregada	2026-02-04 12:45:00	2026-02-09	2026-02-09
+4	2026-02-05 13:15:00	4	4	2	902.00	0.00	135.30	1037.30	Habitual	\N	1037.30	0.00	100.00	Pagado	Entregada	2026-02-05 13:45:00	2026-02-11	2026-02-11
+5	2026-02-06 14:15:00	5	5	1	1335.25	25.00	195.04	1495.29	Habitual	\N	1495.29	0.00	100.00	Pagado	Entregada	2026-02-06 14:45:00	2026-02-08	2026-02-08
+6	2026-02-07 15:15:00	6	6	2	996.50	0.00	147.98	1134.48	Fugaz	José Ramírez	1134.48	0.00	100.00	Pagado	Entregada	2026-02-07 15:45:00	2026-02-10	2026-02-10
+7	2026-02-08 09:15:00	7	7	1	636.75	0.00	95.51	732.26	Habitual	\N	732.26	0.00	100.00	Pagado	Entregada	2026-02-08 09:45:00	2026-02-12	2026-02-12
+8	2026-02-09 10:15:00	8	8	2	1112.00	0.00	166.80	1278.80	Habitual	\N	1278.80	0.00	100.00	Pagado	Entregada	2026-02-09 10:45:00	2026-02-14	2026-02-14
+9	2026-02-10 11:15:00	9	9	1	1629.25	0.00	244.39	1873.64	Habitual	\N	1873.64	0.00	100.00	Pagado	Entregada	2026-02-10 11:45:00	2026-02-16	2026-02-16
+10	2026-02-11 12:15:00	10	10	2	1206.50	25.00	177.23	1358.73	Habitual	\N	1358.73	0.00	100.00	Pagado	Entregada	2026-02-11 12:45:00	2026-02-13	2026-02-13
+11	2026-02-12 13:15:00	11	11	1	762.75	0.00	114.41	877.16	Habitual	\N	877.16	0.00	100.00	Pagado	Lista para entregar	2026-02-12 13:45:00	2026-02-15	\N
+12	2026-02-13 14:15:00	12	12	2	1322.00	0.00	196.80	1508.80	Fugaz	Carlos Mendoza	1508.80	0.00	100.00	Pagado	Lista para entregar	2026-02-13 14:45:00	2026-02-17	\N
+13	2026-02-14 15:15:00	13	13	1	1923.25	0.00	286.99	2200.24	Habitual	\N	2200.24	0.00	100.00	Pagado	Lista para entregar	2026-02-14 15:45:00	2026-02-19	\N
+14	2026-02-15 09:15:00	14	14	2	1416.50	0.00	212.48	1628.98	Habitual	\N	1628.98	0.00	100.00	Pagado	Lista para entregar	2026-02-15 09:45:00	2026-02-21	\N
+15	2026-02-16 10:15:00	15	15	1	888.75	25.00	129.56	993.31	Habitual	\N	993.31	0.00	100.00	Pagado	Lista para entregar	2026-02-16 10:45:00	2026-02-18	\N
+16	2026-02-17 11:15:00	16	16	2	1532.00	0.00	229.80	1761.80	Habitual	\N	1761.80	0.00	100.00	Pagado	Lista para entregar	2026-02-17 11:45:00	2026-02-20	\N
+17	2026-02-18 12:15:00	17	17	1	2217.25	0.00	332.59	2549.84	Habitual	\N	2549.84	0.00	100.00	Pagado	Lista para entregar	2026-02-18 12:45:00	2026-02-22	\N
+18	2026-02-19 13:15:00	18	18	2	1626.50	0.00	243.98	1870.48	Fugaz	José Ramírez	1870.48	0.00	100.00	Pagado	Lista para entregar	2026-02-19 13:45:00	2026-02-24	\N
+19	2026-02-20 14:15:00	19	19	1	1014.75	0.00	150.71	1155.46	Habitual	\N	866.60	288.86	75.00	Parcial	En producción	2026-02-20 14:45:00	2026-02-26	\N
+20	2026-02-21 15:15:00	20	20	2	1742.00	25.00	256.05	1963.05	Habitual	\N	1472.29	490.76	75.00	Parcial	En producción	2026-02-21 15:45:00	2026-02-23	\N
+21	2026-02-22 09:15:00	21	21	1	2511.25	0.00	376.69	2887.94	Habitual	\N	2165.96	721.98	75.00	Parcial	En producción	2026-02-22 09:45:00	2026-02-25	\N
+22	2026-02-23 10:15:00	22	22	2	1836.50	0.00	275.48	2111.98	Habitual	\N	1583.99	527.99	75.00	Parcial	En producción	2026-02-23 10:45:00	2026-02-27	\N
+23	2026-02-24 11:15:00	23	23	1	1140.75	0.00	171.11	1311.86	Habitual	\N	983.90	327.96	75.00	Parcial	En producción	2026-02-24 11:45:00	2026-03-01	\N
+24	2026-02-25 12:15:00	24	24	2	1952.00	0.00	292.80	2244.80	Fugaz	Carlos Mendoza	1683.60	561.20	75.00	Parcial	En producción	2026-02-25 12:45:00	2026-03-03	\N
+25	2026-02-26 13:15:00	25	25	1	2805.25	25.00	417.04	3197.29	Habitual	\N	2397.97	799.32	75.00	Parcial	En producción	2026-02-26 13:45:00	2026-02-28	\N
+80	2026-04-22 12:15:00	80	20	2	1742.00	25.00	257.55	1974.55	Habitual	\N	1974.55	0.00	100.00	Pagado	Cancelada	2026-04-22 12:45:00	2026-04-24	\N
+\.
+
+
+--
+-- Data for Name: factura_estado_historial; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.factura_estado_historial (id_historial, id_factura, tipo_evento, estado_pago_anterior, estado_pago_nuevo, estado_produccion_anterior, estado_produccion_nuevo, monto_pagado_anterior, monto_pagado_nuevo, monto_abonado, saldo_anterior, saldo_nuevo, fecha_entrega_estimada_anterior, fecha_entrega_estimada_nueva, comentario, fecha_evento) FROM stdin;
+1	20	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1963.05	\N	2026-02-23	La factura fue registrada en el sistema.	2026-02-21 15:15:00
+2	25	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3197.29	\N	2026-02-28	La factura fue registrada en el sistema.	2026-02-26 13:15:00
+3	26	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2341.98	\N	2026-03-02	La factura fue registrada en el sistema.	2026-02-27 14:15:00
+4	27	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1445.26	\N	2026-03-04	La factura fue registrada en el sistema.	2026-02-28 15:15:00
+5	11	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	877.16	\N	2026-02-15	La factura fue registrada en el sistema.	2026-02-12 13:15:00
+6	39	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1891.46	\N	2026-03-18	La factura fue registrada en el sistema.	2026-03-12 13:15:00
+7	17	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2549.84	\N	2026-02-22	La factura fue registrada en el sistema.	2026-02-18 12:15:00
+8	66	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1145.98	\N	2026-04-11	La factura fue registrada en el sistema.	2026-04-08 12:15:00
+9	33	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3890.74	\N	2026-03-11	La factura fue registrada en el sistema.	2026-03-06 14:15:00
+10	57	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	5930.84	\N	2026-04-03	La factura fue registrada en el sistema.	2026-03-30 10:15:00
+11	31	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1601.66	\N	2026-03-07	La factura fue registrada en el sistema.	2026-03-04 12:15:00
+12	34	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2824.98	\N	2026-03-13	La factura fue registrada en el sistema.	2026-03-07 15:15:00
+13	12	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1508.80	\N	2026-02-17	La factura fue registrada en el sistema.	2026-02-13 14:15:00
+14	10	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1358.73	\N	2026-02-13	La factura fue registrada en el sistema.	2026-02-11 12:15:00
+15	18	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1870.48	\N	2026-02-24	La factura fue registrada en el sistema.	2026-02-19 13:15:00
+16	64	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1037.30	\N	2026-04-12	La factura fue registrada en el sistema.	2026-04-06 10:15:00
+17	71	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	877.16	\N	2026-04-16	La factura fue registrada en el sistema.	2026-04-13 10:15:00
+18	2	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	904.48	\N	2026-02-07	La factura fue registrada en el sistema.	2026-02-03 11:15:00
+19	72	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1520.30	\N	2026-04-18	La factura fue registrada en el sistema.	2026-04-14 11:15:00
+20	47	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2169.76	\N	2026-03-24	La factura fue registrada en el sistema.	2026-03-20 14:15:00
+21	46	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3560.98	\N	2026-03-22	La factura fue registrada en el sistema.	2026-03-19 13:15:00
+22	15	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	993.31	\N	2026-02-18	La factura fue registrada en el sistema.	2026-02-16 10:15:00
+23	77	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2549.84	\N	2026-04-23	La factura fue registrada en el sistema.	2026-04-19 09:15:00
+24	73	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2211.74	\N	2026-04-20	La factura fue registrada en el sistema.	2026-04-15 12:15:00
+25	56	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	4176.80	\N	2026-04-01	La factura fue registrada en el sistema.	2026-03-29 09:15:00
+26	40	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3170.55	\N	2026-03-15	La factura fue registrada en el sistema.	2026-03-13 14:15:00
+27	13	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2200.24	\N	2026-02-19	La factura fue registrada en el sistema.	2026-02-14 15:15:00
+28	21	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2887.94	\N	2026-02-25	La factura fue registrada en el sistema.	2026-02-22 09:15:00
+29	5	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1495.29	\N	2026-02-08	La factura fue registrada en el sistema.	2026-02-06 14:15:00
+30	19	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1155.46	\N	2026-02-26	La factura fue registrada en el sistema.	2026-02-20 14:15:00
+31	65	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1506.79	\N	2026-04-09	La factura fue registrada en el sistema.	2026-04-07 11:15:00
+32	52	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3935.30	\N	2026-03-29	La factura fue registrada en el sistema.	2026-03-25 12:15:00
+33	37	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	4240.34	\N	2026-03-14	La factura fue registrada en el sistema.	2026-03-10 11:15:00
+34	32	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2727.80	\N	2026-03-09	La factura fue registrada en el sistema.	2026-03-05 13:15:00
+35	78	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1870.48	\N	2026-04-25	La factura fue registrada en el sistema.	2026-04-20 10:15:00
+36	24	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2244.80	\N	2026-03-03	La factura fue registrada en el sistema.	2026-02-25 12:15:00
+37	55	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2430.81	\N	2026-03-30	La factura fue registrada en el sistema.	2026-03-28 15:15:00
+38	68	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1267.30	\N	2026-04-15	La factura fue registrada en el sistema.	2026-04-10 14:15:00
+39	38	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3077.98	\N	2026-03-16	La factura fue registrada en el sistema.	2026-03-11 12:15:00
+40	8	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1278.80	\N	2026-02-14	La factura fue registrada en el sistema.	2026-02-09 10:15:00
+41	80	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1974.55	\N	2026-04-24	La factura fue registrada en el sistema.	2026-04-22 12:15:00
+42	48	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3682.30	\N	2026-03-26	La factura fue registrada en el sistema.	2026-03-21 15:15:00
+43	28	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2486.30	\N	2026-03-06	La factura fue registrada en el sistema.	2026-03-01 09:15:00
+44	30	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2566.23	\N	2026-03-05	La factura fue registrada en el sistema.	2026-03-03 11:15:00
+45	62	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	892.98	\N	2026-04-08	La factura fue registrada en el sistema.	2026-04-04 15:15:00
+46	67	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	732.26	\N	2026-04-13	La factura fue registrada en el sistema.	2026-04-09 13:15:00
+47	50	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3773.73	\N	2026-03-25	La factura fue registrada en el sistema.	2026-03-23 10:15:00
+48	51	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2326.16	\N	2026-03-27	La factura fue registrada en el sistema.	2026-03-24 11:15:00
+49	76	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1750.30	\N	2026-04-21	La factura fue registrada en el sistema.	2026-04-18 15:15:00
+50	69	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1862.14	\N	2026-04-17	La factura fue registrada en el sistema.	2026-04-11 15:15:00
+51	79	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1166.96	\N	2026-04-27	La factura fue registrada en el sistema.	2026-04-21 11:15:00
+52	42	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3319.48	\N	2026-03-19	La factura fue registrada en el sistema.	2026-03-15 09:15:00
+53	59	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2615.96	\N	2026-04-07	La factura fue registrada en el sistema.	2026-04-01 12:15:00
+54	74	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1628.98	\N	2026-04-22	La factura fue registrada en el sistema.	2026-04-16 13:15:00
+55	6	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1134.48	\N	2026-02-10	La factura fue registrada en el sistema.	2026-02-07 15:15:00
+56	29	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3564.14	\N	2026-03-08	La factura fue registrada en el sistema.	2026-03-02 10:15:00
+57	41	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	4566.94	\N	2026-03-17	La factura fue registrada en el sistema.	2026-03-14 15:15:00
+58	16	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1761.80	\N	2026-02-20	La factura fue registrada en el sistema.	2026-02-17 11:15:00
+59	54	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	4032.48	\N	2026-04-02	La factura fue registrada en el sistema.	2026-03-27 14:15:00
+60	36	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2969.30	\N	2026-03-12	La factura fue registrada en el sistema.	2026-03-09 10:15:00
+61	4	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1037.30	\N	2026-02-11	La factura fue registrada en el sistema.	2026-02-05 13:15:00
+62	53	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	5592.74	\N	2026-03-31	La factura fue registrada en el sistema.	2026-03-26 13:15:00
+63	23	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1311.86	\N	2026-03-01	La factura fue registrada en el sistema.	2026-02-24 11:15:00
+64	44	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	3452.30	\N	2026-03-23	La factura fue registrada en el sistema.	2026-03-17 11:15:00
+65	58	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	4285.48	\N	2026-04-05	La factura fue registrada en el sistema.	2026-03-31 11:15:00
+66	1	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1197.44	\N	2026-02-05	La factura fue registrada en el sistema.	2026-02-02 10:15:00
+67	49	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	5254.64	\N	2026-03-28	La factura fue registrada en el sistema.	2026-03-22 09:15:00
+68	22	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2111.98	\N	2026-02-27	La factura fue registrada en el sistema.	2026-02-23 10:15:00
+69	70	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1358.73	\N	2026-04-14	La factura fue registrada en el sistema.	2026-04-12 09:15:00
+70	45	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	4887.79	\N	2026-03-20	La factura fue registrada en el sistema.	2026-03-18 12:15:00
+71	60	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	767.05	\N	2026-04-04	La factura fue registrada en el sistema.	2026-04-02 13:15:00
+72	75	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	981.81	\N	2026-04-19	La factura fue registrada en el sistema.	2026-04-17 14:15:00
+73	43	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	2036.36	\N	2026-03-21	La factura fue registrada en el sistema.	2026-03-16 10:15:00
+74	3	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	587.36	\N	2026-02-09	La factura fue registrada en el sistema.	2026-02-04 12:15:00
+75	61	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1185.94	\N	2026-04-06	La factura fue registrada en el sistema.	2026-04-03 14:15:00
+76	14	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1628.98	\N	2026-02-21	La factura fue registrada en el sistema.	2026-02-15 09:15:00
+77	35	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1717.81	\N	2026-03-10	La factura fue registrada en el sistema.	2026-03-08 09:15:00
+78	63	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	587.36	\N	2026-04-10	La factura fue registrada en el sistema.	2026-04-05 09:15:00
+79	9	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	1873.64	\N	2026-02-16	La factura fue registrada en el sistema.	2026-02-10 11:15:00
+80	7	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	732.26	\N	2026-02-12	La factura fue registrada en el sistema.	2026-02-08 09:15:00
+81	1	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	598.72	598.72	1197.44	598.72	\N	2026-02-05	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-02 10:25:00
+82	2	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	452.24	452.24	904.48	452.24	\N	2026-02-07	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-03 11:25:00
+83	3	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	293.68	293.68	587.36	293.68	\N	2026-02-09	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-04 12:25:00
+84	4	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	518.65	518.65	1037.30	518.65	\N	2026-02-11	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-05 13:25:00
+85	5	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	747.65	747.65	1495.29	747.65	\N	2026-02-08	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-06 14:25:00
+86	6	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	567.24	567.24	1134.48	567.24	\N	2026-02-10	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-07 15:25:00
+87	7	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	366.13	366.13	732.26	366.13	\N	2026-02-12	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-08 09:25:00
+88	8	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	639.40	639.40	1278.80	639.40	\N	2026-02-14	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-09 10:25:00
+89	9	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	936.82	936.82	1873.64	936.82	\N	2026-02-16	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-10 11:25:00
+90	10	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	679.37	679.37	1358.73	679.37	\N	2026-02-13	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-11 12:25:00
+91	11	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	438.58	438.58	877.16	438.58	\N	2026-02-15	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-12 13:25:00
+92	12	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	754.40	754.40	1508.80	754.40	\N	2026-02-17	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-13 14:25:00
+93	13	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1100.12	1100.12	2200.24	1100.12	\N	2026-02-19	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-14 15:25:00
+94	14	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	814.49	814.49	1628.98	814.49	\N	2026-02-21	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-15 09:25:00
+95	15	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	496.66	496.66	993.31	496.66	\N	2026-02-18	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-16 10:25:00
+96	16	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	880.90	880.90	1761.80	880.90	\N	2026-02-20	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-17 11:25:00
+97	17	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1274.92	1274.92	2549.84	1274.92	\N	2026-02-22	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-18 12:25:00
+98	18	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	935.24	935.24	1870.48	935.24	\N	2026-02-24	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-19 13:25:00
+168	8	Producción iniciada	Parcial	Parcial	Pendiente	En producción	639.40	639.40	0.00	639.40	639.40	\N	2026-02-14	La orden pasó al área de producción.	2026-02-09 11:15:00
+99	19	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	577.73	577.73	1155.46	577.73	\N	2026-02-26	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-20 14:25:00
+100	20	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	981.53	981.53	1963.05	981.53	\N	2026-02-23	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-21 15:25:00
+101	21	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1443.97	1443.97	2887.94	1443.97	\N	2026-02-25	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-22 09:25:00
+102	22	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1055.99	1055.99	2111.98	1055.99	\N	2026-02-27	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-23 10:25:00
+103	23	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	655.93	655.93	1311.86	655.93	\N	2026-03-01	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-24 11:25:00
+104	24	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1122.40	1122.40	2244.80	1122.40	\N	2026-03-03	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-25 12:25:00
+105	25	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1598.65	1598.65	3197.29	1598.65	\N	2026-02-28	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-26 13:25:00
+106	26	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1170.99	1170.99	2341.98	1170.99	\N	2026-03-02	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-27 14:25:00
+107	27	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	722.63	722.63	1445.26	722.63	\N	2026-03-04	El cliente realizó el abono inicial requerido para iniciar producción.	2026-02-28 15:25:00
+108	28	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1243.15	1243.15	2486.30	1243.15	\N	2026-03-06	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-01 09:25:00
+109	29	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1782.07	1782.07	3564.14	1782.07	\N	2026-03-08	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-02 10:25:00
+110	30	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1283.12	1283.12	2566.23	1283.12	\N	2026-03-05	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-03 11:25:00
+111	31	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	800.83	800.83	1601.66	800.83	\N	2026-03-07	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-04 12:25:00
+112	32	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1363.90	1363.90	2727.80	1363.90	\N	2026-03-09	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-05 13:25:00
+113	33	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1945.37	1945.37	3890.74	1945.37	\N	2026-03-11	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-06 14:25:00
+114	34	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1412.49	1412.49	2824.98	1412.49	\N	2026-03-13	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-07 15:25:00
+115	35	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	858.91	858.91	1717.81	858.91	\N	2026-03-10	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-08 09:25:00
+116	36	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1484.65	1484.65	2969.30	1484.65	\N	2026-03-12	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-09 10:25:00
+117	37	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2120.17	2120.17	4240.34	2120.17	\N	2026-03-14	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-10 11:25:00
+118	38	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1538.99	1538.99	3077.98	1538.99	\N	2026-03-16	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-11 12:25:00
+119	39	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	945.73	945.73	1891.46	945.73	\N	2026-03-18	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-12 13:25:00
+120	40	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1585.28	1585.28	3170.55	1585.28	\N	2026-03-15	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-13 14:25:00
+121	41	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2283.47	2283.47	4566.94	2283.47	\N	2026-03-17	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-14 15:25:00
+122	42	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1659.74	1659.74	3319.48	1659.74	\N	2026-03-19	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-15 09:25:00
+123	43	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1018.18	1018.18	2036.36	1018.18	\N	2026-03-21	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-16 10:25:00
+124	44	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1726.15	1726.15	3452.30	1726.15	\N	2026-03-23	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-17 11:25:00
+125	45	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2443.90	2443.90	4887.79	2443.90	\N	2026-03-20	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-18 12:25:00
+126	46	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1780.49	1780.49	3560.98	1780.49	\N	2026-03-22	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-19 13:25:00
+127	47	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1084.88	1084.88	2169.76	1084.88	\N	2026-03-24	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-20 14:25:00
+128	48	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1841.15	1841.15	3682.30	1841.15	\N	2026-03-26	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-21 15:25:00
+129	49	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2627.32	2627.32	5254.64	2627.32	\N	2026-03-28	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-22 09:25:00
+130	50	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1886.87	1886.87	3773.73	1886.87	\N	2026-03-25	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-23 10:25:00
+131	51	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1163.08	1163.08	2326.16	1163.08	\N	2026-03-27	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-24 11:25:00
+132	52	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1967.65	1967.65	3935.30	1967.65	\N	2026-03-29	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-25 12:25:00
+133	53	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2796.37	2796.37	5592.74	2796.37	\N	2026-03-31	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-26 13:25:00
+134	54	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2016.24	2016.24	4032.48	2016.24	\N	2026-04-02	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-27 14:25:00
+135	55	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1215.41	1215.41	2430.81	1215.41	\N	2026-03-30	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-28 15:25:00
+136	56	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2088.40	2088.40	4176.80	2088.40	\N	2026-04-01	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-29 09:25:00
+137	57	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2965.42	2965.42	5930.84	2965.42	\N	2026-04-03	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-30 10:25:00
+138	58	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	2142.74	2142.74	4285.48	2142.74	\N	2026-04-05	El cliente realizó el abono inicial requerido para iniciar producción.	2026-03-31 11:25:00
+139	59	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1307.98	1307.98	2615.96	1307.98	\N	2026-04-07	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-01 12:25:00
+140	60	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	383.53	383.53	767.05	383.53	\N	2026-04-04	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-02 13:25:00
+141	61	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	592.97	592.97	1185.94	592.97	\N	2026-04-06	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-03 14:25:00
+142	62	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	446.49	446.49	892.98	446.49	\N	2026-04-08	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-04 15:25:00
+143	63	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	293.68	293.68	587.36	293.68	\N	2026-04-10	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-05 09:25:00
+144	64	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	518.65	518.65	1037.30	518.65	\N	2026-04-12	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-06 10:25:00
+145	65	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	753.40	753.40	1506.79	753.40	\N	2026-04-09	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-07 11:25:00
+146	66	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	572.99	572.99	1145.98	572.99	\N	2026-04-11	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-08 12:25:00
+147	67	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	366.13	366.13	732.26	366.13	\N	2026-04-13	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-09 13:25:00
+148	68	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	633.65	633.65	1267.30	633.65	\N	2026-04-15	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-10 14:25:00
+149	69	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	931.07	931.07	1862.14	931.07	\N	2026-04-17	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-11 15:25:00
+150	70	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	679.37	679.37	1358.73	679.37	\N	2026-04-14	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-12 09:25:00
+151	71	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	438.58	438.58	877.16	438.58	\N	2026-04-16	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-13 10:25:00
+152	72	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	760.15	760.15	1520.30	760.15	\N	2026-04-18	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-14 11:25:00
+153	73	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1105.87	1105.87	2211.74	1105.87	\N	2026-04-20	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-15 12:25:00
+154	74	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	814.49	814.49	1628.98	814.49	\N	2026-04-22	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-16 13:25:00
+155	75	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	490.91	490.91	981.81	490.91	\N	2026-04-19	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-17 14:25:00
+156	76	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	875.15	875.15	1750.30	875.15	\N	2026-04-21	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-18 15:25:00
+157	77	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	1274.92	1274.92	2549.84	1274.92	\N	2026-04-23	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-19 09:25:00
+158	78	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	935.24	935.24	1870.48	935.24	\N	2026-04-25	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-20 10:25:00
+159	79	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	583.48	583.48	1166.96	583.48	\N	2026-04-27	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-21 11:25:00
+160	80	Abono inicial registrado	Pendiente	Parcial	Pendiente	En producción	0.00	987.28	987.28	1974.55	987.28	\N	2026-04-24	El cliente realizó el abono inicial requerido para iniciar producción.	2026-04-22 12:25:00
+161	1	Producción iniciada	Parcial	Parcial	Pendiente	En producción	598.72	598.72	0.00	598.72	598.72	\N	2026-02-05	La orden pasó al área de producción.	2026-02-02 11:15:00
+162	2	Producción iniciada	Parcial	Parcial	Pendiente	En producción	452.24	452.24	0.00	452.24	452.24	\N	2026-02-07	La orden pasó al área de producción.	2026-02-03 12:15:00
+163	3	Producción iniciada	Parcial	Parcial	Pendiente	En producción	293.68	293.68	0.00	293.68	293.68	\N	2026-02-09	La orden pasó al área de producción.	2026-02-04 13:15:00
+164	4	Producción iniciada	Parcial	Parcial	Pendiente	En producción	518.65	518.65	0.00	518.65	518.65	\N	2026-02-11	La orden pasó al área de producción.	2026-02-05 14:15:00
+165	5	Producción iniciada	Parcial	Parcial	Pendiente	En producción	747.65	747.65	0.00	747.65	747.65	\N	2026-02-08	La orden pasó al área de producción.	2026-02-06 15:15:00
+166	6	Producción iniciada	Parcial	Parcial	Pendiente	En producción	567.24	567.24	0.00	567.24	567.24	\N	2026-02-10	La orden pasó al área de producción.	2026-02-07 16:15:00
+167	7	Producción iniciada	Parcial	Parcial	Pendiente	En producción	366.13	366.13	0.00	366.13	366.13	\N	2026-02-12	La orden pasó al área de producción.	2026-02-08 10:15:00
+169	9	Producción iniciada	Parcial	Parcial	Pendiente	En producción	936.82	936.82	0.00	936.82	936.82	\N	2026-02-16	La orden pasó al área de producción.	2026-02-10 12:15:00
+170	10	Producción iniciada	Parcial	Parcial	Pendiente	En producción	679.37	679.37	0.00	679.37	679.37	\N	2026-02-13	La orden pasó al área de producción.	2026-02-11 13:15:00
+171	11	Producción iniciada	Parcial	Parcial	Pendiente	En producción	438.58	438.58	0.00	438.58	438.58	\N	2026-02-15	La orden pasó al área de producción.	2026-02-12 14:15:00
+172	12	Producción iniciada	Parcial	Parcial	Pendiente	En producción	754.40	754.40	0.00	754.40	754.40	\N	2026-02-17	La orden pasó al área de producción.	2026-02-13 15:15:00
+173	13	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1100.12	1100.12	0.00	1100.12	1100.12	\N	2026-02-19	La orden pasó al área de producción.	2026-02-14 16:15:00
+174	14	Producción iniciada	Parcial	Parcial	Pendiente	En producción	814.49	814.49	0.00	814.49	814.49	\N	2026-02-21	La orden pasó al área de producción.	2026-02-15 10:15:00
+175	15	Producción iniciada	Parcial	Parcial	Pendiente	En producción	496.66	496.66	0.00	496.66	496.66	\N	2026-02-18	La orden pasó al área de producción.	2026-02-16 11:15:00
+176	16	Producción iniciada	Parcial	Parcial	Pendiente	En producción	880.90	880.90	0.00	880.90	880.90	\N	2026-02-20	La orden pasó al área de producción.	2026-02-17 12:15:00
+177	17	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1274.92	1274.92	0.00	1274.92	1274.92	\N	2026-02-22	La orden pasó al área de producción.	2026-02-18 13:15:00
+178	18	Producción iniciada	Parcial	Parcial	Pendiente	En producción	935.24	935.24	0.00	935.24	935.24	\N	2026-02-24	La orden pasó al área de producción.	2026-02-19 14:15:00
+179	19	Producción iniciada	Parcial	Parcial	Pendiente	En producción	577.73	577.73	0.00	577.73	577.73	\N	2026-02-26	La orden pasó al área de producción.	2026-02-20 15:15:00
+180	20	Producción iniciada	Parcial	Parcial	Pendiente	En producción	981.53	981.53	0.00	981.53	981.53	\N	2026-02-23	La orden pasó al área de producción.	2026-02-21 16:15:00
+181	21	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1443.97	1443.97	0.00	1443.97	1443.97	\N	2026-02-25	La orden pasó al área de producción.	2026-02-22 10:15:00
+182	22	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1055.99	1055.99	0.00	1055.99	1055.99	\N	2026-02-27	La orden pasó al área de producción.	2026-02-23 11:15:00
+183	23	Producción iniciada	Parcial	Parcial	Pendiente	En producción	655.93	655.93	0.00	655.93	655.93	\N	2026-03-01	La orden pasó al área de producción.	2026-02-24 12:15:00
+184	24	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1122.40	1122.40	0.00	1122.40	1122.40	\N	2026-03-03	La orden pasó al área de producción.	2026-02-25 13:15:00
+185	25	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1598.65	1598.65	0.00	1598.65	1598.65	\N	2026-02-28	La orden pasó al área de producción.	2026-02-26 14:15:00
+186	26	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1170.99	1170.99	0.00	1170.99	1170.99	\N	2026-03-02	La orden pasó al área de producción.	2026-02-27 15:15:00
+187	27	Producción iniciada	Parcial	Parcial	Pendiente	En producción	722.63	722.63	0.00	722.63	722.63	\N	2026-03-04	La orden pasó al área de producción.	2026-02-28 16:15:00
+188	28	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1243.15	1243.15	0.00	1243.15	1243.15	\N	2026-03-06	La orden pasó al área de producción.	2026-03-01 10:15:00
+189	29	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1782.07	1782.07	0.00	1782.07	1782.07	\N	2026-03-08	La orden pasó al área de producción.	2026-03-02 11:15:00
+190	30	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1283.12	1283.12	0.00	1283.12	1283.12	\N	2026-03-05	La orden pasó al área de producción.	2026-03-03 12:15:00
+191	31	Producción iniciada	Parcial	Parcial	Pendiente	En producción	800.83	800.83	0.00	800.83	800.83	\N	2026-03-07	La orden pasó al área de producción.	2026-03-04 13:15:00
+192	32	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1363.90	1363.90	0.00	1363.90	1363.90	\N	2026-03-09	La orden pasó al área de producción.	2026-03-05 14:15:00
+193	33	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1945.37	1945.37	0.00	1945.37	1945.37	\N	2026-03-11	La orden pasó al área de producción.	2026-03-06 15:15:00
+194	34	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1412.49	1412.49	0.00	1412.49	1412.49	\N	2026-03-13	La orden pasó al área de producción.	2026-03-07 16:15:00
+195	35	Producción iniciada	Parcial	Parcial	Pendiente	En producción	858.91	858.91	0.00	858.91	858.91	\N	2026-03-10	La orden pasó al área de producción.	2026-03-08 10:15:00
+196	36	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1484.65	1484.65	0.00	1484.65	1484.65	\N	2026-03-12	La orden pasó al área de producción.	2026-03-09 11:15:00
+197	37	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2120.17	2120.17	0.00	2120.17	2120.17	\N	2026-03-14	La orden pasó al área de producción.	2026-03-10 12:15:00
+198	38	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1538.99	1538.99	0.00	1538.99	1538.99	\N	2026-03-16	La orden pasó al área de producción.	2026-03-11 13:15:00
+199	39	Producción iniciada	Parcial	Parcial	Pendiente	En producción	945.73	945.73	0.00	945.73	945.73	\N	2026-03-18	La orden pasó al área de producción.	2026-03-12 14:15:00
+200	40	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1585.28	1585.28	0.00	1585.28	1585.28	\N	2026-03-15	La orden pasó al área de producción.	2026-03-13 15:15:00
+201	41	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2283.47	2283.47	0.00	2283.47	2283.47	\N	2026-03-17	La orden pasó al área de producción.	2026-03-14 16:15:00
+202	42	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1659.74	1659.74	0.00	1659.74	1659.74	\N	2026-03-19	La orden pasó al área de producción.	2026-03-15 10:15:00
+203	43	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1018.18	1018.18	0.00	1018.18	1018.18	\N	2026-03-21	La orden pasó al área de producción.	2026-03-16 11:15:00
+204	44	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1726.15	1726.15	0.00	1726.15	1726.15	\N	2026-03-23	La orden pasó al área de producción.	2026-03-17 12:15:00
+205	45	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2443.90	2443.90	0.00	2443.90	2443.90	\N	2026-03-20	La orden pasó al área de producción.	2026-03-18 13:15:00
+206	46	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1780.49	1780.49	0.00	1780.49	1780.49	\N	2026-03-22	La orden pasó al área de producción.	2026-03-19 14:15:00
+207	47	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1084.88	1084.88	0.00	1084.88	1084.88	\N	2026-03-24	La orden pasó al área de producción.	2026-03-20 15:15:00
+208	48	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1841.15	1841.15	0.00	1841.15	1841.15	\N	2026-03-26	La orden pasó al área de producción.	2026-03-21 16:15:00
+209	49	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2627.32	2627.32	0.00	2627.32	2627.32	\N	2026-03-28	La orden pasó al área de producción.	2026-03-22 10:15:00
+210	50	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1886.87	1886.87	0.00	1886.87	1886.87	\N	2026-03-25	La orden pasó al área de producción.	2026-03-23 11:15:00
+211	51	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1163.08	1163.08	0.00	1163.08	1163.08	\N	2026-03-27	La orden pasó al área de producción.	2026-03-24 12:15:00
+212	52	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1967.65	1967.65	0.00	1967.65	1967.65	\N	2026-03-29	La orden pasó al área de producción.	2026-03-25 13:15:00
+213	53	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2796.37	2796.37	0.00	2796.37	2796.37	\N	2026-03-31	La orden pasó al área de producción.	2026-03-26 14:15:00
+214	54	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2016.24	2016.24	0.00	2016.24	2016.24	\N	2026-04-02	La orden pasó al área de producción.	2026-03-27 15:15:00
+215	55	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1215.41	1215.41	0.00	1215.41	1215.41	\N	2026-03-30	La orden pasó al área de producción.	2026-03-28 16:15:00
+216	56	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2088.40	2088.40	0.00	2088.40	2088.40	\N	2026-04-01	La orden pasó al área de producción.	2026-03-29 10:15:00
+217	57	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2965.42	2965.42	0.00	2965.42	2965.42	\N	2026-04-03	La orden pasó al área de producción.	2026-03-30 11:15:00
+218	58	Producción iniciada	Parcial	Parcial	Pendiente	En producción	2142.74	2142.74	0.00	2142.74	2142.74	\N	2026-04-05	La orden pasó al área de producción.	2026-03-31 12:15:00
+219	59	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1307.98	1307.98	0.00	1307.98	1307.98	\N	2026-04-07	La orden pasó al área de producción.	2026-04-01 13:15:00
+220	60	Producción iniciada	Parcial	Parcial	Pendiente	En producción	383.53	383.53	0.00	383.53	383.53	\N	2026-04-04	La orden pasó al área de producción.	2026-04-02 14:15:00
+221	61	Producción iniciada	Parcial	Parcial	Pendiente	En producción	592.97	592.97	0.00	592.97	592.97	\N	2026-04-06	La orden pasó al área de producción.	2026-04-03 15:15:00
+222	62	Producción iniciada	Parcial	Parcial	Pendiente	En producción	446.49	446.49	0.00	446.49	446.49	\N	2026-04-08	La orden pasó al área de producción.	2026-04-04 16:15:00
+223	63	Producción iniciada	Parcial	Parcial	Pendiente	En producción	293.68	293.68	0.00	293.68	293.68	\N	2026-04-10	La orden pasó al área de producción.	2026-04-05 10:15:00
+224	64	Producción iniciada	Parcial	Parcial	Pendiente	En producción	518.65	518.65	0.00	518.65	518.65	\N	2026-04-12	La orden pasó al área de producción.	2026-04-06 11:15:00
+225	65	Producción iniciada	Parcial	Parcial	Pendiente	En producción	753.40	753.40	0.00	753.40	753.40	\N	2026-04-09	La orden pasó al área de producción.	2026-04-07 12:15:00
+226	66	Producción iniciada	Parcial	Parcial	Pendiente	En producción	572.99	572.99	0.00	572.99	572.99	\N	2026-04-11	La orden pasó al área de producción.	2026-04-08 13:15:00
+227	67	Producción iniciada	Parcial	Parcial	Pendiente	En producción	366.13	366.13	0.00	366.13	366.13	\N	2026-04-13	La orden pasó al área de producción.	2026-04-09 14:15:00
+228	68	Producción iniciada	Parcial	Parcial	Pendiente	En producción	633.65	633.65	0.00	633.65	633.65	\N	2026-04-15	La orden pasó al área de producción.	2026-04-10 15:15:00
+229	69	Producción iniciada	Parcial	Parcial	Pendiente	En producción	931.07	931.07	0.00	931.07	931.07	\N	2026-04-17	La orden pasó al área de producción.	2026-04-11 16:15:00
+230	70	Producción iniciada	Parcial	Parcial	Pendiente	En producción	679.37	679.37	0.00	679.37	679.37	\N	2026-04-14	La orden pasó al área de producción.	2026-04-12 10:15:00
+231	71	Producción iniciada	Parcial	Parcial	Pendiente	En producción	438.58	438.58	0.00	438.58	438.58	\N	2026-04-16	La orden pasó al área de producción.	2026-04-13 11:15:00
+232	72	Producción iniciada	Parcial	Parcial	Pendiente	En producción	760.15	760.15	0.00	760.15	760.15	\N	2026-04-18	La orden pasó al área de producción.	2026-04-14 12:15:00
+233	73	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1105.87	1105.87	0.00	1105.87	1105.87	\N	2026-04-20	La orden pasó al área de producción.	2026-04-15 13:15:00
+234	74	Producción iniciada	Parcial	Parcial	Pendiente	En producción	814.49	814.49	0.00	814.49	814.49	\N	2026-04-22	La orden pasó al área de producción.	2026-04-16 14:15:00
+235	75	Producción iniciada	Parcial	Parcial	Pendiente	En producción	490.91	490.91	0.00	490.91	490.91	\N	2026-04-19	La orden pasó al área de producción.	2026-04-17 15:15:00
+236	76	Producción iniciada	Parcial	Parcial	Pendiente	En producción	875.15	875.15	0.00	875.15	875.15	\N	2026-04-21	La orden pasó al área de producción.	2026-04-18 16:15:00
+237	77	Producción iniciada	Parcial	Parcial	Pendiente	En producción	1274.92	1274.92	0.00	1274.92	1274.92	\N	2026-04-23	La orden pasó al área de producción.	2026-04-19 10:15:00
+238	78	Producción iniciada	Parcial	Parcial	Pendiente	En producción	935.24	935.24	0.00	935.24	935.24	\N	2026-04-25	La orden pasó al área de producción.	2026-04-20 11:15:00
+239	79	Producción iniciada	Parcial	Parcial	Pendiente	En producción	583.48	583.48	0.00	583.48	583.48	\N	2026-04-27	La orden pasó al área de producción.	2026-04-21 12:15:00
+240	80	Producción iniciada	Parcial	Parcial	Pendiente	En producción	987.28	987.28	0.00	987.28	987.28	\N	2026-04-24	La orden pasó al área de producción.	2026-04-22 13:15:00
+241	3	Segundo abono registrado	Parcial	Parcial	En producción	En producción	293.68	440.52	146.84	293.68	146.84	\N	2026-02-09	El cliente realizó un segundo abono sobre la factura.	2026-02-05 12:15:00
+242	6	Segundo abono registrado	Parcial	Parcial	En producción	En producción	567.24	850.86	283.62	567.24	283.62	\N	2026-02-10	El cliente realizó un segundo abono sobre la factura.	2026-02-08 15:15:00
+243	9	Segundo abono registrado	Parcial	Parcial	En producción	En producción	936.82	1405.23	468.41	936.82	468.41	\N	2026-02-16	El cliente realizó un segundo abono sobre la factura.	2026-02-11 11:15:00
+244	12	Segundo abono registrado	Parcial	Parcial	En producción	En producción	754.40	1131.60	377.20	754.40	377.20	\N	2026-02-17	El cliente realizó un segundo abono sobre la factura.	2026-02-14 14:15:00
+245	15	Segundo abono registrado	Parcial	Parcial	En producción	En producción	496.66	744.98	248.33	496.66	248.33	\N	2026-02-18	El cliente realizó un segundo abono sobre la factura.	2026-02-17 10:15:00
+246	18	Segundo abono registrado	Parcial	Parcial	En producción	En producción	935.24	1402.86	467.62	935.24	467.62	\N	2026-02-24	El cliente realizó un segundo abono sobre la factura.	2026-02-20 13:15:00
+247	21	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1443.97	2165.96	721.99	1443.97	721.99	\N	2026-02-25	El cliente realizó un segundo abono sobre la factura.	2026-02-23 09:15:00
+248	24	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1122.40	1683.60	561.20	1122.40	561.20	\N	2026-03-03	El cliente realizó un segundo abono sobre la factura.	2026-02-26 12:15:00
+249	27	Segundo abono registrado	Parcial	Parcial	En producción	En producción	722.63	1083.95	361.32	722.63	361.32	\N	2026-03-04	El cliente realizó un segundo abono sobre la factura.	2026-03-01 15:15:00
+250	30	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1283.12	1924.67	641.56	1283.12	641.56	\N	2026-03-05	El cliente realizó un segundo abono sobre la factura.	2026-03-04 11:15:00
+251	33	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1945.37	2918.06	972.69	1945.37	972.69	\N	2026-03-11	El cliente realizó un segundo abono sobre la factura.	2026-03-07 14:15:00
+252	36	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1484.65	2226.98	742.33	1484.65	742.33	\N	2026-03-12	El cliente realizó un segundo abono sobre la factura.	2026-03-10 10:15:00
+253	39	Segundo abono registrado	Parcial	Parcial	En producción	En producción	945.73	1418.60	472.87	945.73	472.87	\N	2026-03-18	El cliente realizó un segundo abono sobre la factura.	2026-03-13 13:15:00
+254	42	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1659.74	2489.61	829.87	1659.74	829.87	\N	2026-03-19	El cliente realizó un segundo abono sobre la factura.	2026-03-16 09:15:00
+255	45	Segundo abono registrado	Parcial	Parcial	En producción	En producción	2443.90	3665.84	1221.95	2443.90	1221.95	\N	2026-03-20	El cliente realizó un segundo abono sobre la factura.	2026-03-19 12:15:00
+256	48	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1841.15	2761.73	920.58	1841.15	920.58	\N	2026-03-26	El cliente realizó un segundo abono sobre la factura.	2026-03-22 15:15:00
+257	51	Segundo abono registrado	Parcial	Parcial	En producción	En producción	1163.08	1744.62	581.54	1163.08	581.54	\N	2026-03-27	El cliente realizó un segundo abono sobre la factura.	2026-03-25 11:15:00
+258	54	Segundo abono registrado	Parcial	Parcial	En producción	En producción	2016.24	3024.36	1008.12	2016.24	1008.12	\N	2026-04-02	El cliente realizó un segundo abono sobre la factura.	2026-03-28 14:15:00
+259	57	Segundo abono registrado	Parcial	Parcial	En producción	En producción	2965.42	4448.13	1482.71	2965.42	1482.71	\N	2026-04-03	El cliente realizó un segundo abono sobre la factura.	2026-03-31 10:15:00
+260	60	Segundo abono registrado	Parcial	Parcial	En producción	En producción	383.53	575.29	191.76	383.53	191.76	\N	2026-04-04	El cliente realizó un segundo abono sobre la factura.	2026-04-03 13:15:00
+261	63	Segundo abono registrado	Parcial	Parcial	En producción	En producción	293.68	440.52	146.84	293.68	146.84	\N	2026-04-10	El cliente realizó un segundo abono sobre la factura.	2026-04-06 09:15:00
+262	66	Segundo abono registrado	Parcial	Parcial	En producción	En producción	572.99	859.49	286.50	572.99	286.50	\N	2026-04-11	El cliente realizó un segundo abono sobre la factura.	2026-04-09 12:15:00
+263	69	Segundo abono registrado	Parcial	Parcial	En producción	En producción	931.07	1396.61	465.54	931.07	465.54	\N	2026-04-17	El cliente realizó un segundo abono sobre la factura.	2026-04-12 15:15:00
+264	72	Segundo abono registrado	Parcial	Parcial	En producción	En producción	760.15	1140.23	380.08	760.15	380.08	\N	2026-04-18	El cliente realizó un segundo abono sobre la factura.	2026-04-15 11:15:00
+265	75	Segundo abono registrado	Parcial	Parcial	En producción	En producción	490.91	736.36	245.45	490.91	245.45	\N	2026-04-19	El cliente realizó un segundo abono sobre la factura.	2026-04-18 14:15:00
+266	78	Segundo abono registrado	Parcial	Parcial	En producción	En producción	935.24	1402.86	467.62	935.24	467.62	\N	2026-04-25	El cliente realizó un segundo abono sobre la factura.	2026-04-21 10:15:00
+267	3	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	440.52	440.52	0.00	146.84	146.84	\N	2026-02-09	El pedido fue finalizado y quedó listo para entrega.	2026-02-09 00:00:00
+268	6	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	850.86	850.86	0.00	283.62	283.62	\N	2026-02-10	El pedido fue finalizado y quedó listo para entrega.	2026-02-10 00:00:00
+269	9	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1405.23	1405.23	0.00	468.41	468.41	\N	2026-02-16	El pedido fue finalizado y quedó listo para entrega.	2026-02-16 00:00:00
+270	12	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1131.60	1131.60	0.00	377.20	377.20	\N	2026-02-17	El pedido fue finalizado y quedó listo para entrega.	2026-02-17 00:00:00
+271	15	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	744.98	744.98	0.00	248.33	248.33	\N	2026-02-18	El pedido fue finalizado y quedó listo para entrega.	2026-02-18 00:00:00
+272	18	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1402.86	1402.86	0.00	467.62	467.62	\N	2026-02-24	El pedido fue finalizado y quedó listo para entrega.	2026-02-24 00:00:00
+273	21	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	2165.96	2165.96	0.00	721.99	721.99	\N	2026-02-25	El pedido fue finalizado y quedó listo para entrega.	2026-02-25 00:00:00
+274	24	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1683.60	1683.60	0.00	561.20	561.20	\N	2026-03-03	El pedido fue finalizado y quedó listo para entrega.	2026-03-03 00:00:00
+275	27	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1083.95	1083.95	0.00	361.32	361.32	\N	2026-03-04	El pedido fue finalizado y quedó listo para entrega.	2026-03-04 00:00:00
+276	30	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1924.67	1924.67	0.00	641.56	641.56	\N	2026-03-05	El pedido fue finalizado y quedó listo para entrega.	2026-03-05 00:00:00
+277	33	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	2918.06	2918.06	0.00	972.69	972.69	\N	2026-03-11	El pedido fue finalizado y quedó listo para entrega.	2026-03-11 00:00:00
+278	36	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	2226.98	2226.98	0.00	742.33	742.33	\N	2026-03-12	El pedido fue finalizado y quedó listo para entrega.	2026-03-12 00:00:00
+279	39	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1418.60	1418.60	0.00	472.87	472.87	\N	2026-03-18	El pedido fue finalizado y quedó listo para entrega.	2026-03-18 00:00:00
+280	42	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	2489.61	2489.61	0.00	829.87	829.87	\N	2026-03-19	El pedido fue finalizado y quedó listo para entrega.	2026-03-19 00:00:00
+281	45	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	3665.84	3665.84	0.00	1221.95	1221.95	\N	2026-03-20	El pedido fue finalizado y quedó listo para entrega.	2026-03-20 00:00:00
+282	48	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	2761.73	2761.73	0.00	920.58	920.58	\N	2026-03-26	El pedido fue finalizado y quedó listo para entrega.	2026-03-26 00:00:00
+283	51	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1744.62	1744.62	0.00	581.54	581.54	\N	2026-03-27	El pedido fue finalizado y quedó listo para entrega.	2026-03-27 00:00:00
+284	54	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	3024.36	3024.36	0.00	1008.12	1008.12	\N	2026-04-02	El pedido fue finalizado y quedó listo para entrega.	2026-04-02 00:00:00
+285	57	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	4448.13	4448.13	0.00	1482.71	1482.71	\N	2026-04-03	El pedido fue finalizado y quedó listo para entrega.	2026-04-03 00:00:00
+286	60	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	575.29	575.29	0.00	191.76	191.76	\N	2026-04-04	El pedido fue finalizado y quedó listo para entrega.	2026-04-04 00:00:00
+287	63	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	440.52	440.52	0.00	146.84	146.84	\N	2026-04-10	El pedido fue finalizado y quedó listo para entrega.	2026-04-10 00:00:00
+288	66	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	859.49	859.49	0.00	286.50	286.50	\N	2026-04-11	El pedido fue finalizado y quedó listo para entrega.	2026-04-11 00:00:00
+289	69	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1396.61	1396.61	0.00	465.54	465.54	\N	2026-04-17	El pedido fue finalizado y quedó listo para entrega.	2026-04-17 00:00:00
+290	72	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1140.23	1140.23	0.00	380.08	380.08	\N	2026-04-18	El pedido fue finalizado y quedó listo para entrega.	2026-04-18 00:00:00
+291	75	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	736.36	736.36	0.00	245.45	245.45	\N	2026-04-19	El pedido fue finalizado y quedó listo para entrega.	2026-04-19 00:00:00
+292	78	Pedido listo para entregar	Parcial	Parcial	En producción	Lista para entregar	1402.86	1402.86	0.00	467.62	467.62	\N	2026-04-25	El pedido fue finalizado y quedó listo para entrega.	2026-04-25 00:00:00
+293	5	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	747.65	747.65	0.00	747.65	747.65	\N	2026-02-08	El cliente canceló después de la fecha estimada de entrega.	2026-02-08 14:15:00
+294	10	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	679.37	679.37	0.00	679.37	679.37	\N	2026-02-13	El cliente canceló después de la fecha estimada de entrega.	2026-02-13 12:15:00
+295	15	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	496.66	496.66	0.00	496.66	496.66	\N	2026-02-18	El cliente canceló después de la fecha estimada de entrega.	2026-02-18 10:15:00
+296	20	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	981.53	981.53	0.00	981.53	981.53	\N	2026-02-23	El cliente canceló después de la fecha estimada de entrega.	2026-02-23 15:15:00
+297	25	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	1598.65	1598.65	0.00	1598.65	1598.65	\N	2026-02-28	El cliente canceló después de la fecha estimada de entrega.	2026-02-28 13:15:00
+298	30	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	1283.12	1283.12	0.00	1283.12	1283.12	\N	2026-03-05	El cliente canceló después de la fecha estimada de entrega.	2026-03-05 11:15:00
+299	35	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	858.91	858.91	0.00	858.91	858.91	\N	2026-03-10	El cliente canceló después de la fecha estimada de entrega.	2026-03-10 09:15:00
+300	40	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	1585.28	1585.28	0.00	1585.28	1585.28	\N	2026-03-15	El cliente canceló después de la fecha estimada de entrega.	2026-03-15 14:15:00
+301	45	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	2443.90	2443.90	0.00	2443.90	2443.90	\N	2026-03-20	El cliente canceló después de la fecha estimada de entrega.	2026-03-20 12:15:00
+302	50	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	1886.87	1886.87	0.00	1886.87	1886.87	\N	2026-03-25	El cliente canceló después de la fecha estimada de entrega.	2026-03-25 10:15:00
+303	55	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	1215.41	1215.41	0.00	1215.41	1215.41	\N	2026-03-30	El cliente canceló después de la fecha estimada de entrega.	2026-03-30 15:15:00
+304	60	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	383.53	383.53	0.00	383.53	383.53	\N	2026-04-04	El cliente canceló después de la fecha estimada de entrega.	2026-04-04 13:15:00
+305	65	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	753.40	753.40	0.00	753.40	753.40	\N	2026-04-09	El cliente canceló después de la fecha estimada de entrega.	2026-04-09 11:15:00
+306	70	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	679.37	679.37	0.00	679.37	679.37	\N	2026-04-14	El cliente canceló después de la fecha estimada de entrega.	2026-04-14 09:15:00
+307	75	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	490.91	490.91	0.00	490.91	490.91	\N	2026-04-19	El cliente canceló después de la fecha estimada de entrega.	2026-04-19 14:15:00
+308	80	Factura cancelada por el cliente	Parcial	Parcial	En producción	Cancelada	987.28	987.28	0.00	987.28	987.28	\N	2026-04-24	El cliente canceló después de la fecha estimada de entrega.	2026-04-24 12:15:00
+309	3	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	440.52	587.36	146.84	146.84	0.00	\N	2026-02-09	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-02-09 02:00:00
+310	6	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	850.86	1134.48	283.62	283.62	0.00	\N	2026-02-10	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-02-10 02:00:00
+311	9	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1405.23	1873.64	468.41	468.41	0.00	\N	2026-02-16	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-02-16 02:00:00
+312	12	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1131.60	1508.80	377.20	377.20	0.00	\N	2026-02-17	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-02-17 02:00:00
+313	18	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1402.86	1870.48	467.62	467.62	0.00	\N	2026-02-24	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-02-24 02:00:00
+314	21	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	2165.96	2887.94	721.99	721.99	0.00	\N	2026-02-25	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-02-25 02:00:00
+315	24	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1683.60	2244.80	561.20	561.20	0.00	\N	2026-03-03	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-03 02:00:00
+316	27	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1083.95	1445.26	361.32	361.32	0.00	\N	2026-03-04	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-04 02:00:00
+317	33	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	2918.06	3890.74	972.69	972.69	0.00	\N	2026-03-11	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-11 02:00:00
+318	36	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	2226.98	2969.30	742.33	742.33	0.00	\N	2026-03-12	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-12 02:00:00
+319	39	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1418.60	1891.46	472.87	472.87	0.00	\N	2026-03-18	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-18 02:00:00
+320	42	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	2489.61	3319.48	829.87	829.87	0.00	\N	2026-03-19	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-19 02:00:00
+321	48	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	2761.73	3682.30	920.58	920.58	0.00	\N	2026-03-26	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-26 02:00:00
+322	51	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1744.62	2326.16	581.54	581.54	0.00	\N	2026-03-27	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-03-27 02:00:00
+323	54	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	3024.36	4032.48	1008.12	1008.12	0.00	\N	2026-04-02	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-04-02 02:00:00
+324	57	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	4448.13	5930.84	1482.71	1482.71	0.00	\N	2026-04-03	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-04-03 02:00:00
+325	63	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	440.52	587.36	146.84	146.84	0.00	\N	2026-04-10	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-04-10 02:00:00
+326	66	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	859.49	1145.98	286.50	286.50	0.00	\N	2026-04-11	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-04-11 02:00:00
+327	69	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1396.61	1862.14	465.54	465.54	0.00	\N	2026-04-17	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-04-17 02:00:00
+328	72	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1140.23	1520.30	380.08	380.08	0.00	\N	2026-04-18	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-04-18 02:00:00
+329	78	Pago final y entrega	Parcial	Pagado	Lista para entregar	Entregada	1402.86	1870.48	467.62	467.62	0.00	\N	2026-04-25	El cliente canceló el saldo pendiente y el pedido fue entregado.	2026-04-25 02:00:00
+330	11	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	877.16	877.16	0.00	0.00	0.00	2026-02-15	2026-02-15	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+331	12	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	1508.80	1508.80	0.00	0.00	0.00	2026-02-17	2026-02-17	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+332	13	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	2200.24	2200.24	0.00	0.00	0.00	2026-02-19	2026-02-19	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+333	14	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	1628.98	1628.98	0.00	0.00	0.00	2026-02-21	2026-02-21	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+334	15	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	993.31	993.31	0.00	0.00	0.00	2026-02-18	2026-02-18	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+335	16	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	1761.80	1761.80	0.00	0.00	0.00	2026-02-20	2026-02-20	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+336	17	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	2549.84	2549.84	0.00	0.00	0.00	2026-02-22	2026-02-22	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+337	18	Estado de producción actualizado	Pagado	Pagado	Entregada	Lista para entregar	1870.48	1870.48	0.00	0.00	0.00	2026-02-24	2026-02-24	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+338	19	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	1155.46	866.60	0.00	0.00	288.86	2026-02-26	2026-02-26	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+339	20	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	1963.05	1472.29	0.00	0.00	490.76	2026-02-23	2026-02-23	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+340	21	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	2887.94	2165.96	0.00	0.00	721.98	2026-02-25	2026-02-25	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+341	22	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	2111.98	1583.99	0.00	0.00	527.99	2026-02-27	2026-02-27	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+342	23	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	1311.86	983.90	0.00	0.00	327.96	2026-03-01	2026-03-01	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+343	24	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	2244.80	1683.60	0.00	0.00	561.20	2026-03-03	2026-03-03	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+344	25	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	3197.29	2397.97	0.00	0.00	799.32	2026-02-28	2026-02-28	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+345	26	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	2341.98	1756.49	0.00	0.00	585.49	2026-03-02	2026-03-02	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+346	27	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	1445.26	1083.95	0.00	0.00	361.31	2026-03-04	2026-03-04	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+347	28	Estado de producción actualizado	Pagado	Parcial	Entregada	En producción	2486.30	1864.73	0.00	0.00	621.57	2026-03-06	2026-03-06	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+348	29	Estado de producción actualizado	Pagado	Parcial	Entregada	Lista para entregar	3564.14	1782.07	0.00	0.00	1782.07	2026-03-08	2026-03-08	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+349	30	Estado de producción actualizado	Pagado	Parcial	Entregada	Lista para entregar	2566.23	1283.12	0.00	0.00	1283.11	2026-03-05	2026-03-05	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+350	31	Estado de producción actualizado	Pagado	Parcial	Entregada	Lista para entregar	1601.66	800.83	0.00	0.00	800.83	2026-03-07	2026-03-07	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+351	32	Estado de producción actualizado	Pagado	Parcial	Entregada	Lista para entregar	2727.80	1363.90	0.00	0.00	1363.90	2026-03-09	2026-03-09	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+352	33	Estado de producción actualizado	Pagado	Parcial	Entregada	Lista para entregar	3890.74	1945.37	0.00	0.00	1945.37	2026-03-11	2026-03-11	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+353	34	Estado de producción actualizado	Pagado	Parcial	Entregada	Lista para entregar	2824.98	1412.49	0.00	0.00	1412.49	2026-03-13	2026-03-13	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+354	35	Estado de producción actualizado	Pagado	Parcial	Entregada	Lista para entregar	1717.81	858.91	0.00	0.00	858.90	2026-03-10	2026-03-10	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+355	39	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	945.73	0.00	0.00	945.73	1891.46	2026-03-18	2026-03-18	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+356	40	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	1585.28	0.00	0.00	1585.28	3170.55	2026-03-15	2026-03-15	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+357	41	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	2283.47	0.00	0.00	2283.47	4566.94	2026-03-17	2026-03-17	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+358	42	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	1659.74	0.00	0.00	1659.74	3319.48	2026-03-19	2026-03-19	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+359	43	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	1018.18	0.00	0.00	1018.18	2036.36	2026-03-21	2026-03-21	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+360	44	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	1726.15	0.00	0.00	1726.15	3452.30	2026-03-23	2026-03-23	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+361	45	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	2443.90	0.00	0.00	2443.90	4887.79	2026-03-20	2026-03-20	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+362	46	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	1780.49	0.00	0.00	1780.49	3560.98	2026-03-22	2026-03-22	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+363	47	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	1084.88	0.00	0.00	1084.88	2169.76	2026-03-24	2026-03-24	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+364	48	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	En producción	1841.15	0.00	0.00	1841.15	3682.30	2026-03-26	2026-03-26	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+365	49	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	Pendiente	2627.32	0.00	0.00	2627.32	5254.64	2026-03-28	2026-03-28	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+366	50	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	Pendiente	1886.87	0.00	0.00	1886.87	3773.73	2026-03-25	2026-03-25	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+367	51	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	Pendiente	1163.08	0.00	0.00	1163.08	2326.16	2026-03-27	2026-03-27	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+368	52	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	Pendiente	1967.65	0.00	0.00	1967.65	3935.30	2026-03-29	2026-03-29	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+369	53	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	Pendiente	2796.37	0.00	0.00	2796.37	5592.74	2026-03-31	2026-03-31	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+370	54	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	Pendiente	2016.24	0.00	0.00	2016.24	4032.48	2026-04-02	2026-04-02	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+371	55	Estado de producción actualizado	Parcial	Pendiente	Lista para entregar	Pendiente	1215.41	0.00	0.00	1215.41	2430.81	2026-03-30	2026-03-30	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+372	56	Estado de producción actualizado	Parcial	Pendiente	En producción	Pendiente	2088.40	0.00	0.00	2088.40	4176.80	2026-04-01	2026-04-01	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+373	57	Factura cancelada	Parcial	Parcial	En producción	Cancelada	2965.42	2075.79	0.00	2965.42	3855.05	2026-04-03	2026-04-03	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+374	58	Factura cancelada	Parcial	Parcial	En producción	Cancelada	2142.74	1499.92	0.00	2142.74	2785.56	2026-04-05	2026-04-05	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+375	59	Factura cancelada	Parcial	Parcial	En producción	Cancelada	1307.98	915.59	0.00	1307.98	1700.37	2026-04-07	2026-04-07	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+376	60	Factura cancelada	Parcial	Parcial	En producción	Cancelada	383.53	268.47	0.00	383.53	498.58	2026-04-04	2026-04-04	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+377	61	Factura cancelada	Parcial	Parcial	En producción	Cancelada	592.97	415.08	0.00	592.97	770.86	2026-04-06	2026-04-06	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+378	62	Factura cancelada	Parcial	Parcial	En producción	Cancelada	446.49	312.54	0.00	446.49	580.44	2026-04-08	2026-04-08	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+379	63	Factura cancelada	Parcial	Pendiente	En producción	Cancelada	293.68	0.00	0.00	293.68	587.36	2026-04-10	2026-04-10	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+380	64	Factura cancelada	Parcial	Pendiente	En producción	Cancelada	518.65	0.00	0.00	518.65	1037.30	2026-04-12	2026-04-12	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+381	65	Factura cancelada	Parcial	Pendiente	En producción	Cancelada	753.40	0.00	0.00	753.40	1506.79	2026-04-09	2026-04-09	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+382	66	Factura cancelada	Pendiente	Pendiente	En producción	Cancelada	0.00	0.00	0.00	1145.98	1145.98	2026-04-11	2026-04-11	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+383	67	Pago actualizado	Pendiente	Pagado	En producción	En producción	0.00	732.26	732.26	732.26	0.00	2026-04-13	2026-04-13	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+384	68	Pago actualizado	Pendiente	Pagado	En producción	En producción	0.00	1267.30	1267.30	1267.30	0.00	2026-04-15	2026-04-15	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+385	69	Pago actualizado	Pendiente	Pagado	En producción	En producción	0.00	1862.14	1862.14	1862.14	0.00	2026-04-17	2026-04-17	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+386	70	Pago actualizado	Pendiente	Pagado	En producción	En producción	0.00	1358.73	1358.73	1358.73	0.00	2026-04-14	2026-04-14	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+387	71	Estado de producción actualizado	Pendiente	Parcial	Pendiente	Entregada	0.00	789.44	789.44	877.16	87.72	2026-04-16	2026-04-16	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+388	72	Estado de producción actualizado	Pendiente	Parcial	Pendiente	Entregada	0.00	1368.27	1368.27	1520.30	152.03	2026-04-18	2026-04-18	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+389	73	Estado de producción actualizado	Pendiente	Parcial	Pendiente	Entregada	0.00	1990.57	1990.57	2211.74	221.17	2026-04-20	2026-04-20	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+390	74	Estado de producción actualizado	Pendiente	Parcial	Pendiente	Entregada	0.00	1466.08	1466.08	1628.98	162.90	2026-04-22	2026-04-22	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+391	75	Estado de producción actualizado	Pendiente	Parcial	Pendiente	Entregada	0.00	883.63	883.63	981.81	98.18	2026-04-19	2026-04-19	Cambio registrado automáticamente por el sistema.	2026-05-12 20:46:35.442283
+392	76	Factura cancelada	Pendiente	Pagado	Pendiente	Cancelada	0.00	1750.30	1750.30	1750.30	0.00	2026-04-21	2026-04-21	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+393	77	Factura cancelada	Pendiente	Pagado	Pendiente	Cancelada	0.00	2549.84	2549.84	2549.84	0.00	2026-04-23	2026-04-23	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+394	78	Factura cancelada	Pendiente	Pagado	Pendiente	Cancelada	0.00	1870.48	1870.48	1870.48	0.00	2026-04-25	2026-04-25	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+395	79	Factura cancelada	Pendiente	Pagado	Pendiente	Cancelada	0.00	1166.96	1166.96	1166.96	0.00	2026-04-27	2026-04-27	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
+396	80	Factura cancelada	Pendiente	Pagado	Pendiente	Cancelada	0.00	1974.55	1974.55	1974.55	0.00	2026-04-24	2026-04-24	El cliente canceló después de la fecha estimada de entrega.	2026-05-12 20:46:35.442283
 \.
 
 
@@ -4834,6 +5405,13 @@ SELECT pg_catalog.setval('public.detallefactura_id_detalle_seq', 160, true);
 
 
 --
+-- Name: factura_estado_historial_id_historial_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.factura_estado_historial_id_historial_seq', 396, true);
+
+
+--
 -- Name: factura_id_factura_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -4932,6 +5510,14 @@ ALTER TABLE ONLY public.detallefactura
 
 
 --
+-- Name: factura_estado_historial factura_estado_historial_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.factura_estado_historial
+    ADD CONSTRAINT factura_estado_historial_pkey PRIMARY KEY (id_historial);
+
+
+--
 -- Name: factura factura_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5012,6 +5598,13 @@ ALTER TABLE ONLY public.usuario
 
 
 --
+-- Name: idx_factura_estado_historial_factura; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_factura_estado_historial_factura ON public.factura_estado_historial USING btree (id_factura);
+
+
+--
 -- Name: categoria trg_auditar_delete_categoria; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5037,6 +5630,21 @@ CREATE TRIGGER trg_auditar_delete_producto AFTER DELETE ON public.producto FOR E
 --
 
 CREATE TRIGGER trg_auditar_delete_proveedor AFTER DELETE ON public.proveedor FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_delete_generico();
+
+
+--
+-- Name: factura trg_factura_estado_historial; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_factura_estado_historial AFTER INSERT OR UPDATE ON public.factura FOR EACH ROW EXECUTE FUNCTION public.registrar_historial_estado_factura();
+
+
+--
+-- Name: factura_estado_historial factura_estado_historial_id_factura_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.factura_estado_historial
+    ADD CONSTRAINT factura_estado_historial_id_factura_fkey FOREIGN KEY (id_factura) REFERENCES public.factura(id_factura) ON DELETE CASCADE;
 
 
 --
@@ -5155,5 +5763,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict PT7rX2Pllfnz69eDHhtPJezLhaFQD0d2Bc900c1Bo8p2nozufgUm0gBHAXkfn3Q
+\unrestrict a29NDPVUAPyZo7QKUrA2uf3rEbl7vCiib0wnLQxTQemzqfcwpypEtbY8UdvOH9Z
 
