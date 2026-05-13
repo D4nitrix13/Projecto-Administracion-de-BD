@@ -24,8 +24,27 @@ function obtenerDatosFacturas(): array
     $busqueda = trim($_GET["q"] ?? "");
     $seccionFiltro = $_GET["seccion"] ?? "";
     $usuarioFiltro = $_GET["usuario"] ?? "";
+    $estadoPagoFiltro = $_GET["estado_pago"] ?? "";
+    $estadoProduccionFiltro = $_GET["estado_produccion"] ?? "";
     $fechaDesde = $_GET["desde"] ?? "";
     $fechaHasta = $_GET["hasta"] ?? "";
+
+    $estadosPagoPermitidos = ["Pendiente", "Parcial", "Pagado"];
+    $estadosProduccionPermitidos = [
+        "Pendiente",
+        "En producción",
+        "Lista para entregar",
+        "Entregada",
+        "Cancelada",
+    ];
+
+    if (!in_array($estadoPagoFiltro, $estadosPagoPermitidos, true)) {
+        $estadoPagoFiltro = "";
+    }
+
+    if (!in_array($estadoProduccionFiltro, $estadosProduccionPermitidos, true)) {
+        $estadoProduccionFiltro = "";
+    }
 
     $seccionFiltroInt = ctype_digit($seccionFiltro) ? (int)$seccionFiltro : null;
     $usuarioFiltroInt = ctype_digit($usuarioFiltro) ? (int)$usuarioFiltro : null;
@@ -43,6 +62,8 @@ function obtenerDatosFacturas(): array
         "busqueda" => $busqueda,
         "seccionFiltroInt" => $seccionFiltroInt,
         "usuarioFiltroInt" => $usuarioFiltroInt,
+        "estadoPagoFiltro" => $estadoPagoFiltro,
+        "estadoProduccionFiltro" => $estadoProduccionFiltro,
         "fechaDesde" => $fechaDesde,
         "fechaHasta" => $fechaHasta,
     ]);
@@ -58,6 +79,8 @@ function obtenerDatosFacturas(): array
         "busqueda" => $busqueda,
         "seccionFiltroInt" => $seccionFiltroInt,
         "usuarioFiltroInt" => $usuarioFiltroInt,
+        "estadoPagoFiltro" => $estadoPagoFiltro,
+        "estadoProduccionFiltro" => $estadoProduccionFiltro,
         "fechaDesde" => $fechaDesde,
         "fechaHasta" => $fechaHasta,
         "textoSubtitulo" => $textoSubtitulo,

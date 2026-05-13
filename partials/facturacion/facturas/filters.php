@@ -1,4 +1,4 @@
-<form method="get" class="proveedores-filtros-bar" style="margin-top:14px; margin-bottom:16px;">
+<form method="get" class="proveedores-filtros-bar facturas-filtros-bar">
     <div class="filtro-item-full">
         <label for="q" class="label">Buscar</label>
 
@@ -40,6 +40,30 @@
                     <?= htmlspecialchars($usuario["nombre"]) ?>
                 </option>
             <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="filtro-item">
+        <label for="estado_pago" class="label">Estado de pago</label>
+
+        <select id="estado_pago" name="estado_pago" class="input">
+            <option value="">Todos</option>
+            <option value="Pendiente" <?= ($estadoPagoFiltro === "Pendiente") ? "selected" : "" ?>>Pendiente</option>
+            <option value="Parcial" <?= ($estadoPagoFiltro === "Parcial") ? "selected" : "" ?>>Parcial</option>
+            <option value="Pagado" <?= ($estadoPagoFiltro === "Pagado") ? "selected" : "" ?>>Pagado</option>
+        </select>
+    </div>
+
+    <div class="filtro-item">
+        <label for="estado_produccion" class="label">Estado de producción</label>
+
+        <select id="estado_produccion" name="estado_produccion" class="input">
+            <option value="">Todos</option>
+            <option value="Pendiente" <?= ($estadoProduccionFiltro === "Pendiente") ? "selected" : "" ?>>Pendiente</option>
+            <option value="En producción" <?= ($estadoProduccionFiltro === "En producción") ? "selected" : "" ?>>En producción</option>
+            <option value="Lista para entregar" <?= ($estadoProduccionFiltro === "Lista para entregar") ? "selected" : "" ?>>Lista para entregar</option>
+            <option value="Entregada" <?= ($estadoProduccionFiltro === "Entregada") ? "selected" : "" ?>>Entregada</option>
+            <option value="Cancelada" <?= ($estadoProduccionFiltro === "Cancelada") ? "selected" : "" ?>>Cancelada</option>
         </select>
     </div>
 

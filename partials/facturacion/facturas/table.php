@@ -8,6 +8,8 @@
                 <th>Sección</th>
                 <th>Usuario</th>
                 <th>Total</th>
+                <th>Pago</th>
+                <th>Producción</th>
                 <th class="col-acciones">Acciones</th>
             </tr>
         </thead>
@@ -15,12 +17,31 @@
         <tbody>
             <?php if (empty($facturas)): ?>
                 <tr>
-                    <td colspan="7" class="dashboard-muted">
+                    <td colspan="9" class="dashboard-muted">
                         No se encontraron facturas con los filtros aplicados.
                     </td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($facturas as $factura): ?>
+                    <?php
+                    $estadoPago = $factura["estado_pago"] ?? "Pendiente";
+                    $estadoProduccion = $factura["estado_produccion"] ?? "Pendiente";
+
+                    $clasePago = match ($estadoPago) {
+                        "Pagado" => "badge-success",
+                        "Parcial" => "badge-info",
+                        default => "badge-warning",
+                    };
+
+                    $claseProduccion = match ($estadoProduccion) {
+                        "Entregada" => "badge-success",
+                        "Lista para entregar" => "badge-info",
+                        "En producción" => "badge-primary",
+                        "Cancelada" => "badge-danger",
+                        default => "badge-warning",
+                    };
+                    ?>
+
                     <tr>
                         <td><?= (int)$factura["id_factura"] ?></td>
 
@@ -38,17 +59,31 @@
                             C$ <?= number_format((float)$factura["total"], 2) ?>
                         </td>
 
+                        <td>
+                            <span class="status-badge <?= $clasePago ?>">
+                                <?= htmlspecialchars($estadoPago) ?>
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="status-badge <?= $claseProduccion ?>">
+                                <?= htmlspecialchars($estadoProduccion) ?>
+                            </span>
+                        </td>
+
                         <td class="acciones">
                             <a
                                 href="detalle_factura.php?id=<?= (int)$factura["id_factura"] ?>"
                                 class="btn-accion btn-accion-detalle">
                                 Ver detalles
                             </a>
+
                             <a
                                 href="editar_factura.php?id=<?= urlencode((string)$factura["id_factura"]) ?>"
-                                class="btn-accion btn-accion-detalle">
+                                class="btn-accion btn-accion-editar">
                                 Editar
                             </a>
+
                             <a
                                 href="eliminar_factura.php?id=<?= (int)$factura["id_factura"] ?>"
                                 class="btn-accion btn-accion-eliminar"

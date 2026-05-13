@@ -16,6 +16,8 @@ class FacturaRepository
         $busqueda = trim($filtros["busqueda"] ?? "");
         $seccionFiltroInt = $filtros["seccionFiltroInt"] ?? null;
         $usuarioFiltroInt = $filtros["usuarioFiltroInt"] ?? null;
+        $estadoPagoFiltro = $filtros["estadoPagoFiltro"] ?? "";
+        $estadoProduccionFiltro = $filtros["estadoProduccionFiltro"] ?? "";
         $fechaDesde = $filtros["fechaDesde"] ?? "";
         $fechaHasta = $filtros["fechaHasta"] ?? "";
 
@@ -27,14 +29,42 @@ class FacturaRepository
             ? $fechaHasta . " 23:59:59"
             : null;
 
+        $whereExtra = [];
+        $params = [
+            ":id_rol" => $idRol,
+            ":busqueda" => $busqueda,
+            ":id_seccion" => $seccionFiltroInt,
+            ":id_usuario" => $usuarioFiltroInt,
+            ":fecha_desde" => $fechaDesdeSql,
+            ":fecha_hasta" => $fechaHastaSql,
+        ];
+
+        if ($estadoPagoFiltro !== "") {
+            $whereExtra[] = "f.estado_pago = :estado_pago";
+            $params[":estado_pago"] = $estadoPagoFiltro;
+        }
+
+        if ($estadoProduccionFiltro !== "") {
+            $whereExtra[] = "f.estado_produccion = :estado_produccion";
+            $params[":estado_produccion"] = $estadoProduccionFiltro;
+        }
+
+        $whereExtraSql = "";
+
+        if (!empty($whereExtra)) {
+            $whereExtraSql = "WHERE " . implode(" AND ", $whereExtra);
+        }
+
         $statement = $this->connection->prepare("
             SELECT
-                id_factura,
-                fecha,
-                total,
-                cliente,
-                usuario,
-                seccion
+                bf.id_factura,
+                bf.fecha,
+                bf.total,
+                bf.cliente,
+                bf.usuario,
+                bf.seccion,
+                f.estado_pago,
+                f.estado_produccion
             FROM buscar_facturas_filtradas(
                 :id_rol,
                 :busqueda,
@@ -42,17 +72,13 @@ class FacturaRepository
                 :id_usuario,
                 :fecha_desde,
                 :fecha_hasta
-            )
+            ) AS bf
+            INNER JOIN factura f ON f.id_factura = bf.id_factura
+            $whereExtraSql
+            ORDER BY bf.fecha DESC, bf.id_factura DESC
         ");
 
-        $statement->execute([
-            ":id_rol" => $idRol,
-            ":busqueda" => $busqueda,
-            ":id_seccion" => $seccionFiltroInt,
-            ":id_usuario" => $usuarioFiltroInt,
-            ":fecha_desde" => $fechaDesdeSql,
-            ":fecha_hasta" => $fechaHastaSql,
-        ]);
+        $statement->execute($params);
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }

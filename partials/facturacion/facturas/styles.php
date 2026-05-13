@@ -483,4 +483,146 @@
         border-color: #a5b4fc;
         color: #3730a3;
     }
+
+    .facturas-filtros-bar {
+        margin-top: 14px;
+        margin-bottom: 16px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 900;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .badge-success {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+    }
+
+    .badge-info {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border-color: #93c5fd;
+    }
+
+    .badge-primary {
+        background: #eef2ff;
+        color: #4338ca;
+        border-color: #c7d2fe;
+    }
+
+    .badge-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    .badge-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    .facturas-status-help-compact {
+        padding: 16px 20px;
+        margin-bottom: 18px;
+    }
+
+    .facturas-status-help-compact summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    .facturas-status-help-compact summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .facturas-status-help-compact summary span {
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .facturas-status-help-compact summary small {
+        color: #6b7280;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    .status-guide-table {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 18px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .status-guide-group {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+    .status-guide-group h3 {
+        margin: 0;
+        padding: 10px 14px;
+        background: #f3f4f6;
+        color: #111827;
+        font-size: 0.88rem;
+        font-weight: 900;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .status-guide-row {
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .status-guide-row:last-child {
+        border-bottom: none;
+    }
+
+    .status-guide-row p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.86rem;
+        line-height: 1.35;
+    }
+
+    @media (max-width: 900px) {
+        .status-guide-table {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .facturas-status-help-compact summary {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .status-guide-row {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+    }
 </style>
