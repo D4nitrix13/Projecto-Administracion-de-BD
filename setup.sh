@@ -8,6 +8,7 @@ sudo rm -rf storage/ backups/ database/
 mkdir -p storage/system
 mkdir -p backups/manual backups/full backups/diff backups/logs
 mkdir -p database/postgresql database/logs database/wal_archive database/pgadmin
+mkdir -p uploads/productos
 
 cat > storage/system/backup_schedule.json <<'EOF'
 {
@@ -28,10 +29,10 @@ echo '{
 echo "[]" > storage/system/maintenance_history.json
 echo "[]" > backups/logs/delete_queue.json
 
-sudo chown -R 33:33 storage backups
-sudo chmod -R 775 storage backups
-sudo find storage backups -type f -exec chmod 664 {} \;
-sudo find storage backups -type d -exec chmod 775 {} \;
+sudo chown -R 33:33 storage backups uploads
+sudo chmod -R 775 storage backups uploads
+sudo find storage backups uploads -type f -exec chmod 664 {} \;
+sudo find storage backups uploads -type d -exec chmod 775 {} \;
 
 sudo chown -R 999:999 database/postgresql database/logs database/wal_archive
 
@@ -52,8 +53,6 @@ chmod +x scripts/backup_full.sh
 chmod +x scripts/backup_diff.sh
 chmod +x scripts/backup_logs.sh
 chmod +x scripts/mantenimiento_bd.sh
-
-docker compose -f docker/docker-compose.yml up -d --build
 
 docker compose -f docker/docker-compose.yml up -d --build
 

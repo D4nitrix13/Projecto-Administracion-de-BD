@@ -1,1 +1,17 @@
-[]
+[
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-05-12 22:15:12",
+        "next_run_at": "2026-05-19 22:15:12",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    }
+]
