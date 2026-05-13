@@ -3,6 +3,9 @@ $tipoClienteVenta = $factura["tipo_cliente_venta"] ?? TIPO_CLIENTE_HABITUAL;
 $idClienteActual = (int)($factura["id_cliente"] ?? 0);
 $idUsuarioActual = (int)($factura["id_usuario"] ?? 0);
 $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
+
+$montoPagadoActual = (float)($factura["monto_pagado"] ?? 0);
+$fechaEntregaEstimadaActual = $factura["fecha_entrega_estimada"] ?? "";
 ?>
 
 <form method="POST" class="factura-edit-card" id="facturaEditForm">
@@ -132,6 +135,62 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         <div id="facturaEditProductos" class="factura-edit-products"></div>
     </section>
 
+    <section class="factura-edit-section factura-edit-payment-section">
+        <div class="factura-edit-section-title">
+            <div>
+                <h2>Pago y entrega</h2>
+                <p>Actualice el abono del cliente y la fecha estimada de entrega.</p>
+            </div>
+        </div>
+
+        <div class="factura-edit-payment-grid">
+            <label class="factura-edit-field">
+                <span>Monto pagado</span>
+                <input
+                    type="number"
+                    name="monto_pagado"
+                    id="facturaEditMontoPagado"
+                    class="factura-edit-number-decimal"
+                    min="0"
+                    step="0.01"
+                    value="<?= htmlspecialchars(number_format($montoPagadoActual, 2, ".", "")) ?>">
+            </label>
+
+            <label class="factura-edit-field">
+                <span>Fecha estimada de entrega</span>
+                <input
+                    type="date"
+                    name="fecha_entrega_estimada"
+                    id="facturaEditFechaEntregaEstimada"
+                    value="<?= htmlspecialchars((string)$fechaEntregaEstimadaActual) ?>">
+            </label>
+        </div>
+
+        <div class="factura-edit-payment-summary">
+            <div>
+                <span>Mínimo requerido</span>
+                <strong id="facturaEditMinimoRequerido">C$ 0.00</strong>
+            </div>
+
+            <div>
+                <span>Saldo pendiente</span>
+                <strong id="facturaEditSaldoPendiente">C$ 0.00</strong>
+            </div>
+
+            <div>
+                <span>Estado de pago</span>
+                <strong id="facturaEditEstadoPago" class="factura-edit-payment-status pending">
+                    Pendiente
+                </strong>
+            </div>
+        </div>
+
+        <div id="facturaEditAvisoPago" class="factura-edit-payment-warning" style="display:none;">
+            <strong>Pago mínimo requerido</strong>
+            <p>El cliente debe pagar al menos el 50% del total para iniciar o mantener la producción activa.</p>
+        </div>
+    </section>
+
     <aside class="factura-edit-summary">
         <div>
             <span>Subtotal</span>
@@ -185,6 +244,14 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         });
     }
 
+    function normalizarTexto(texto) {
+        return String(texto || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+    }
+
     function bloquearCaracteresNoNumericos(event, permiteDecimal = false) {
         const teclasPermitidas = [
             "Backspace",
@@ -202,7 +269,11 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             return;
         }
 
-        if (permiteDecimal && event.key === "." && !event.currentTarget.value.includes(".")) {
+        if (permiteDecimal && (event.key === "." || event.key === ",")) {
+            if (event.currentTarget.value.includes(".") || event.currentTarget.value.includes(",")) {
+                event.preventDefault();
+            }
+
             return;
         }
 
@@ -217,7 +288,7 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             const partes = valor.split(".");
 
             if (partes.length > 2) {
-                valor = partes.shift() + "." + partes.join("");
+                valor = partes[0] + "." + partes.slice(1).join("");
             }
 
             input.value = valor;
@@ -227,208 +298,236 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         input.value = input.value.replace(/[^\d]/g, "");
     }
 
-    function nombrePersona(item) {
-        if (!item) {
-            return "Sin nombre";
-        }
-
-        const nombresApellidos = [
-            item.nombres,
-            item.apellidos
-        ].filter(Boolean).join(" ").trim();
-
-        return (
-            item.nombre ||
-            item.nombre_cliente ||
-            item.cliente ||
-            item.nombre_completo ||
-            item.nombre_usuario ||
-            item.usuario ||
-            item.username ||
-            item.razon_social ||
-            nombresApellidos ||
-            "Sin nombre"
-        );
+    function obtenerNombreUsuario(usuario) {
+        return `${usuario.nombre || ""} ${usuario.apellido || ""}`.trim() ||
+            usuario.usuario ||
+            usuario.nombre_usuario ||
+            "Usuario";
     }
 
-    function subtituloCliente(item) {
-        return item.telefono || item.identificacion || item.tipo_cliente || "Cliente habitual";
+    function obtenerNombreCliente(cliente) {
+        return `${cliente.nombres || ""} ${cliente.apellidos || ""}`.trim() ||
+            cliente.nombre ||
+            "Cliente";
     }
 
     function nombreProducto(producto) {
-        if (!producto) {
-            return "";
-        }
-
-        return `${producto.codigo || ""} ${producto.nombre || producto.producto || ""}`.trim();
+        return producto.nombre || producto.producto || "Producto";
     }
 
     function precioProducto(producto) {
-        return Number(producto.precio_venta || producto.precio || producto.precio_unitario || 0);
+        return Number(producto.precio_venta || producto.precio || 0);
     }
 
-    function buscarProducto(id) {
-        return productos.find(producto => Number(producto.id_producto) === Number(id));
+    function stockProducto(producto) {
+        return Number(producto.stock || 0);
     }
 
-    function stockProductoEdicion(idProducto) {
-        const producto = buscarProducto(idProducto);
+    function eliminarDuplicadosVisuales(lista, callback) {
+        const usados = new Set();
 
-        if (!producto) {
-            return 0;
-        }
+        return lista.filter(item => {
+            const key = callback(item);
 
-        const stockBase = Number(producto.stock || 0);
-
-        const cantidadOriginal = detallesIniciales
-            .filter(detalle => Number(detalle.id_producto) === Number(idProducto))
-            .reduce((total, detalle) => total + Number(detalle.cantidad || 0), 0);
-
-        return stockBase + cantidadOriginal;
-    }
-
-    function eliminarDuplicadosVisuales(data, keyCallback) {
-        const map = new Map();
-
-        data.forEach(item => {
-            const key = String(keyCallback(item)).toLowerCase().trim();
-
-            if (!map.has(key)) {
-                map.set(key, item);
+            if (usados.has(key)) {
+                return false;
             }
-        });
 
-        return Array.from(map.values());
-    }
-
-    function pintarFiltro(input, hidden, lista, data, idKey, render, onSelect, keyCallback = null) {
-        const query = input.value.toLowerCase().trim();
-
-        lista.innerHTML = "";
-
-        if (query.length === 0) {
-            return;
-        }
-
-        const fuente = keyCallback ?
-            eliminarDuplicadosVisuales(data, keyCallback) :
-            data;
-
-        const filtrados = fuente.filter(item => {
-            return JSON.stringify(item).toLowerCase().includes(query);
-        }).slice(0, 8);
-
-        if (filtrados.length === 0) {
-            lista.innerHTML = `<div class="factura-edit-filter-empty">Sin resultados</div>`;
-            return;
-        }
-
-        filtrados.forEach(item => {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "factura-edit-filter-option";
-            button.innerHTML = render(item);
-
-            button.addEventListener("click", () => {
-                hidden.value = item[idKey];
-                input.value = onSelect ? onSelect(item) : nombrePersona(item);
-                lista.innerHTML = "";
-                calcularTotales();
-            });
-
-            lista.appendChild(button);
+            usados.add(key);
+            return true;
         });
     }
 
-    function crearFiltro(inputId, hiddenId, listaId, data, idKey, render, onSelect, keyCallback = null) {
+    function crearBuscador({
+        inputId,
+        hiddenId,
+        listaId,
+        data,
+        idKey,
+        getTitle,
+        getSubtitle,
+        selectedId
+    }) {
         const input = document.getElementById(inputId);
         const hidden = document.getElementById(hiddenId);
         const lista = document.getElementById(listaId);
 
-        input.addEventListener("input", () => {
-            hidden.value = "";
-            pintarFiltro(input, hidden, lista, data, idKey, render, onSelect, keyCallback);
-        });
+        if (!input || !hidden || !lista) {
+            return;
+        }
 
-        input.addEventListener("focus", () => {
-            pintarFiltro(input, hidden, lista, data, idKey, render, onSelect, keyCallback);
+        const actual = data.find(item => Number(item[idKey]) === Number(selectedId));
+
+        if (actual) {
+            input.value = getTitle(actual);
+            hidden.value = actual[idKey];
+        }
+
+        input.addEventListener("input", () => {
+            const query = normalizarTexto(input.value);
+            hidden.value = "";
+            lista.innerHTML = "";
+
+            if (query.length === 0) {
+                return;
+            }
+
+            data.filter(item => {
+                return normalizarTexto(JSON.stringify(item)).includes(query);
+            }).slice(0, 8).forEach(item => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "factura-edit-filter-option";
+
+                button.innerHTML = `
+                    <strong>${getTitle(item)}</strong>
+                    <small>${getSubtitle(item)}</small>
+                `;
+
+                button.addEventListener("click", () => {
+                    input.value = getTitle(item);
+                    hidden.value = item[idKey];
+                    lista.innerHTML = "";
+                });
+
+                lista.appendChild(button);
+            });
+
+            if (lista.innerHTML === "") {
+                lista.innerHTML = `<div class="factura-edit-filter-empty">Sin resultados.</div>`;
+            }
         });
     }
 
-    function crearFilaProducto(detalle = null) {
-        const contenedor = document.getElementById("facturaEditProductos");
-        const row = document.createElement("div");
+    crearBuscador({
+        inputId: "facturaEditUsuarioFiltro",
+        hiddenId: "facturaEditUsuarioId",
+        listaId: "facturaEditUsuarioLista",
+        data: usuarios,
+        idKey: "id_usuario",
+        selectedId: usuarioActual,
+        getTitle: obtenerNombreUsuario,
+        getSubtitle: usuario => usuario.rol || usuario.email || "Trabajador"
+    });
 
+    crearBuscador({
+        inputId: "facturaEditClienteFiltro",
+        hiddenId: "facturaEditClienteId",
+        listaId: "facturaEditClienteLista",
+        data: clientes,
+        idKey: "id_cliente",
+        selectedId: clienteActual,
+        getTitle: obtenerNombreCliente,
+        getSubtitle: cliente => [
+            cliente.telefono || "",
+            cliente.identificacion || ""
+        ].filter(Boolean).join(" · ") || "Cliente habitual"
+    });
+
+    const contenedor = document.getElementById("facturaEditProductos");
+    const btnAgregar = document.getElementById("facturaEditAgregarProducto");
+    const descuentoGlobalInput = document.getElementById("facturaEditDescuentoGlobal");
+    const montoPagadoInput = document.getElementById("facturaEditMontoPagado");
+    const fechaEntregaInput = document.getElementById("facturaEditFechaEntregaEstimada");
+    const avisoFugaz = document.getElementById("facturaEditAvisoFugaz");
+    const avisoPago = document.getElementById("facturaEditAvisoPago");
+
+    function stockProductoEdicion(idProducto) {
+        const producto = productos.find(item => Number(item.id_producto) === Number(idProducto));
+        const stockBase = producto ? stockProducto(producto) : 0;
+
+        let cantidadOriginal = 0;
+
+        detallesIniciales.forEach(detalle => {
+            if (Number(detalle.id_producto) === Number(idProducto)) {
+                cantidadOriginal += Number(detalle.cantidad || 0);
+            }
+        });
+
+        return stockBase + cantidadOriginal;
+    }
+
+    function crearFilaProducto(detalle = null) {
+        const row = document.createElement("div");
         row.className = "factura-edit-product-row";
 
-        const idProducto = detalle ? detalle.id_producto : "";
-        const producto = detalle ? buscarProducto(detalle.id_producto) : null;
-        const productoTexto = producto ? nombreProducto(producto) : "";
-        const stockActual = producto ? stockProductoEdicion(producto.id_producto) : 0;
-        const precioActual = producto ? precioProducto(producto) : 0;
+        const productoActual = detalle ?
+            productos.find(producto => Number(producto.id_producto) === Number(detalle.id_producto)) :
+            null;
+
+        const idProducto = detalle ? Number(detalle.id_producto || 0) : 0;
+        const nombre = productoActual ? nombreProducto(productoActual) : (detalle?.nombre_producto || "");
+        const precio = productoActual ? precioProducto(productoActual) : Number(detalle?.precio_unitario || 0);
+        const stock = idProducto > 0 ? stockProductoEdicion(idProducto) : 0;
 
         row.innerHTML = `
-        <input type="hidden" name="id_producto[]" class="id-producto" value="${idProducto}">
+            <div class="factura-edit-product-main">
+                <label class="factura-edit-field factura-edit-product-search">
+                    <span>Producto</span>
 
-        <div class="factura-edit-product-main">
-            <label class="factura-edit-field factura-edit-product-search">
-                <span>Producto</span>
+                    <input
+                        type="hidden"
+                        name="id_producto[]"
+                        class="id-producto"
+                        value="${idProducto || ""}">
+
+                    <input
+                        type="text"
+                        class="producto-filtro"
+                        value="${nombre}"
+                        placeholder="Buscar producto..."
+                        autocomplete="off">
+
+                    <div class="producto-lista"></div>
+                </label>
+
+                <div class="factura-edit-product-meta">
+                    <div>
+                        <span>Stock disponible</span>
+                        <strong class="stock-disponible">${stock}</strong>
+                    </div>
+
+                    <div>
+                        <span>Precio unitario</span>
+                        <strong class="precio-unitario">${money(precio)}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <label class="factura-edit-field factura-edit-qty-field">
+                <span>Cantidad</span>
                 <input
-                    type="text"
-                    class="producto-filtro"
-                    value="${productoTexto}"
-                    placeholder="Filtrar producto por código o nombre..."
-                    autocomplete="off">
-                <div class="factura-edit-filter-list producto-lista"></div>
+                    type="number"
+                    name="cantidad[]"
+                    class="cantidad factura-edit-number-integer"
+                    min="1"
+                    step="1"
+                    value="${detalle ? Number(detalle.cantidad || 1) : 1}">
             </label>
 
-            <div class="factura-edit-product-meta">
-                <div>
-                    <span>Stock disponible</span>
-                    <strong class="stock-disponible">${stockActual}</strong>
+            <label class="factura-edit-field factura-edit-discount-field">
+                <span>Descuento</span>
+                <input
+                    type="number"
+                    name="descuento_linea[]"
+                    class="descuento-linea factura-edit-number-decimal"
+                    min="0"
+                    step="0.01"
+                    value="${detalle ? Number(detalle.descuento_linea || 0).toFixed(2) : "0.00"}">
+            </label>
+
+            <div class="factura-edit-line-actions">
+                <div class="factura-edit-line-total">
+                    <span>Total línea</span>
+                    <strong>C$ 0.00</strong>
+                    <small class="factura-edit-line-warning"></small>
                 </div>
 
-                <div>
-                    <span>Precio unitario</span>
-                    <strong class="precio-unitario">${money(precioActual)}</strong>
-                </div>
+                <button type="button" class="factura-edit-btn factura-edit-btn-danger factura-edit-remove-btn">
+                    Quitar
+                </button>
             </div>
-        </div>
-
-        <label class="factura-edit-field factura-edit-qty-field">
-            <span>Cantidad</span>
-            <input
-                type="number"
-                name="cantidad[]"
-                class="cantidad factura-edit-number-integer"
-                min="1"
-                step="1"
-                value="${detalle ? detalle.cantidad : 1}">
-        </label>
-
-        <label class="factura-edit-field factura-edit-discount-field">
-            <span>Descuento</span>
-            <input
-                type="number"
-                name="descuento_linea[]"
-                class="descuento-linea factura-edit-number-decimal"
-                min="0"
-                step="0.01"
-                value="${detalle ? detalle.descuento_linea : "0.00"}">
-        </label>
-
-        <div class="factura-edit-line-actions">
-            <div class="factura-edit-line-total">
-                <span>Total línea</span>
-                <strong>C$ 0.00</strong>
-                <small class="factura-edit-line-warning"></small>
-            </div>
-
-            <button type="button" class="factura-edit-btn factura-edit-btn-danger factura-edit-remove-btn">
-                Quitar
-            </button>
-        </div>
-    `;
+        `;
 
         const input = row.querySelector(".producto-filtro");
         const hidden = row.querySelector(".id-producto");
@@ -438,11 +537,12 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
 
         input.addEventListener("input", () => {
             hidden.value = "";
-
-            const query = input.value.toLowerCase().trim();
             lista.innerHTML = "";
 
+            const query = normalizarTexto(input.value);
+
             if (query.length === 0) {
+                calcularTotales();
                 return;
             }
 
@@ -452,16 +552,16 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
             );
 
             productosUnicos.filter(producto => {
-                return JSON.stringify(producto).toLowerCase().includes(query);
+                return normalizarTexto(JSON.stringify(producto)).includes(query);
             }).slice(0, 8).forEach(producto => {
                 const button = document.createElement("button");
                 button.type = "button";
                 button.className = "factura-edit-filter-option";
 
                 button.innerHTML = `
-                <strong>${nombreProducto(producto)}</strong>
-                <small>Precio: ${money(precioProducto(producto))} · Stock disponible: ${stockProductoEdicion(producto.id_producto)}</small>
-            `;
+                    <strong>${nombreProducto(producto)}</strong>
+                    <small>Precio: ${money(precioProducto(producto))} · Stock disponible: ${stockProductoEdicion(producto.id_producto)}</small>
+                `;
 
                 button.addEventListener("click", () => {
                     hidden.value = producto.id_producto;
@@ -525,76 +625,46 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
     function calcularTotales() {
         let subtotal = 0;
         let descuentoLineas = 0;
-
-        const cantidadesPorProducto = obtenerCantidadesSolicitadasPorProducto();
+        const cantidadesSolicitadas = obtenerCantidadesSolicitadasPorProducto();
 
         document.querySelectorAll(".factura-edit-product-row").forEach(row => {
-            const id = row.querySelector(".id-producto").value;
-            const producto = buscarProducto(id);
+            const idProducto = Number(row.querySelector(".id-producto").value || 0);
             const cantidadInput = row.querySelector(".cantidad");
             const descuentoInput = row.querySelector(".descuento-linea");
+            const totalLineaView = row.querySelector(".factura-edit-line-total strong");
             const warning = row.querySelector(".factura-edit-line-warning");
 
-            let cantidad = Number(cantidadInput.value || 0);
-            const descuento = Number(descuentoInput.value || 0);
+            const producto = productos.find(item => Number(item.id_producto) === idProducto);
             const precio = producto ? precioProducto(producto) : 0;
+            const cantidad = Number(cantidadInput.value || 0);
+            const descuento = Math.max(0, Number(descuentoInput.value || 0));
+            const stockDisponible = idProducto > 0 ? stockProductoEdicion(idProducto) : 0;
 
-            if (producto) {
-                const disponible = stockProductoEdicion(id);
-                const cantidadOtros = (cantidadesPorProducto[id] || 0) - cantidad;
-                const maximoPermitidoFila = Math.max(disponible - cantidadOtros, 0);
+            row.classList.remove("factura-edit-row-error");
+            warning.textContent = "";
 
-                cantidadInput.max = String(maximoPermitidoFila);
+            if (idProducto <= 0 || !producto || cantidad <= 0) {
+                totalLineaView.textContent = money(0);
+                return;
+            }
 
-                if (cantidad > maximoPermitidoFila) {
-                    cantidad = maximoPermitidoFila;
-                    cantidadInput.value = String(maximoPermitidoFila);
-                }
-
-                if (cantidad < 1 && maximoPermitidoFila > 0) {
-                    cantidad = 1;
-                    cantidadInput.value = "1";
-                }
-
-                if (maximoPermitidoFila <= 0) {
-                    cantidad = 0;
-                    cantidadInput.value = "0";
-                }
-            } else {
-                cantidadInput.removeAttribute("max");
+            if (cantidadesSolicitadas[idProducto] > stockDisponible) {
+                row.classList.add("factura-edit-row-error");
+                warning.textContent = `Stock máximo disponible: ${stockDisponible}.`;
             }
 
             const subtotalLinea = precio * cantidad;
-            const totalLinea = Math.max(subtotalLinea - descuento, 0);
+            const descuentoSeguro = Math.min(descuento, subtotalLinea);
+            const totalLinea = subtotalLinea - descuentoSeguro;
 
             subtotal += subtotalLinea;
-            descuentoLineas += descuento;
-
-            row.querySelector(".factura-edit-line-total strong").textContent = money(totalLinea);
-
-            if (producto) {
-                const disponible = stockProductoEdicion(id);
-                const solicitadoTotal = cantidadesPorProducto[id] || 0;
-
-                if (solicitadoTotal > disponible) {
-                    warning.textContent = `Stock insuficiente. Disponible: ${disponible}`;
-                    row.classList.add("factura-edit-row-error");
-                } else if (descuento > subtotalLinea) {
-                    warning.textContent = "El descuento supera el subtotal.";
-                    row.classList.add("factura-edit-row-error");
-                } else {
-                    warning.textContent = "";
-                    row.classList.remove("factura-edit-row-error");
-                }
-            } else {
-                warning.textContent = "";
-                row.classList.remove("factura-edit-row-error");
-            }
+            descuentoLineas += descuentoSeguro;
+            totalLineaView.textContent = money(totalLinea);
         });
 
-        const descuentoGlobal = Number(document.getElementById("facturaEditDescuentoGlobal").value || 0);
+        const descuentoGlobal = Math.max(0, Number(descuentoGlobalInput.value || 0));
         const descuentoTotal = descuentoLineas + descuentoGlobal;
-        const base = Math.max(subtotal - descuentoTotal, 0);
+        const base = Math.max(0, subtotal - descuentoTotal);
         const iva = base * 0.15;
         const total = base + iva;
 
@@ -603,97 +673,173 @@ $idSeccionActual = (int)($factura["id_seccion"] ?? 0);
         document.getElementById("facturaEditIva").textContent = money(iva);
         document.getElementById("facturaEditTotal").textContent = money(total);
 
+        actualizarResumenPago(total);
         validarLimiteFugaz(total);
+
+        return total;
+    }
+
+    function actualizarResumenPago(total) {
+        const minimo = total * 0.50;
+        let montoPagado = Number(montoPagadoInput.value || 0);
+
+        if (Number.isNaN(montoPagado) || montoPagado < 0) {
+            montoPagado = 0;
+        }
+
+        if (montoPagado > total) {
+            montoPagado = total;
+            montoPagadoInput.value = total.toFixed(2);
+        }
+
+        const saldo = Math.max(0, total - montoPagado);
+        const estado = document.getElementById("facturaEditEstadoPago");
+
+        document.getElementById("facturaEditMinimoRequerido").textContent = money(minimo);
+        document.getElementById("facturaEditSaldoPendiente").textContent = money(saldo);
+
+        estado.classList.remove("pending", "partial", "paid");
+
+        if (montoPagado <= 0) {
+            estado.textContent = "Pendiente";
+            estado.classList.add("pending");
+        } else if (montoPagado >= total && total > 0) {
+            estado.textContent = "Pagado";
+            estado.classList.add("paid");
+        } else {
+            estado.textContent = "Parcial";
+            estado.classList.add("partial");
+        }
+
+        avisoPago.style.display = total > 0 && montoPagado < minimo ? "block" : "none";
     }
 
     function validarLimiteFugaz(total) {
-        const tipo = document.querySelector('input[name="tipo_cliente_venta"]:checked')?.value || "Habitual";
-        const aviso = document.getElementById("facturaEditAvisoFugaz");
+        const tipo = document.querySelector('input[name="tipo_cliente_venta"]:checked')?.value;
 
-        if (tipo === "Fugaz" && total > limiteClienteFugaz) {
-            aviso.textContent = `Un cliente fugaz no puede comprar más de ${money(limiteClienteFugaz)}. Cambie a cliente habitual o reduzca el total.`;
-            aviso.style.display = "block";
-        } else {
-            aviso.style.display = "none";
+        if (tipo === "<?= TIPO_CLIENTE_FUGAZ ?>" && total > limiteClienteFugaz) {
+            avisoFugaz.style.display = "block";
+            avisoFugaz.textContent =
+                "Un cliente fugaz no puede realizar una compra mayor a " +
+                money(limiteClienteFugaz) +
+                ". Para continuar, registre al cliente como habitual.";
+            return false;
         }
+
+        avisoFugaz.style.display = "none";
+        avisoFugaz.textContent = "";
+        return true;
     }
 
-    function toggleCliente() {
-        const tipo = document.querySelector('input[name="tipo_cliente_venta"]:checked').value;
+    function toggleTipoCliente() {
+        const tipo = document.querySelector('input[name="tipo_cliente_venta"]:checked')?.value;
+        const habitual = document.getElementById("facturaEditClienteHabitualBox");
+        const fugaz = document.getElementById("facturaEditClienteFugazBox");
 
-        document.getElementById("facturaEditClienteHabitualBox").style.display = tipo === "Habitual" ? "grid" : "none";
-        document.getElementById("facturaEditClienteFugazBox").style.display = tipo === "Fugaz" ? "grid" : "none";
+        if (tipo === "<?= TIPO_CLIENTE_FUGAZ ?>") {
+            habitual.style.display = "none";
+            fugaz.style.display = "grid";
+        } else {
+            habitual.style.display = "grid";
+            fugaz.style.display = "none";
+        }
 
         calcularTotales();
     }
 
-    document.addEventListener("click", event => {
-        if (!event.target.closest(".factura-edit-field")) {
-            document.querySelectorAll(".factura-edit-filter-list").forEach(lista => {
-                lista.innerHTML = "";
-            });
-        }
+    document.querySelectorAll('input[name="tipo_cliente_venta"]').forEach(input => {
+        input.addEventListener("change", toggleTipoCliente);
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const usuario = usuarios.find(usuario => Number(usuario.id_usuario) === Number(usuarioActual));
-
-        if (usuario) {
-            document.getElementById("facturaEditUsuarioFiltro").value = nombrePersona(usuario);
+    [descuentoGlobalInput, montoPagadoInput].forEach(input => {
+        if (!input) {
+            return;
         }
 
-        const cliente = clientes.find(cliente => Number(cliente.id_cliente) === Number(clienteActual));
-
-        if (cliente) {
-            document.getElementById("facturaEditClienteFiltro").value = nombrePersona(cliente);
-        } else if (clienteFacturaActual) {
-            document.getElementById("facturaEditClienteFiltro").value = nombrePersona(clienteFacturaActual);
-        }
-
-        crearFiltro(
-            "facturaEditUsuarioFiltro",
-            "facturaEditUsuarioId",
-            "facturaEditUsuarioLista",
-            usuarios,
-            "id_usuario",
-            item => `<strong>${nombrePersona(item)}</strong><small>${item.email || "Trabajador del sistema"}</small>`,
-            item => nombrePersona(item),
-            item => `${nombrePersona(item)}|${item.email || ""}`
-        );
-
-        crearFiltro(
-            "facturaEditClienteFiltro",
-            "facturaEditClienteId",
-            "facturaEditClienteLista",
-            clientes,
-            "id_cliente",
-            item => `<strong>${nombrePersona(item)}</strong><small>${subtituloCliente(item)}</small>`,
-            item => nombrePersona(item),
-            item => `${nombrePersona(item)}|${item.telefono || ""}|${item.identificacion || ""}`
-        );
-
-        detallesIniciales.forEach(detalle => crearFilaProducto(detalle));
-
-        if (detallesIniciales.length === 0) {
-            crearFilaProducto();
-        }
-
-        document.querySelectorAll(".factura-edit-number-decimal").forEach(input => {
-            input.addEventListener("keydown", event => bloquearCaracteresNoNumericos(event, true));
-            input.addEventListener("input", () => {
-                normalizarNumeroInput(input, true);
-                calcularTotales();
-            });
+        input.addEventListener("keydown", event => bloquearCaracteresNoNumericos(event, true));
+        input.addEventListener("input", () => {
+            normalizarNumeroInput(input, true);
+            calcularTotales();
         });
 
-        document.getElementById("facturaEditAgregarProducto").addEventListener("click", () => crearFilaProducto());
-        document.getElementById("facturaEditDescuentoGlobal").addEventListener("input", calcularTotales);
+        input.addEventListener("blur", () => {
+            if (input.value.trim() === "") {
+                input.value = "0.00";
+            }
 
-        document.querySelectorAll('input[name="tipo_cliente_venta"]').forEach(radio => {
-            radio.addEventListener("change", toggleCliente);
+            calcularTotales();
+        });
+    });
+
+    btnAgregar.addEventListener("click", () => crearFilaProducto());
+
+    detallesIniciales.forEach(detalle => crearFilaProducto(detalle));
+
+    if (detallesIniciales.length === 0) {
+        crearFilaProducto();
+    }
+
+    toggleTipoCliente();
+    calcularTotales();
+
+    document.getElementById("facturaEditForm").addEventListener("submit", event => {
+        const filas = document.querySelectorAll(".factura-edit-product-row");
+
+        if (filas.length === 0) {
+            event.preventDefault();
+            alert("Debe agregar al menos un producto.");
+            return;
+        }
+
+        const tipo = document.querySelector('input[name="tipo_cliente_venta"]:checked')?.value;
+        const total = calcularTotales();
+        const montoPagado = Number(montoPagadoInput.value || 0);
+        const minimo = total * 0.50;
+
+        if (tipo === "<?= TIPO_CLIENTE_HABITUAL ?>" && !document.getElementById("facturaEditClienteId").value) {
+            event.preventDefault();
+            alert("Debe seleccionar un cliente habitual válido.");
+            return;
+        }
+
+        if (tipo === "<?= TIPO_CLIENTE_FUGAZ ?>" && total > limiteClienteFugaz) {
+            event.preventDefault();
+            alert("Un cliente fugaz no puede realizar una compra mayor a " + money(limiteClienteFugaz) + ".");
+            return;
+        }
+
+        if (Number.isNaN(montoPagado) || montoPagado < minimo) {
+            event.preventDefault();
+            alert("El cliente debe pagar al menos el 50% del total.\n\nMínimo requerido: " + money(minimo));
+            return;
+        }
+
+        if (montoPagado > total) {
+            event.preventDefault();
+            alert("El monto pagado no puede ser mayor al total de la factura.");
+            return;
+        }
+
+        if (!fechaEntregaInput.value.trim()) {
+            event.preventDefault();
+            alert("Debe seleccionar una fecha estimada de entrega.");
+            return;
+        }
+
+        let error = false;
+
+        filas.forEach(row => {
+            const idProducto = row.querySelector(".id-producto").value;
+            const cantidad = Number(row.querySelector(".cantidad").value || 0);
+
+            if (!idProducto || cantidad < 1 || row.classList.contains("factura-edit-row-error")) {
+                error = true;
+            }
         });
 
-        toggleCliente();
-        calcularTotales();
+        if (error) {
+            event.preventDefault();
+            alert("Revise los productos, cantidades y stock disponible.");
+        }
     });
 </script>

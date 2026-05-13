@@ -706,22 +706,44 @@ class FacturaService
                 ];
             }
 
+            $montoPagado = $this->normalizarMontoPagado($post["monto_pagado"] ?? "0");
+            $fechaEntregaEstimada = trim((string)($post["fecha_entrega_estimada"] ?? ""));
+
+            $errorPagoProduccion = $this->validarPagoProduccion(
+                $montoPagado,
+                $totales["total"],
+                $fechaEntregaEstimada
+            );
+
+            if ($errorPagoProduccion !== null) {
+                return [
+                    "success" => false,
+                    "message" => $errorPagoProduccion,
+                ];
+            }
+
+            $datosPagoProduccion = $this->calcularDatosPagoProduccion(
+                $montoPagado,
+                $totales["total"],
+                $fechaEntregaEstimada
+            );
+
             $this->connection->beginTransaction();
 
             $statement = $this->connection->prepare("
-                CALL editar_factura_sistema(
-                    :id_factura,
-                    :fecha,
-                    :id_cliente,
-                    :id_usuario,
-                    :id_seccion,
-                    :tipo_cliente_venta,
-                    :nombre_cliente_fugaz,
-                    :descuento_global,
-                    :iva,
-                    CAST(:items AS JSONB)
-                )
-            ");
+    CALL editar_factura_sistema(
+        :id_factura,
+        :fecha,
+        :id_cliente,
+        :id_usuario,
+        :id_seccion,
+        :tipo_cliente_venta,
+        :nombre_cliente_fugaz,
+        :descuento_global,
+        :iva,
+        CAST(:items AS JSONB)
+    )
+");
 
             $statement->execute([
                 ":id_factura" => $idFactura,
@@ -736,6 +758,7 @@ class FacturaService
                 ":items" => json_encode($items, JSON_THROW_ON_ERROR),
             ]);
 
+            $this->actualizarPagoProduccionFactura($idFactura, $datosPagoProduccion);
             $this->connection->commit();
 
             return [

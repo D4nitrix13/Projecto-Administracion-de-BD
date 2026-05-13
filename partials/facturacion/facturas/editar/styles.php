@@ -498,4 +498,85 @@
             width: 100%;
         }
     }
+
+    .factura-edit-payment-section {
+        background: #ffffff;
+    }
+
+    .factura-edit-payment-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .factura-edit-payment-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .factura-edit-payment-summary div {
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: #f8fafc;
+    }
+
+    .factura-edit-payment-summary span {
+        display: block;
+        color: #6b7280;
+        font-size: 0.75rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .factura-edit-payment-summary strong {
+        display: block;
+        margin-top: 6px;
+        color: #111827;
+        font-weight: 900;
+    }
+
+    .factura-edit-payment-status.pending {
+        color: #b45309;
+    }
+
+    .factura-edit-payment-status.partial {
+        color: #2563eb;
+    }
+
+    .factura-edit-payment-status.paid {
+        color: #15803d;
+    }
+
+    .factura-edit-payment-warning {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        color: #7c2d12;
+    }
+
+    .factura-edit-payment-warning strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #9a3412;
+        font-size: 0.92rem;
+    }
+
+    .factura-edit-payment-warning p {
+        margin: 0;
+        font-size: 0.86rem;
+        line-height: 1.45;
+    }
+
+    @media (max-width: 760px) {
+
+        .factura-edit-payment-grid,
+        .factura-edit-payment-summary {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
