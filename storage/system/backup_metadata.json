@@ -6,5 +6,21 @@
         "archivo": "backup_manual_test_2026-05-12_22-04-38.sql",
         "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_test_2026-05-12_22-04-38.sql",
         "created_at": "2026-05-12 22:04:38"
+    },
+    "backup_manual_borrar_imagen_2026-05-12_22-31-40.sql": {
+        "descripcion": "",
+        "usuario_id": 1,
+        "tipo": "Manual",
+        "archivo": "backup_manual_borrar_imagen_2026-05-12_22-31-40.sql",
+        "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_borrar_imagen_2026-05-12_22-31-40.sql",
+        "created_at": "2026-05-12 22:31:40"
+    },
+    "backup_manual_daniel_2026-05-12_22-39-24.sql": {
+        "descripcion": "",
+        "usuario_id": 1,
+        "tipo": "Manual",
+        "archivo": "backup_manual_daniel_2026-05-12_22-39-24.sql",
+        "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_daniel_2026-05-12_22-39-24.sql",
+        "created_at": "2026-05-12 22:39:24"
     }
 }

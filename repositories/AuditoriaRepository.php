@@ -179,17 +179,56 @@ class AuditoriaRepository
             );
         }
     }
-
     public function eliminarAuditoriaPermanentemente(int $idAuditoria): void
     {
-        $statement = $this->connection->prepare("
+        $registro = $this->obtenerRegistroAuditoria($idAuditoria);
+
+        if (!$registro) {
+            throw new RuntimeException(
+                "No se encontró el registro eliminado."
+            );
+        }
+
+        $this->connection->beginTransaction();
+
+        try {
+            if (($registro["tabla_afectada"] ?? "") === "producto") {
+                $datos = json_decode(
+                    $registro["datos_anteriores"] ?? "{}",
+                    true
+                );
+
+                if (is_array($datos)) {
+                    $imagen = trim((string)($datos["imagen"] ?? ""));
+
+                    if ($imagen !== "") {
+                        $rutaImagen = __DIR__ . "/../uploads/productos/" . basename($imagen);
+
+                        if (is_file($rutaImagen)) {
+                            unlink($rutaImagen);
+                        }
+                    }
+                }
+            }
+
+            $statement = $this->connection->prepare("
             DELETE FROM auditoria
             WHERE id_auditoria = :id_auditoria
               AND accion = 'DELETE'
         ");
 
-        $statement->execute([
-            ":id_auditoria" => $idAuditoria,
-        ]);
+            $statement->execute([
+                ":id_auditoria" => $idAuditoria,
+            ]);
+
+            $this->connection->commit();
+        } catch (Throwable $exception) {
+            $this->connection->rollBack();
+
+            throw new RuntimeException(
+                "No se pudo eliminar permanentemente el registro. Detalle: "
+                    . $exception->getMessage()
+            );
+        }
     }
 }

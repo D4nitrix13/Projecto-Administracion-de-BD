@@ -1,50 +1,51 @@
 <?php
-// * Stored function or procedure has been executed
-
 session_start();
 
-if (!isset($_SESSION["user"])) {
-    header("Location: login.php");
+require_once __DIR__ . "/includes/auth_guard.php";
+
+requireLogin();
+
+$user = $_SESSION["user"];
+$idRol = (int)($user["id_rol"] ?? 0);
+
+if ($idRol === 3) {
+    $_SESSION["flash_error"] = "No tienes permisos para eliminar productos.";
+    header("Location: productos.php");
     exit();
 }
 
-$connection = require "./sql/db.php";
-
-$id = isset($_GET["id"]) ? (int) $_GET["id"] : 0;
-
-if ($id <= 0) {
+if (!isset($_GET["id"]) || !ctype_digit((string)$_GET["id"])) {
     $_SESSION["flash_error"] = "Producto no válido.";
     header("Location: productos.php");
     exit();
 }
 
+$idProducto = (int)$_GET["id"];
+
+/** @var PDO $connection */
+$connection = require __DIR__ . "/sql/db.php";
+
 try {
-    $stmtDel = $connection->prepare("
-        SELECT filas_afectadas
-        FROM eliminar_producto_sistema(:id_producto)
+    $stmt = $connection->prepare("
+        DELETE FROM producto
+        WHERE id_producto = :id_producto
     ");
 
-    $stmtDel->execute([
-        ":id_producto" => $id
+    $stmt->execute([
+        ":id_producto" => $idProducto,
     ]);
 
-    $resultado = $stmtDel->fetch(PDO::FETCH_ASSOC);
-    $filasAfectadas = (int) ($resultado["filas_afectadas"] ?? 0);
+    if ($stmt->rowCount() === 0) {
+        $_SESSION["flash_error"] = "El producto no existe o ya fue eliminado.";
+        header("Location: productos.php");
+        exit();
+    }
 
-    if ($filasAfectadas > 0) {
-        $_SESSION["flash_success"] = "Producto eliminado correctamente.";
-    } else {
-        $_SESSION["flash_error"] = "El producto especificado no existe.";
-    }
-} catch (PDOException $e) {
-    // 23503 = violación de llave foránea: detalle de venta o compra
-    if ($e->getCode() === "23503") {
-        $_SESSION["flash_error"] = "No se puede eliminar el producto porque tiene ventas o compras asociadas.";
-    } else {
-        error_log("eliminar producto error: " . $e->getMessage());
-        $_SESSION["flash_error"] = "Error al eliminar el producto.";
-    }
+    $_SESSION["flash_success"] = "Producto eliminado correctamente. Puede restaurarlo desde Registros eliminados.";
+    header("Location: productos.php");
+    exit();
+} catch (Throwable $exception) {
+    $_SESSION["flash_error"] = "No se pudo eliminar el producto: " . $exception->getMessage();
+    header("Location: productos.php");
+    exit();
 }
-
-header("Location: productos.php");
-exit();

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DDeojN12CSVzLrAvfVb9RfYpoK4d7FYGZ0IEksOv0QmPYaugDXnqb5iuGZJNWfb
+\restrict V5NevU0EBVHxMwc8Gie6sxI6SNUjy50UZHb49fCN6zZwXSZW0RMbbgEd4tR1cgg
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg12+1)
@@ -195,6 +195,14 @@ DROP FUNCTION IF EXISTS public.actualizar_producto_edicion(p_id_producto integer
 DROP FUNCTION IF EXISTS public.actualizar_password_usuario_login(p_id_usuario integer, p_password_hash text);
 DROP FUNCTION IF EXISTS public.actualizar_cliente_sistema(p_id_cliente integer, p_nombres character varying, p_apellidos character varying, p_telefono character varying, p_direccion character varying, p_identificacion character varying, p_tipo_cliente character varying);
 DROP FUNCTION IF EXISTS public.actualizar_categoria(p_id_categoria integer, p_nombre character varying);
+-- *not* dropping schema, since initdb creates it
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+-- *not* creating schema, since initdb creates it
+
+
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
@@ -3897,7 +3905,8 @@ COPY public.auditoria (id_auditoria, usuario, accion, tabla_afectada, descripcio
 42	Sistema	DELETE	cliente	\N	2026-05-12 21:58:41.700417	2026-05-12 21:58:41.700417	\N	359	{"nombres": "María Papelera", "telefono": "7777-2020", "apellidos": "Temporal", "direccion": "León, Nicaragua", "id_cliente": 359, "tipo_cliente": "Mayorista", "fecha_registro": "2026-05-12", "identificacion": "PAP-CLI-002"}
 43	Sistema	DELETE	proveedor	\N	2026-05-12 21:58:41.703555	2026-05-12 21:58:41.703555	\N	11	{"email": "proveedor.papelera@test.com", "nombre": "Proveedor Prueba Papelera", "telefono": "8888-9090", "direccion": "Managua, Nicaragua", "id_proveedor": 11}
 44	Sistema	DELETE	categoria	\N	2026-05-12 21:58:41.704884	2026-05-12 21:58:41.704884	\N	11	{"nombre": "Prueba Papelera Categoría", "id_categoria": 11}
-45	Sistema	DELETE	producto	\N	2026-05-12 22:04:26.858734	2026-05-12 22:04:26.858734	\N	122	{"stock": 7, "codigo": "TEMP-PROD-001", "imagen": null, "nombre": "Producto temporal auditoria", "descripcion": "Producto creado para probar restauración.", "id_producto": 122, "id_categoria": 12, "id_proveedor": 12, "precio_venta": 240.00, "precio_compra": 120.00}
+45	Sistema	RESTAURADO	producto	 | Registro restaurado desde papelera administrativa.	2026-05-12 22:04:26.858734	2026-05-12 22:04:26.858734	\N	122	{"stock": 7, "codigo": "TEMP-PROD-001", "imagen": null, "nombre": "Producto temporal auditoria", "descripcion": "Producto creado para probar restauración.", "id_producto": 122, "id_categoria": 12, "id_proveedor": 12, "precio_venta": 240.00, "precio_compra": 120.00}
+46	Sistema	DELETE	producto	\N	2026-05-12 22:39:13.128318	2026-05-12 22:39:13.128318	\N	121	{"stock": 12, "codigo": "PAP-PROD-004", "imagen": "prod_6a04006d25c598.81799647.png", "nombre": "Bolso prueba papelera", "descripcion": "Producto temporal adicional para probar registros eliminados.", "id_producto": 121, "id_categoria": 10, "id_proveedor": 10, "precio_venta": 295.00, "precio_compra": 160.00}
 \.
 
 
@@ -5246,7 +5255,7 @@ COPY public.producto (id_producto, codigo, nombre, descripcion, imagen, id_categ
 118	P118	Poster Ilustrado A3 #118	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_692e2130300f13.79885065.jpg	8	8	522.50	749.50	3
 119	P119	Bolso Tote Personalizado #119	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56fdd0d4ab5.98973422.jpg	9	9	526.25	754.75	54
 120	P120	Mousepad Gamer Estampado #120	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_bd9ae845c714f7f64699fb75.jpg	10	10	530.00	760.00	4
-121	PAP-PROD-004	Bolso prueba papelera	Producto temporal adicional para probar registros eliminados.	\N	10	10	160.00	295.00	12
+122	TEMP-PROD-001	Producto temporal auditoria	Producto creado para probar restauración.	\N	12	12	120.00	240.00	7
 \.
 
 
@@ -5332,7 +5341,7 @@ COPY public.usuario (id_usuario, nombre, email, password, id_rol, id_seccion) FR
 -- Name: auditoria_id_auditoria_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_auditoria_seq', 45, true);
+SELECT pg_catalog.setval('public.auditoria_id_auditoria_seq', 46, true);
 
 
 --
@@ -5757,5 +5766,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DDeojN12CSVzLrAvfVb9RfYpoK4d7FYGZ0IEksOv0QmPYaugDXnqb5iuGZJNWfb
+\unrestrict V5NevU0EBVHxMwc8Gie6sxI6SNUjy50UZHb49fCN6zZwXSZW0RMbbgEd4tR1cgg
 
