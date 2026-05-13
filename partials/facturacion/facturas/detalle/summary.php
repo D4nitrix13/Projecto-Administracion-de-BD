@@ -2,15 +2,19 @@
 $estadoPago = $factura["estado_pago"] ?? "Pendiente";
 $estadoProduccion = $factura["estado_produccion"] ?? "Pendiente";
 
+$resumenHistorial = $resumenHistorial ?? [];
+
 function invoiceStatusClass(string $estado): string
 {
     return match ($estado) {
-        "Pagado", "Entregada" => "success",
-        "Parcial", "En producción", "Lista para entregar" => "info",
+        "Pagado", "Entregada", "Completada" => "success",
+        "Parcial", "En producción", "Lista para entregar", "En seguimiento" => "info",
         "Cancelada" => "danger",
         default => "warning",
     };
 }
+
+$ultimoEvento = $resumenHistorial["ultimoEvento"] ?? null;
 ?>
 
 <div class="invoice-summary-grid">
@@ -41,24 +45,36 @@ function invoiceStatusClass(string $estado): string
             <span class="status-badge status-<?= invoiceStatusClass($estadoProduccion) ?>">
                 Producción: <?= htmlspecialchars($estadoProduccion) ?>
             </span>
+
+            <span class="status-badge status-<?= invoiceStatusClass((string)($resumenHistorial["estadoOperativo"] ?? "En seguimiento")) ?>">
+                Operación: <?= htmlspecialchars($resumenHistorial["estadoOperativo"] ?? "En seguimiento") ?>
+            </span>
         </div>
 
         <div class="invoice-info-grid">
             <div class="invoice-info-item">
-                <span>Fecha</span>
+                <span>Fecha de emisión</span>
                 <strong>
                     <?= htmlspecialchars(date("d/m/Y H:i", strtotime($factura["fecha"] ?? "now"))) ?>
                 </strong>
             </div>
 
             <div class="invoice-info-item">
-                <span>Subtotal</span>
-                <strong>C$ <?= number_format((float)($factura["subtotal"] ?? 0), 2) ?></strong>
+                <span>Días desde creación</span>
+                <strong>
+                    <?= isset($resumenHistorial["diasDesdeCreacion"]) ? (int)$resumenHistorial["diasDesdeCreacion"] . " días" : "—" ?>
+                </strong>
             </div>
 
             <div class="invoice-info-item">
-                <span>Impuesto</span>
-                <strong>C$ <?= number_format((float)($factura["impuesto"] ?? 0), 2) ?></strong>
+                <span>Fecha estimada de entrega</span>
+                <strong>
+                    <?php if (!empty($factura["fecha_entrega_estimada"])): ?>
+                        <?= htmlspecialchars(date("d/m/Y", strtotime($factura["fecha_entrega_estimada"]))) ?>
+                    <?php else: ?>
+                        —
+                    <?php endif; ?>
+                </strong>
             </div>
 
             <div class="invoice-info-item invoice-info-total">
@@ -95,35 +111,76 @@ function invoiceStatusClass(string $estado): string
     <div class="invoice-section-header">
         <div>
             <h3>Pago y producción</h3>
-            <p>Seguimiento del abono realizado, saldo pendiente y estado operativo de la factura.</p>
+            <p>Resumen financiero y operativo generado a partir del estado actual y la bitácora de eventos.</p>
         </div>
     </div>
 
     <div class="invoice-payment-grid">
         <div class="invoice-payment-item">
             <span>Monto pagado</span>
-            <strong>C$ <?= number_format((float)($factura["monto_pagado"] ?? 0), 2) ?></strong>
+            <strong>C$ <?= number_format((float)($resumenHistorial["montoPagado"] ?? 0), 2) ?></strong>
         </div>
 
         <div class="invoice-payment-item">
             <span>Saldo pendiente</span>
-            <strong>C$ <?= number_format((float)($factura["saldo_pendiente"] ?? 0), 2) ?></strong>
+            <strong>C$ <?= number_format((float)($resumenHistorial["saldoPendiente"] ?? 0), 2) ?></strong>
         </div>
 
         <div class="invoice-payment-item">
             <span>Porcentaje pagado</span>
-            <strong><?= number_format((float)($factura["porcentaje_pagado"] ?? 0), 2) ?>%</strong>
+            <strong><?= number_format((float)($resumenHistorial["porcentajePagado"] ?? 0), 2) ?>%</strong>
         </div>
 
         <div class="invoice-payment-item">
-            <span>Fecha estimada de entrega</span>
-            <strong>
-                <?php if (!empty($factura["fecha_entrega_estimada"])): ?>
-                    <?= htmlspecialchars(date("d/m/Y", strtotime($factura["fecha_entrega_estimada"]))) ?>
-                <?php else: ?>
-                    —
-                <?php endif; ?>
-            </strong>
+            <span>Abonado según historial</span>
+            <strong>C$ <?= number_format((float)($resumenHistorial["totalAbonadoHistorial"] ?? 0), 2) ?></strong>
+        </div>
+    </div>
+
+    <div class="invoice-progress-wrapper">
+        <div class="invoice-progress-header">
+            <span>Avance de pago</span>
+            <strong><?= number_format((float)($resumenHistorial["porcentajePagado"] ?? 0), 2) ?>%</strong>
+        </div>
+
+        <div class="invoice-progress-bar">
+            <div style="width: <?= min(100, max(0, (float)($resumenHistorial["porcentajePagado"] ?? 0))) ?>%;"></div>
         </div>
     </div>
 </section>
+
+<section class="invoice-history-overview">
+    <article class="invoice-history-kpi">
+        <span>Total eventos</span>
+        <strong><?= number_format((int)($resumenHistorial["totalEventos"] ?? 0)) ?></strong>
+    </article>
+
+    <article class="invoice-history-kpi">
+        <span>Eventos de pago</span>
+        <strong><?= number_format((int)($resumenHistorial["eventosPago"] ?? 0)) ?></strong>
+    </article>
+
+    <article class="invoice-history-kpi">
+        <span>Eventos operativos</span>
+        <strong><?= number_format((int)($resumenHistorial["eventosProduccion"] ?? 0)) ?></strong>
+    </article>
+
+    <article class="invoice-history-kpi <?= ((int)($resumenHistorial["eventosCancelacion"] ?? 0) > 0) ? "danger" : "" ?>">
+        <span>Cancelaciones</span>
+        <strong><?= number_format((int)($resumenHistorial["eventosCancelacion"] ?? 0)) ?></strong>
+    </article>
+</section>
+
+<?php if ($ultimoEvento): ?>
+    <section class="invoice-last-event">
+        <div>
+            <span>Última actividad registrada</span>
+            <strong><?= htmlspecialchars($ultimoEvento["tipo_evento"] ?? "Evento registrado") ?></strong>
+            <p><?= htmlspecialchars($ultimoEvento["comentario"] ?? "Cambio registrado.") ?></p>
+        </div>
+
+        <time>
+            <?= htmlspecialchars(date("d/m/Y H:i", strtotime($ultimoEvento["fecha_evento"] ?? "now"))) ?>
+        </time>
+    </section>
+<?php endif; ?>
