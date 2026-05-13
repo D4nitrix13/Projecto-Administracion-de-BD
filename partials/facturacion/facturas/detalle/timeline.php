@@ -12,7 +12,7 @@ function invoiceTimelineBadgeClass(?string $estado): string
 
 function invoiceTimelineEventClass(?string $tipoEvento): string
 {
-    $tipoEvento = strtolower((string)$tipoEvento);
+    $tipoEvento = mb_strtolower((string)$tipoEvento);
 
     if (str_contains($tipoEvento, "cancel")) {
         return "danger";
@@ -57,6 +57,13 @@ function invoiceTimelineEventClass(?string $tipoEvento): string
             Esta factura todavía no tiene historial de acciones registrado.
         </p>
     <?php else: ?>
+        <?php if (!empty($resumenHistorial["historialGenerado"])): ?>
+            <p class="invoice-generated-note">
+                Esta trazabilidad fue generada desde los datos actuales de la factura porque no existen eventos históricos reales en la tabla
+                <strong>factura_estado_historial</strong>.
+            </p>
+        <?php endif; ?>
+
         <div class="invoice-timeline">
             <?php foreach ($historialEstados as $index => $evento): ?>
                 <?php
@@ -89,7 +96,7 @@ function invoiceTimelineEventClass(?string $tipoEvento): string
                             </div>
 
                             <time>
-                                <?= htmlspecialchars(date("d/m/Y H:i", strtotime($evento["fecha_evento"]))) ?>
+                                <?= htmlspecialchars(date("d/m/Y H:i", strtotime($evento["fecha_evento"] ?? "now"))) ?>
                             </time>
                         </div>
 
@@ -158,6 +165,10 @@ function invoiceTimelineEventClass(?string $tipoEvento): string
 
                             <?php if (!empty($evento["id_historial"])): ?>
                                 <span>ID historial: <?= (int)$evento["id_historial"] ?></span>
+                            <?php endif; ?>
+
+                            <?php if (!empty($evento["generado_desde_factura"])): ?>
+                                <span>Origen: factura actual</span>
                             <?php endif; ?>
                         </div>
                     </div>

@@ -18,7 +18,6 @@ $ultimoEvento = $resumenHistorial["ultimoEvento"] ?? null;
 ?>
 
 <div class="invoice-summary-grid">
-
     <article class="invoice-main-panel">
         <div class="invoice-main-header">
             <div>
@@ -104,7 +103,6 @@ $ultimoEvento = $resumenHistorial["ultimoEvento"] ?? null;
             </div>
         </div>
     </article>
-
 </div>
 
 <section class="invoice-payment-panel">
@@ -146,6 +144,39 @@ $ultimoEvento = $resumenHistorial["ultimoEvento"] ?? null;
         <div class="invoice-progress-bar">
             <div style="width: <?= min(100, max(0, (float)($resumenHistorial["porcentajePagado"] ?? 0))) ?>%;"></div>
         </div>
+    </div>
+</section>
+
+<section class="invoice-state-flow">
+    <div class="invoice-section-header">
+        <div>
+            <h3>Flujo de estados disponibles</h3>
+            <p>Visualización completa del recorrido de pago y producción de la factura.</p>
+        </div>
+    </div>
+
+    <div class="invoice-flow-grid">
+        <article class="invoice-flow-card">
+            <h4>Pago</h4>
+
+            <?php foreach (($resumenHistorial["flujoPago"] ?? []) as $estado => $activo): ?>
+                <div class="invoice-flow-step <?= $activo ? "active" : "" ?>">
+                    <span></span>
+                    <strong><?= htmlspecialchars($estado) ?></strong>
+                </div>
+            <?php endforeach; ?>
+        </article>
+
+        <article class="invoice-flow-card">
+            <h4>Producción</h4>
+
+            <?php foreach (($resumenHistorial["flujoProduccion"] ?? []) as $estado => $activo): ?>
+                <div class="invoice-flow-step <?= $activo ? "active" : "" ?>">
+                    <span></span>
+                    <strong><?= htmlspecialchars($estado) ?></strong>
+                </div>
+            <?php endforeach; ?>
+        </article>
     </div>
 </section>
 
