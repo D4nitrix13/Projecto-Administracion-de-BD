@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict a29NDPVUAPyZo7QKUrA2uf3rEbl7vCiib0wnLQxTQemzqfcwpypEtbY8UdvOH9Z
+\restrict Sri9v3gsI5fHli5XqYDmv8FUYf4tdYBuUK0FCyTpXs9Y1d2KlWQeaA0uofDIuyx
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg12+1)
@@ -40,6 +40,10 @@ DROP TRIGGER IF EXISTS trg_auditar_delete_producto ON public.producto;
 DROP TRIGGER IF EXISTS trg_auditar_delete_cliente ON public.cliente;
 DROP TRIGGER IF EXISTS trg_auditar_delete_categoria ON public.categoria;
 DROP INDEX IF EXISTS public.idx_factura_estado_historial_factura;
+DROP INDEX IF EXISTS public.idx_auditoria_tabla_afectada;
+DROP INDEX IF EXISTS public.idx_auditoria_registro_id;
+DROP INDEX IF EXISTS public.idx_auditoria_datos_anteriores_gin;
+DROP INDEX IF EXISTS public.idx_auditoria_accion_fecha;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS usuario_pkey;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS usuario_email_key;
 ALTER TABLE IF EXISTS ONLY public.seccion DROP CONSTRAINT IF EXISTS seccion_pkey;
@@ -3337,7 +3341,9 @@ CREATE TABLE public.auditoria (
     descripcion text,
     fecha_registro timestamp without time zone DEFAULT now() NOT NULL,
     fecha timestamp without time zone DEFAULT now() NOT NULL,
-    id_usuario integer
+    id_usuario integer,
+    registro_id text,
+    datos_anteriores jsonb
 );
 
 
@@ -3894,47 +3900,47 @@ ALTER TABLE ONLY public.usuario ALTER COLUMN id_usuario SET DEFAULT nextval('pub
 -- Data for Name: auditoria; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.auditoria (id_auditoria, usuario, accion, tabla_afectada, descripcion, fecha_registro, fecha, id_usuario) FROM stdin;
-1	Leonel Messi	UPDATE	producto	Registro de auditoría generado para pruebas académicas #1	2026-05-06 09:24:52.990096	2026-02-02 08:00:00	1
-2	Daniel Pérez	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #2	2026-05-06 09:24:52.990096	2026-02-03 08:00:00	2
-3	Jeremy Pérez	INSERT	cliente	Registro de auditoría generado para pruebas académicas #3	2026-05-06 09:24:52.990096	2026-02-04 08:00:00	3
-4	Jhossep Ramos	UPDATE	factura	Registro de auditoría generado para pruebas académicas #4	2026-05-06 09:24:52.990096	2026-02-05 08:00:00	4
-5	Diego Torres	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #5	2026-05-06 09:24:52.990096	2026-02-06 08:00:00	5
-6	Carlos Núñez	INSERT	compra	Registro de auditoría generado para pruebas académicas #6	2026-05-06 09:24:52.990096	2026-02-07 08:00:00	6
-7	Mónica Larios	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #7	2026-05-06 09:24:52.990096	2026-02-08 08:00:00	7
-8	Esteban Rodríguez	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #8	2026-05-06 09:24:52.990096	2026-02-09 08:00:00	8
-9	Eduardo Molina	INSERT	producto	Registro de auditoría generado para pruebas académicas #9	2026-05-06 09:24:52.990096	2026-02-10 08:00:00	9
-10	Andy Sánchez	UPDATE	compra	Registro de auditoría generado para pruebas académicas #10	2026-05-06 09:24:52.990096	2026-02-11 08:00:00	10
-11	Sofía Gómez	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #11	2026-05-06 09:24:52.990096	2026-02-12 08:00:00	11
-12	Luis Torres	INSERT	factura	Registro de auditoría generado para pruebas académicas #12	2026-05-06 09:24:52.990096	2026-02-13 08:00:00	12
-13	Carla Bermúdez	UPDATE	producto	Registro de auditoría generado para pruebas académicas #13	2026-05-06 09:24:52.990096	2026-02-14 08:00:00	13
-14	Karla Medina	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #14	2026-05-06 09:24:52.990096	2026-02-15 08:00:00	14
-15	Wilmer Ruiz	INSERT	cliente	Registro de auditoría generado para pruebas académicas #15	2026-05-06 09:24:52.990096	2026-02-16 08:00:00	15
-16	Miguel Hernández	UPDATE	factura	Registro de auditoría generado para pruebas académicas #16	2026-05-06 09:24:52.990096	2026-02-17 08:00:00	16
-17	Paola López	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #17	2026-05-06 09:24:52.990096	2026-02-18 08:00:00	17
-18	Kevin Castillo	INSERT	compra	Registro de auditoría generado para pruebas académicas #18	2026-05-06 09:24:52.990096	2026-02-19 08:00:00	18
-19	María Fernández	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #19	2026-05-06 09:24:52.990096	2026-02-20 08:00:00	19
-20	Josefina Rivas	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #20	2026-05-06 09:24:52.990096	2026-02-21 08:00:00	20
-21	Roberto Gutiérrez	INSERT	producto	Registro de auditoría generado para pruebas académicas #21	2026-05-06 09:24:52.990096	2026-02-22 08:00:00	21
-22	Lucía Herrera	UPDATE	compra	Registro de auditoría generado para pruebas académicas #22	2026-05-06 09:24:52.990096	2026-02-23 08:00:00	22
-23	Brandon Morales	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #23	2026-05-06 09:24:52.990096	2026-02-24 08:00:00	23
-24	Andrea Vega	INSERT	factura	Registro de auditoría generado para pruebas académicas #24	2026-05-06 09:24:52.990096	2026-02-25 08:00:00	24
-25	Sergio Mairena	UPDATE	producto	Registro de auditoría generado para pruebas académicas #25	2026-05-06 09:24:52.990096	2026-02-26 08:00:00	25
-26	Julia Campos	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #26	2026-05-06 09:24:52.990096	2026-02-27 08:00:00	26
-27	Laura Castillo	INSERT	cliente	Registro de auditoría generado para pruebas académicas #27	2026-05-06 09:24:52.990096	2026-02-28 08:00:00	27
-28	Óscar Mejía	UPDATE	factura	Registro de auditoría generado para pruebas académicas #28	2026-05-06 09:24:52.990096	2026-03-01 08:00:00	28
-29	Carmen Rojas	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #29	2026-05-06 09:24:52.990096	2026-03-02 08:00:00	29
-30	Nidia Solís	INSERT	compra	Registro de auditoría generado para pruebas académicas #30	2026-05-06 09:24:52.990096	2026-03-03 08:00:00	30
-31	Leonel Messi	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #31	2026-05-06 09:24:52.990096	2026-03-04 08:00:00	1
-32	Daniel Pérez	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #32	2026-05-06 09:24:52.990096	2026-03-05 08:00:00	2
-33	Jeremy Pérez	INSERT	producto	Registro de auditoría generado para pruebas académicas #33	2026-05-06 09:24:52.990096	2026-03-06 08:00:00	3
-34	Jhossep Ramos	UPDATE	compra	Registro de auditoría generado para pruebas académicas #34	2026-05-06 09:24:52.990096	2026-03-07 08:00:00	4
-35	Diego Torres	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #35	2026-05-06 09:24:52.990096	2026-03-08 08:00:00	5
-36	Carlos Núñez	INSERT	factura	Registro de auditoría generado para pruebas académicas #36	2026-05-06 09:24:52.990096	2026-03-09 08:00:00	6
-37	Mónica Larios	UPDATE	producto	Registro de auditoría generado para pruebas académicas #37	2026-05-06 09:24:52.990096	2026-03-10 08:00:00	7
-38	Esteban Rodríguez	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #38	2026-05-06 09:24:52.990096	2026-03-11 08:00:00	8
-39	Eduardo Molina	INSERT	cliente	Registro de auditoría generado para pruebas académicas #39	2026-05-06 09:24:52.990096	2026-03-12 08:00:00	9
-40	Andy Sánchez	UPDATE	factura	Registro de auditoría generado para pruebas académicas #40	2026-05-06 09:24:52.990096	2026-03-13 08:00:00	10
+COPY public.auditoria (id_auditoria, usuario, accion, tabla_afectada, descripcion, fecha_registro, fecha, id_usuario, registro_id, datos_anteriores) FROM stdin;
+1	Leonel Messi	UPDATE	producto	Registro de auditoría generado para pruebas académicas #1	2026-05-06 09:24:52.990096	2026-02-02 08:00:00	1	\N	\N
+2	Daniel Pérez	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #2	2026-05-06 09:24:52.990096	2026-02-03 08:00:00	2	\N	\N
+3	Jeremy Pérez	INSERT	cliente	Registro de auditoría generado para pruebas académicas #3	2026-05-06 09:24:52.990096	2026-02-04 08:00:00	3	\N	\N
+4	Jhossep Ramos	UPDATE	factura	Registro de auditoría generado para pruebas académicas #4	2026-05-06 09:24:52.990096	2026-02-05 08:00:00	4	\N	\N
+5	Diego Torres	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #5	2026-05-06 09:24:52.990096	2026-02-06 08:00:00	5	\N	\N
+6	Carlos Núñez	INSERT	compra	Registro de auditoría generado para pruebas académicas #6	2026-05-06 09:24:52.990096	2026-02-07 08:00:00	6	\N	\N
+7	Mónica Larios	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #7	2026-05-06 09:24:52.990096	2026-02-08 08:00:00	7	\N	\N
+8	Esteban Rodríguez	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #8	2026-05-06 09:24:52.990096	2026-02-09 08:00:00	8	\N	\N
+9	Eduardo Molina	INSERT	producto	Registro de auditoría generado para pruebas académicas #9	2026-05-06 09:24:52.990096	2026-02-10 08:00:00	9	\N	\N
+10	Andy Sánchez	UPDATE	compra	Registro de auditoría generado para pruebas académicas #10	2026-05-06 09:24:52.990096	2026-02-11 08:00:00	10	\N	\N
+11	Sofía Gómez	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #11	2026-05-06 09:24:52.990096	2026-02-12 08:00:00	11	\N	\N
+12	Luis Torres	INSERT	factura	Registro de auditoría generado para pruebas académicas #12	2026-05-06 09:24:52.990096	2026-02-13 08:00:00	12	\N	\N
+13	Carla Bermúdez	UPDATE	producto	Registro de auditoría generado para pruebas académicas #13	2026-05-06 09:24:52.990096	2026-02-14 08:00:00	13	\N	\N
+14	Karla Medina	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #14	2026-05-06 09:24:52.990096	2026-02-15 08:00:00	14	\N	\N
+15	Wilmer Ruiz	INSERT	cliente	Registro de auditoría generado para pruebas académicas #15	2026-05-06 09:24:52.990096	2026-02-16 08:00:00	15	\N	\N
+16	Miguel Hernández	UPDATE	factura	Registro de auditoría generado para pruebas académicas #16	2026-05-06 09:24:52.990096	2026-02-17 08:00:00	16	\N	\N
+17	Paola López	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #17	2026-05-06 09:24:52.990096	2026-02-18 08:00:00	17	\N	\N
+18	Kevin Castillo	INSERT	compra	Registro de auditoría generado para pruebas académicas #18	2026-05-06 09:24:52.990096	2026-02-19 08:00:00	18	\N	\N
+19	María Fernández	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #19	2026-05-06 09:24:52.990096	2026-02-20 08:00:00	19	\N	\N
+20	Josefina Rivas	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #20	2026-05-06 09:24:52.990096	2026-02-21 08:00:00	20	\N	\N
+21	Roberto Gutiérrez	INSERT	producto	Registro de auditoría generado para pruebas académicas #21	2026-05-06 09:24:52.990096	2026-02-22 08:00:00	21	\N	\N
+22	Lucía Herrera	UPDATE	compra	Registro de auditoría generado para pruebas académicas #22	2026-05-06 09:24:52.990096	2026-02-23 08:00:00	22	\N	\N
+23	Brandon Morales	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #23	2026-05-06 09:24:52.990096	2026-02-24 08:00:00	23	\N	\N
+24	Andrea Vega	INSERT	factura	Registro de auditoría generado para pruebas académicas #24	2026-05-06 09:24:52.990096	2026-02-25 08:00:00	24	\N	\N
+25	Sergio Mairena	UPDATE	producto	Registro de auditoría generado para pruebas académicas #25	2026-05-06 09:24:52.990096	2026-02-26 08:00:00	25	\N	\N
+26	Julia Campos	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #26	2026-05-06 09:24:52.990096	2026-02-27 08:00:00	26	\N	\N
+27	Laura Castillo	INSERT	cliente	Registro de auditoría generado para pruebas académicas #27	2026-05-06 09:24:52.990096	2026-02-28 08:00:00	27	\N	\N
+28	Óscar Mejía	UPDATE	factura	Registro de auditoría generado para pruebas académicas #28	2026-05-06 09:24:52.990096	2026-03-01 08:00:00	28	\N	\N
+29	Carmen Rojas	CONSULTA	producto	Registro de auditoría generado para pruebas académicas #29	2026-05-06 09:24:52.990096	2026-03-02 08:00:00	29	\N	\N
+30	Nidia Solís	INSERT	compra	Registro de auditoría generado para pruebas académicas #30	2026-05-06 09:24:52.990096	2026-03-03 08:00:00	30	\N	\N
+31	Leonel Messi	UPDATE	cliente	Registro de auditoría generado para pruebas académicas #31	2026-05-06 09:24:52.990096	2026-03-04 08:00:00	1	\N	\N
+32	Daniel Pérez	CONSULTA	factura	Registro de auditoría generado para pruebas académicas #32	2026-05-06 09:24:52.990096	2026-03-05 08:00:00	2	\N	\N
+33	Jeremy Pérez	INSERT	producto	Registro de auditoría generado para pruebas académicas #33	2026-05-06 09:24:52.990096	2026-03-06 08:00:00	3	\N	\N
+34	Jhossep Ramos	UPDATE	compra	Registro de auditoría generado para pruebas académicas #34	2026-05-06 09:24:52.990096	2026-03-07 08:00:00	4	\N	\N
+35	Diego Torres	CONSULTA	cliente	Registro de auditoría generado para pruebas académicas #35	2026-05-06 09:24:52.990096	2026-03-08 08:00:00	5	\N	\N
+36	Carlos Núñez	INSERT	factura	Registro de auditoría generado para pruebas académicas #36	2026-05-06 09:24:52.990096	2026-03-09 08:00:00	6	\N	\N
+37	Mónica Larios	UPDATE	producto	Registro de auditoría generado para pruebas académicas #37	2026-05-06 09:24:52.990096	2026-03-10 08:00:00	7	\N	\N
+38	Esteban Rodríguez	CONSULTA	compra	Registro de auditoría generado para pruebas académicas #38	2026-05-06 09:24:52.990096	2026-03-11 08:00:00	8	\N	\N
+39	Eduardo Molina	INSERT	cliente	Registro de auditoría generado para pruebas académicas #39	2026-05-06 09:24:52.990096	2026-03-12 08:00:00	9	\N	\N
+40	Andy Sánchez	UPDATE	factura	Registro de auditoría generado para pruebas académicas #40	2026-05-06 09:24:52.990096	2026-03-13 08:00:00	10	\N	\N
 \.
 
 
@@ -5598,6 +5604,34 @@ ALTER TABLE ONLY public.usuario
 
 
 --
+-- Name: idx_auditoria_accion_fecha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_accion_fecha ON public.auditoria USING btree (accion, fecha DESC);
+
+
+--
+-- Name: idx_auditoria_datos_anteriores_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_datos_anteriores_gin ON public.auditoria USING gin (datos_anteriores);
+
+
+--
+-- Name: idx_auditoria_registro_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_registro_id ON public.auditoria USING btree (registro_id);
+
+
+--
+-- Name: idx_auditoria_tabla_afectada; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_tabla_afectada ON public.auditoria USING btree (tabla_afectada);
+
+
+--
 -- Name: idx_factura_estado_historial_factura; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5763,5 +5797,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict a29NDPVUAPyZo7QKUrA2uf3rEbl7vCiib0wnLQxTQemzqfcwpypEtbY8UdvOH9Z
+\unrestrict Sri9v3gsI5fHli5XqYDmv8FUYf4tdYBuUK0FCyTpXs9Y1d2KlWQeaA0uofDIuyx
 

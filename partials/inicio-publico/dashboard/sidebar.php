@@ -138,6 +138,12 @@ function isActivePage(string $page, string $currentPage): string
                     </a>
 
                     <a
+                        href="auditoria_eliminados.php"
+                        class="sidebar-sublink <?= isActivePage("auditoria_eliminados.php", $currentPage) ?>">
+                        Registros eliminados
+                    </a>
+
+                    <a
                         href="backups_manuales.php"
                         class="sidebar-sublink <?= isActivePage("backups_manuales.php", $currentPage) ?>">
                         Backups manuales
