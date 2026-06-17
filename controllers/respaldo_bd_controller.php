@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../services/BackupService.php";
+require_once __DIR__ . "/../helpers/notificaciones.php";
 
 function obtenerDatosRespaldosBd(): array
 {
@@ -83,6 +84,13 @@ function procesarAccionBackup(
         $mensajePersonalizado
     );
 
+    if ($resultado["success"]) {
+        notificar("backup_manual", "Backup manual", $resultado["message"], [
+            "id_usuario_origen" => $idUsuario,
+            "rol_origen" => $user["rol"] ?? "",
+        ]);
+    }
+
     return [
         "error" => $resultado["success"] ? null : $resultado["message"],
         "success" => $resultado["success"] ? $resultado["message"] : null,
@@ -112,6 +120,13 @@ function procesarAccionRestore(
     }
 
     $resultado = $backupService->restaurarDesdeArchivo($archivo);
+
+    if ($resultado["success"]) {
+        notificar("backup_restaurado", "BD restaurada", "La base de datos fue restaurada desde: {$archivo}", [
+            "rol_origen" => "Administrador",
+            "metadata" => ["archivo" => $archivo],
+        ]);
+    }
 
     return [
         "error" => $resultado["success"] ? null : $resultado["message"],

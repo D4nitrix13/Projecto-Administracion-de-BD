@@ -5,6 +5,7 @@ session_start();
 $pageTitle = "Mantenimiento BD - Panda Estampados / Kitsune";
 
 require_once __DIR__ . "/includes/auth_guard.php";
+require_once __DIR__ . "/helpers/notificaciones.php";
 
 requireAdmin();
 
@@ -187,6 +188,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         if ($resultado["success"]) {
             $success = "ok";
+
+            notificar("mantenimiento_bd", "Mantenimiento BD", "Se ejecutó: {$action}", [
+                "id_usuario_origen" => (int)$user["id_usuario"],
+                "rol_origen" => $user["rol"] ?? "",
+                "metadata" => ["accion" => $action],
+            ]);
 
             if ($mensaje === "" || str_contains($mensaje, "El script terminó sin devolver salida")) {
                 $successDetail = "La tarea finalizó correctamente. Puede revisar la carpeta backups/logs para ver el detalle del proceso.";

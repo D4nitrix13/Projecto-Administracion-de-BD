@@ -22,6 +22,8 @@ $idSeccion            = $viewData["idSeccion"];
 $descuentoGlobal      = $viewData["descuentoGlobal"];
 $tipoClienteVenta     = $viewData["tipoClienteVenta"];
 $nombreClienteFugaz   = $viewData["nombreClienteFugaz"];
+$montoPagado          = $viewData["montoPagado"];
+$fechaEntregaEstimada = $viewData["fechaEntregaEstimada"];
 $textoSubtitulo       = $viewData["textoSubtitulo"];
 
 ?>

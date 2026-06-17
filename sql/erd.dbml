@@ -1,0 +1,139 @@
+// https://dbdiagram.io/d
+// Panda Estampados y Kitsune — ER Diagram
+
+Table rol {
+    id_rol int [pk]
+    nombre varchar(30) [unique, not null]
+}
+
+Table seccion {
+    id_seccion int [pk]
+    nombre varchar(30) [unique, not null]
+}
+
+Table usuario {
+    id_usuario int [pk]
+    nombre varchar(100) [not null]
+    email varchar(120) [unique, not null]
+    password text [not null]
+    id_rol int [ref: > rol.id_rol, not null]
+    id_seccion int [ref: > seccion.id_seccion]
+}
+
+Table categoria {
+    id_categoria int [pk]
+    nombre varchar(80) [unique, not null]
+}
+
+Table proveedor {
+    id_proveedor int [pk]
+    nombre varchar(120) [not null]
+    telefono varchar(30)
+    email varchar(120)
+    direccion varchar(200)
+}
+
+Table cliente {
+    id_cliente int [pk]
+    nombres varchar(80) [not null]
+    apellidos varchar(80) [not null]
+    telefono varchar(30)
+    direccion varchar(200)
+    identificacion varchar(40)
+    tipo_cliente varchar(12) [not null, note: 'Mayorista | Detallista']
+    fecha_registro date [not null, default: `CURRENT_DATE`]
+}
+
+Table producto {
+    id_producto int [pk]
+    codigo varchar(50) [unique, not null]
+    nombre varchar(120) [not null]
+    descripcion text [default: `'Sin descripción'`]
+    imagen varchar(200)
+    id_categoria int [ref: > categoria.id_categoria]
+    id_proveedor int [ref: > proveedor.id_proveedor]
+    precio_compra numeric(10,2) [not null]
+    precio_venta numeric(10,2) [not null]
+    stock int [not null, default: 0]
+}
+
+Table compra {
+    id_compra int [pk]
+    fecha timestamp [not null, default: `now()`]
+    id_proveedor int [ref: > proveedor.id_proveedor, not null]
+    id_usuario int [ref: > usuario.id_usuario, not null]
+    total numeric(10,2) [not null, default: 0]
+}
+
+Table detallecompra {
+    id_detalle int [pk]
+    id_compra int [ref: > compra.id_compra, not null]
+    id_producto int [ref: > producto.id_producto, not null]
+    cantidad int [not null]
+    costo_unitario numeric(10,2) [not null]
+    total_linea numeric(10,2) [not null]
+}
+
+Table factura {
+    id_factura int [pk]
+    fecha timestamp [not null, default: `now()`]
+    id_cliente int [ref: > cliente.id_cliente, not null]
+    id_usuario int [ref: > usuario.id_usuario, not null]
+    id_seccion int [ref: > seccion.id_seccion, not null]
+    subtotal numeric(10,2) [not null, default: 0]
+    descuento numeric(10,2) [not null, default: 0]
+    impuesto numeric(10,2) [not null, default: 0]
+    total numeric(10,2) [not null, default: 0]
+    tipo_cliente_venta varchar(10) [not null, default: `'Habitual'`, note: 'Habitual | Fugaz']
+    nombre_cliente_fugaz varchar(150)
+    monto_pagado numeric(10,2) [not null, default: 0]
+    saldo_pendiente numeric(10,2) [not null, default: 0]
+    porcentaje_pagado numeric(5,2) [not null, default: 0]
+    estado_pago varchar(30) [not null, default: `'Pendiente'`, note: 'Pendiente | Parcial | Pagado']
+    estado_produccion varchar(30) [not null, default: `'Pendiente'`, note: 'Pendiente | En producción | Lista para entregar | Entregada | Cancelada']
+    fecha_orden_produccion timestamp [default: `CURRENT_TIMESTAMP`]
+    fecha_entrega_estimada date
+    fecha_entrega_real date
+}
+
+Table detallefactura {
+    id_detalle int [pk]
+    id_factura int [ref: > factura.id_factura, not null]
+    id_producto int [ref: > producto.id_producto, not null]
+    cantidad int [not null]
+    precio_unitario numeric(10,2) [not null]
+    descuento_linea numeric(10,2) [not null, default: 0]
+    total_linea numeric(10,2) [not null]
+}
+
+Table factura_estado_historial {
+    id_historial int [pk]
+    id_factura int [ref: > factura.id_factura, not null]
+    tipo_evento varchar(80) [not null]
+    estado_pago_anterior varchar(50)
+    estado_pago_nuevo varchar(50)
+    estado_produccion_anterior varchar(80)
+    estado_produccion_nuevo varchar(80)
+    monto_pagado_anterior numeric(12,2)
+    monto_pagado_nuevo numeric(12,2)
+    monto_abonado numeric(12,2) [default: 0]
+    saldo_anterior numeric(12,2)
+    saldo_nuevo numeric(12,2)
+    fecha_entrega_estimada_anterior date
+    fecha_entrega_estimada_nueva date
+    comentario text
+    fecha_evento timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table auditoria {
+    id_auditoria int [pk]
+    usuario varchar(100) [default: `'Sistema'`]
+    accion varchar(50) [not null]
+    tabla_afectada varchar(100) [not null]
+    descripcion text
+    fecha_registro timestamp [not null, default: `now()`]
+    fecha timestamp [not null, default: `now()`]
+    id_usuario int [ref: > usuario.id_usuario]
+    registro_id text
+    datos_anteriores jsonb
+}

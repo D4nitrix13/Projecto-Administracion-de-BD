@@ -50,12 +50,14 @@
                                 Editar
                             </a>
 
-                            <a
-                                href="eliminar_cliente.php?id=<?= (int)$cliente["id_cliente"] ?>"
-                                class="btn-accion btn-accion-eliminar"
-                                onclick="return confirm('¿Seguro que desea eliminar este cliente?');">
-                                Eliminar
-                            </a>
+                            <form method="POST" action="eliminar_cliente.php" style="display:inline;"
+                                  onsubmit="return confirm('¿Seguro que desea eliminar este cliente?');">
+                                <input type="hidden" name="id" value="<?= (int)$cliente["id_cliente"] ?>">
+                                <?= csrfField() ?>
+                                <button type="submit" class="btn-accion btn-accion-eliminar">
+                                    Eliminar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>

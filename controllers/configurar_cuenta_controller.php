@@ -1,17 +1,20 @@
 <?php
 // * Stored function or procedure has been executed
 
+use App\Repository\ConfiguracionRepository;
+
 function obtenerDatosConfigurarCuenta(): array
 {
     $user = $_SESSION["user"];
 
     /** @var PDO $connection */
     $connection = require __DIR__ . "/../sql/db.php";
+    $repo = new ConfiguracionRepository($connection);
 
     $error = null;
     $success = null;
 
-    $dbUser = obtenerUsuarioCuentaActual($connection, (int)$user["id_usuario"]);
+    $dbUser = $repo->obtenerUsuarioCuenta((int)$user["id_usuario"]);
 
     if (!$dbUser) {
         session_destroy();
@@ -24,7 +27,7 @@ function obtenerDatosConfigurarCuenta(): array
     $seccionTexto = obtenerTextoSeccionCuenta($dbUser);
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $resultado = actualizarCuentaDesdePost($connection, $dbUser, $_POST);
+        $resultado = actualizarCuentaDesdePost($repo, $dbUser, $_POST);
 
         if ($resultado["success"]) {
             $success = "Datos de cuenta actualizados correctamente.";
@@ -52,30 +55,6 @@ function obtenerDatosConfigurarCuenta(): array
     ];
 }
 
-function obtenerUsuarioCuentaActual(PDO $connection, int $idUsuario): ?array
-{
-    $statement = $connection->prepare("
-        SELECT
-            id_usuario,
-            nombre,
-            email,
-            password,
-            id_rol,
-            id_seccion,
-            rol_nombre,
-            seccion_nombre
-        FROM obtener_usuario_configurar_cuenta(:id_usuario)
-    ");
-
-    $statement->execute([
-        ":id_usuario" => $idUsuario,
-    ]);
-
-    $dbUser = $statement->fetch(PDO::FETCH_ASSOC);
-
-    return $dbUser ?: null;
-}
-
 function obtenerTextoSeccionCuenta(array $dbUser): string
 {
     if ($dbUser["id_seccion"] === null) {
@@ -86,7 +65,7 @@ function obtenerTextoSeccionCuenta(array $dbUser): string
 }
 
 function actualizarCuentaDesdePost(
-    PDO $connection,
+    ConfiguracionRepository $repo,
     array $dbUser,
     array $post
 ): array {
@@ -132,25 +111,14 @@ function actualizarCuentaDesdePost(
     }
 
     try {
-        $statement = $connection->prepare("
-            SELECT actualizar_usuario_configurar_cuenta(
-                :id_usuario,
-                :nombre,
-                :email,
-                :password
-            ) AS actualizado
-        ");
+        $actualizado = $repo->actualizarCuenta(
+            (int)$dbUser["id_usuario"],
+            $nombre,
+            $email,
+            $passwordHashFinal
+        );
 
-        $statement->execute([
-            ":id_usuario" => (int)$dbUser["id_usuario"],
-            ":nombre" => $nombre,
-            ":email" => $email,
-            ":password" => $passwordHashFinal,
-        ]);
-
-        $resultado = $statement->fetch(PDO::FETCH_ASSOC);
-
-        if (empty($resultado["actualizado"])) {
+        if (!$actualizado) {
             return [
                 "success" => false,
                 "message" => "No se pudo actualizar la cuenta.",
@@ -165,7 +133,7 @@ function actualizarCuentaDesdePost(
             "nombre" => $nombre,
             "email" => $email,
         ];
-    } catch (PDOException $exception) {
+    } catch (\PDOException $exception) {
         if ($exception->getCode() === "23505") {
             return [
                 "success" => false,

@@ -205,7 +205,19 @@ function isActivePage(string $page, string $currentPage): string
     </div>
 
     <div class="sidebar-account">
-        <p class="sidebar-label">Cuenta</p>
+        <p class="sidebar-label">Notificaciones</p>
+
+        <nav class="sidebar-nav">
+            <a
+                href="notificaciones.php"
+                class="<?= isActivePage("notificaciones.php", $currentPage) ?>">
+                <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Notificaciones
+                <span class="notif-sidebar-badge" id="notifBadge" style="display:none;">0</span>
+            </a>
+        </nav>
+
+        <p class="sidebar-label" style="margin-top: 20px;">Cuenta</p>
 
         <nav class="sidebar-nav">
             <a

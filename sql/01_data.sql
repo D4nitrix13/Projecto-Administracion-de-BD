@@ -1266,19 +1266,14 @@ BEGIN
         RAISE EXCEPTION 'La factura no existe.';
     END IF;
 
-    FOR item IN
-        SELECT jsonb_array_elements(p_items)
-    LOOP
-        v_id_producto := (item->>'id_producto')::INT;
-        v_cantidad := (item->>'cantidad')::INT;
+    -- 1) Restaurar stock de TODOS los detalles viejos de una sola vez
+    UPDATE Producto
+    SET stock = stock + df.cantidad
+    FROM DetalleFactura df
+    WHERE df.id_factura = p_id_factura
+      AND df.id_producto = Producto.id_producto;
 
-        UPDATE Producto
-        SET stock = stock + df.cantidad
-        FROM DetalleFactura df
-        WHERE df.id_factura = p_id_factura
-          AND df.id_producto = Producto.id_producto;
-    END LOOP;
-
+    -- 2) Eliminar detalles viejos
     DELETE FROM DetalleFactura
     WHERE id_factura = p_id_factura;
 

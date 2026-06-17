@@ -70,10 +70,14 @@ log_subsection() {
 
 get_csrf_token() {
     local url="$1"
-    curl -s -b "$COOKIE_FILE" -c "$COOKIE_FILE" "$url" 2>/dev/null \
-        | grep -o 'name="_token" value="[^"]*"' \
-        | sed 's/.*value="\([^"]*\)".*/\1/' \
-        | head -1
+    local html
+    html=$(curl -s -b "$COOKIE_FILE" -c "$COOKIE_FILE" "$url" 2>/dev/null)
+    local token
+    token=$(echo "$html" | grep -o -m1 'name="_token" value="[^"]*"' | sed 's/.*value="\([^"]*\)".*/\1/')
+    if [ -z "$token" ]; then
+        token=$(curl -s -b "$COOKIE_FILE" -c "$COOKIE_FILE" "$BASE_URL/csrf_token.php" 2>/dev/null)
+    fi
+    echo "$token"
 }
 
 # Wrapper para peticiones GET
@@ -222,7 +226,8 @@ test_categorias() {
     # ── DELETE ──
     log_subsection "DELETE — Eliminar categoria"
     if [ -n "${cat_id:-}" ] && [ "$cat_id" != "" ]; then
-        code=$(do_get "$BASE_URL/eliminar_categoria.php?id=$cat_id")
+        token=$(get_csrf_token "$BASE_URL/eliminar_categoria.php")
+        code=$(do_post "$BASE_URL/eliminar_categoria.php" "id=$cat_id&_token=$token")
         if [ "$code" = "302" ] || [ "$code" = "200" ]; then
             log_pass "Eliminacion de categoria OK (HTTP $code)"
         else
@@ -310,7 +315,8 @@ test_proveedores() {
     # ── DELETE ──
     log_subsection "DELETE — Eliminar proveedor"
     if [ -n "${prov_id:-}" ] && [ "$prov_id" != "" ]; then
-        code=$(do_get "$BASE_URL/eliminar_proveedor.php?id=$prov_id")
+        token=$(get_csrf_token "$BASE_URL/eliminar_proveedor.php")
+        code=$(do_post "$BASE_URL/eliminar_proveedor.php" "id=$prov_id&_token=$token")
         if [ "$code" = "302" ] || [ "$code" = "200" ]; then
             log_pass "Eliminacion de proveedor OK (HTTP $code)"
         else
@@ -414,7 +420,8 @@ test_clientes() {
     # ── DELETE ──
     log_subsection "DELETE — Eliminar cliente"
     if [ -n "${cli_id:-}" ] && [ "$cli_id" != "" ]; then
-        code=$(do_get "$BASE_URL/eliminar_cliente.php?id=$cli_id")
+        token=$(get_csrf_token "$BASE_URL/eliminar_cliente.php")
+        code=$(do_post "$BASE_URL/eliminar_cliente.php" "id=$cli_id&_token=$token")
         if [ "$code" = "302" ] || [ "$code" = "200" ]; then
             log_pass "Eliminacion de cliente OK (HTTP $code)"
         else
@@ -542,7 +549,8 @@ test_productos() {
     # ── DELETE ──
     log_subsection "DELETE — Eliminar producto"
     if [ -n "${prod_id:-}" ] && [ "$prod_id" != "" ]; then
-        code=$(do_get "$BASE_URL/eliminar_producto.php?id=$prod_id")
+        token=$(get_csrf_token "$BASE_URL/eliminar_producto.php")
+        code=$(do_post "$BASE_URL/eliminar_producto.php" "id=$prod_id&_token=$token")
         if [ "$code" = "302" ] || [ "$code" = "200" ]; then
             log_pass "Eliminacion de producto OK (HTTP $code)"
         else
@@ -646,7 +654,8 @@ test_trabajadores() {
     # ── DELETE ──
     log_subsection "DELETE — Eliminar trabajador"
     if [ -n "${user_id:-}" ] && [ "$user_id" != "" ]; then
-        code=$(do_get "$BASE_URL/eliminar_usuario.php?id=$user_id")
+        token=$(get_csrf_token "$BASE_URL/eliminar_usuario.php")
+        code=$(do_post "$BASE_URL/eliminar_usuario.php" "id=$user_id&_token=$token")
         if [ "$code" = "302" ] || [ "$code" = "200" ]; then
             log_pass "Eliminacion de trabajador OK (HTTP $code)"
         else
@@ -783,7 +792,8 @@ test_facturas() {
     # ── DELETE ──
     log_subsection "DELETE — Eliminar factura"
     if [ -n "${fact_id:-}" ] && [ "$fact_id" != "" ]; then
-        code=$(do_get "$BASE_URL/eliminar_factura.php?id=$fact_id")
+        token=$(get_csrf_token "$BASE_URL/eliminar_factura.php")
+        code=$(do_post "$BASE_URL/eliminar_factura.php" "id=$fact_id&_token=$token")
         if [ "$code" = "302" ] || [ "$code" = "200" ]; then
             log_pass "Eliminacion de factura OK (HTTP $code)"
         else
@@ -850,6 +860,46 @@ test_reportes() {
         log_pass "Reporte con fechas OK (200)"
     else
         log_fail "Reporte con fechas fallo (HTTP $code)"
+    fi
+
+    log_subsection "EXPORT — Exportar reporte de ventas a Excel"
+    code=$(do_get "$BASE_URL/export.php?tipo=ventas")
+    if [ "$code" = "200" ]; then
+        log_pass "Exportar ventas OK (200)"
+    else
+        log_fail "Exportar ventas fallo (HTTP $code)"
+    fi
+
+    log_subsection "EXPORT — Exportar reporte de productos a Excel"
+    code=$(do_get "$BASE_URL/export.php?tipo=productos")
+    if [ "$code" = "200" ]; then
+        log_pass "Exportar productos OK (200)"
+    else
+        log_fail "Exportar productos fallo (HTTP $code)"
+    fi
+
+    log_subsection "EXPORT — Exportar reporte de clientes a Excel"
+    code=$(do_get "$BASE_URL/export.php?tipo=clientes")
+    if [ "$code" = "200" ]; then
+        log_pass "Exportar clientes OK (200)"
+    else
+        log_fail "Exportar clientes fallo (HTTP $code)"
+    fi
+
+    log_subsection "EXPORT — Exportar reporte completo a Excel"
+    code=$(do_get "$BASE_URL/export.php?tipo=completo")
+    if [ "$code" = "200" ]; then
+        log_pass "Exportar completo OK (200)"
+    else
+        log_fail "Exportar completo fallo (HTTP $code)"
+    fi
+
+    log_subsection "EXPORT — Exportar con rango de fechas"
+    code=$(do_get "$BASE_URL/export.php?tipo=ventas&desde=2025-01-01&hasta=2026-12-31")
+    if [ "$code" = "200" ]; then
+        log_pass "Exportar con fechas OK (200)"
+    else
+        log_fail "Exportar con fechas fallo (HTTP $code)"
     fi
 }
 

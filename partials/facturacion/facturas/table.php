@@ -84,12 +84,14 @@
                                 Editar
                             </a>
 
-                            <a
-                                href="eliminar_factura.php?id=<?= (int)$factura["id_factura"] ?>"
-                                class="btn-accion btn-accion-eliminar"
-                                onclick="return confirm('¿Seguro que desea eliminar esta factura?');">
-                                Eliminar
-                            </a>
+                            <form method="POST" action="eliminar_factura.php" style="display:inline;"
+                                  onsubmit="return confirm('¿Seguro que desea eliminar esta factura?');">
+                                <input type="hidden" name="id" value="<?= (int)$factura["id_factura"] ?>">
+                                <?= csrfField() ?>
+                                <button type="submit" class="btn-accion btn-accion-eliminar">
+                                    Eliminar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>

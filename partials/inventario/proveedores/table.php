@@ -45,12 +45,14 @@
                                     Editar
                                 </a>
 
-                                <a
-                                    href="eliminar_proveedor.php?id=<?= (int)$proveedor["id_proveedor"] ?>"
-                                    class="btn-accion btn-accion-eliminar"
-                                    onclick="return confirm('¿Seguro que desea eliminar este proveedor?');">
-                                    Eliminar
-                                </a>
+                                <form method="POST" action="eliminar_proveedor.php" style="display:inline;"
+                                      onsubmit="return confirm('¿Seguro que desea eliminar este proveedor?');">
+                                    <input type="hidden" name="id" value="<?= (int)$proveedor["id_proveedor"] ?>">
+                                    <?= csrfField() ?>
+                                    <button type="submit" class="btn-accion btn-accion-eliminar">
+                                        Eliminar
+                                    </button>
+                                </form>
                             <?php else: ?>
                                 <span class="dashboard-muted">Solo lectura</span>
                             <?php endif; ?>

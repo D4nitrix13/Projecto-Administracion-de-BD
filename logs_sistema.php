@@ -472,6 +472,19 @@ if ($selectedSource !== "" && $selectedFile !== "") {
 
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
+    <?php if ($selectedLog): ?>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var viewer = document.getElementById("logViewer");
+            if (viewer) {
+                setTimeout(function() {
+                    viewer.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 100);
+            }
+        });
+    </script>
+    <?php endif; ?>
+
 </body>
 
 </html>

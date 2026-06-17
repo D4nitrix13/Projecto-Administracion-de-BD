@@ -41,12 +41,14 @@
                                         Editar
                                     </a>
 
-                                    <a
-                                        href="eliminar_categoria.php?id=<?= (int)$cat["id_categoria"] ?>"
-                                        class="btn-action btn-delete"
-                                        onclick="return confirm('¿Seguro que desea eliminar esta categoría?');">
-                                        Eliminar
-                                    </a>
+                                    <form method="POST" action="eliminar_categoria.php" style="display:inline;"
+                                          onsubmit="return confirm('¿Seguro que desea eliminar esta categoría?');">
+                                        <input type="hidden" name="id" value="<?= (int)$cat["id_categoria"] ?>">
+                                        <?= csrfField() ?>
+                                        <button type="submit" class="btn-action btn-delete">
+                                            Eliminar
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         <?php endif; ?>

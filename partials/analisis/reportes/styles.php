@@ -269,6 +269,43 @@
         line-height: 1.45;
     }
 
+    .reports-section-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border: 1px solid #16a34a;
+        border-radius: 10px;
+        background: #16a34a;
+        color: #ffffff;
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-export:hover {
+        background: #15803d;
+        border-color: #15803d;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+    }
+
+    .btn-export:active {
+        background: #166534;
+    }
+
+    .btn-export svg {
+        flex-shrink: 0;
+    }
+
     .report-status {
         display: inline-flex;
         align-items: center;

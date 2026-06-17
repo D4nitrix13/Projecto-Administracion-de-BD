@@ -1,4 +1,4 @@
-<aside class="logs-viewer-card">
+<aside class="logs-viewer-card" id="logViewer">
     <div class="logs-card-header">
         <div>
             <span class="logs-badge logs-badge-info">Vista previa</span>

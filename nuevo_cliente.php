@@ -10,6 +10,8 @@ if (!isset($_SESSION["user"])) {
     exit();
 }
 
+require_once __DIR__ . "/helpers/notificaciones.php";
+
 $user = $_SESSION["user"];
 $idRol = (int)($user["id_rol"] ?? 0);
 
@@ -81,6 +83,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             if (!empty($resultado["registrado"])) {
                 $_SESSION["flash_success"] = "Cliente registrado correctamente.";
+
+                notificar("cliente_creado", "Nuevo cliente", "Se registró el cliente: {$nombres} {$apellidos}", [
+                    "id_usuario_origen" => (int)$user["id_usuario"],
+                    "rol_origen" => $user["rol"] ?? "",
+                    "metadata" => ["nombre" => "{$nombres} {$apellidos}"],
+                ]);
+
                 header("Location: " . $redirect);
                 exit();
             }

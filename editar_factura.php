@@ -7,7 +7,9 @@ $pageTitle = "Editar factura - Panda Estampados / Kitsune";
 require_once __DIR__ . "/includes/auth_guard.php";
 requireAdmin();
 
+require_once __DIR__ . "/bootstrap.php";
 require_once __DIR__ . "/config/constants.php";
+require_once __DIR__ . "/repositories/ProductoRepository.php";
 require_once __DIR__ . "/services/FacturaService.php";
 
 date_default_timezone_set("America/Managua");

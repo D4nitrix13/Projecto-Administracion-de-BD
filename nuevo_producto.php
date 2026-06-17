@@ -7,6 +7,7 @@ session_start();
 $pageTitle = "Nuevo producto - Panda Estampados / Kitsune";
 
 require_once __DIR__ . "/includes/auth_guard.php";
+require_once __DIR__ . "/helpers/notificaciones.php";
 
 requireLogin();
 
@@ -139,6 +140,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ]);
 
             $_SESSION["flash_success"] = "Producto registrado correctamente.";
+
+            notificar("producto_creado", "Nuevo producto", "Se registró el producto: {$nombre} ({$codigo})", [
+                "id_usuario_origen" => (int)$user["id_usuario"],
+                "rol_origen" => $user["rol"] ?? "",
+                "metadata" => ["nombre" => $nombre, "codigo" => $codigo],
+            ]);
+
+            if ((int)$stock <= 5) {
+                notificar("stock_bajo", "Stock bajo", "El producto {$nombre} tiene solo {$stock} unidades en stock", [
+                    "id_usuario_origen" => (int)$user["id_usuario"],
+                    "rol_origen" => $user["rol"] ?? "",
+                    "metadata" => ["nombre" => $nombre, "stock" => (int)$stock],
+                ]);
+            }
+
             header("Location: productos.php");
             exit();
         } catch (PDOException $e) {

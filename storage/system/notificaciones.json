@@ -1,0 +1,30 @@
+[
+    {
+        "id": "25e5d035abb782dedff217cca050ce3d",
+        "tipo": "backup_manual",
+        "titulo": "Backup manual",
+        "mensaje": "Respaldo generado: backup_manual_test_2026-06-17_11-17-12.sql",
+        "leida": true,
+        "fecha": "2026-06-17T11:17:12",
+        "fecha_lectura": "2026-06-17T11:17:19",
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "1dec2dbf31521698bef572f48338a8a6",
+        "tipo": "producto_eliminado",
+        "titulo": "Producto eliminado",
+        "mensaje": "Se eliminó el producto ID #149",
+        "leida": false,
+        "fecha": "2026-06-17T11:18:22",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    }
+]

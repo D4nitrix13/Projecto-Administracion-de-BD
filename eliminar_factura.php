@@ -1,24 +1,32 @@
 <?php
 // * Stored function or procedure has been executed
 
-// eliminar_factura.php
 session_start();
 
-if (!isset($_SESSION["user"])) {
-    header("Location: login.php");
+require_once __DIR__ . "/includes/auth_guard.php";
+require_once __DIR__ . "/helpers/csrf.php";
+require_once __DIR__ . "/helpers/notificaciones.php";
+
+requireLogin();
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: facturas.php");
     exit();
 }
 
-/** @var PDO $connection */
-$connection = require "./sql/db.php";
+csrfRequire();
 
-$id = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
+$user = $_SESSION["user"];
+$id = isset($_POST["id"]) ? (int)$_POST["id"] : 0;
 
 if ($id <= 0) {
     $_SESSION["flash_error"] = "Factura no válida.";
     header("Location: facturas.php");
     exit();
 }
+
+/** @var PDO $connection */
+$connection = require "./sql/db.php";
 
 try {
     $stmt = $connection->prepare("
@@ -33,6 +41,12 @@ try {
 
     if (!empty($resultado["eliminado"])) {
         $_SESSION["flash_success"] = "Factura eliminada correctamente y stock ajustado.";
+
+        notificar("factura_cancelada", "Factura cancelada", "Se eliminó la factura ID #{$id} y se restauró el stock", [
+            "id_usuario_origen" => (int)$user["id_usuario"],
+            "rol_origen" => $user["rol"] ?? "",
+            "metadata" => ["factura_id" => $id],
+        ]);
     } else {
         $_SESSION["flash_error"] = "No se pudo eliminar la factura.";
     }

@@ -4,6 +4,7 @@ require_once __DIR__ . "/../repositories/ProductoRepository.php";
 require_once __DIR__ . "/../repositories/CategoriaRepository.php";
 require_once __DIR__ . "/../repositories/ProveedorRepository.php";
 require_once __DIR__ . "/../services/ProductoImageService.php";
+require_once __DIR__ . "/../helpers/notificaciones.php";
 
 function obtenerDatosEditarProducto(): array
 {
@@ -66,6 +67,15 @@ function obtenerDatosEditarProducto(): array
                 $datos["imagen"] = $nombreImagenBD;
 
                 $productoRepository->actualizarProducto($id, $datos);
+
+                $nuevoStock = (int)$datos["stock"];
+                if ($nuevoStock <= 5) {
+                    notificar("stock_bajo", "Stock bajo", "El producto {$datos["nombre"]} tiene solo {$nuevoStock} unidades en stock", [
+                        "id_usuario_origen" => (int)$user["id_usuario"],
+                        "rol_origen" => $user["rol"] ?? "",
+                        "metadata" => ["producto_id" => $id, "nombre" => $datos["nombre"], "stock" => $nuevoStock],
+                    ]);
+                }
 
                 $_SESSION["flash_success"] = "Producto actualizado correctamente.";
 

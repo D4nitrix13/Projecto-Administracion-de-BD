@@ -43,12 +43,14 @@
                                 Editar
                             </a>
 
-                            <a
-                                href="eliminar_usuario.php?id=<?= (int)$usuario["id_usuario"] ?>"
-                                class="btn-accion btn-accion-eliminar"
-                                onclick="return confirm('¿Seguro que desea eliminar este trabajador?');">
-                                Eliminar
-                            </a>
+                            <form method="POST" action="eliminar_usuario.php" style="display:inline;"
+                                  onsubmit="return confirm('¿Seguro que desea eliminar este trabajador?');">
+                                <input type="hidden" name="id" value="<?= (int)$usuario["id_usuario"] ?>">
+                                <?= csrfField() ?>
+                                <button type="submit" class="btn-accion btn-accion-eliminar">
+                                    Eliminar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>

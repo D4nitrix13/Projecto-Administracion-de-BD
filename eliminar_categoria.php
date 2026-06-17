@@ -3,10 +3,18 @@
 
 session_start();
 
-if (!isset($_SESSION["user"])) {
-    header("Location: login.php");
+require_once __DIR__ . "/includes/auth_guard.php";
+require_once __DIR__ . "/helpers/csrf.php";
+require_once __DIR__ . "/helpers/notificaciones.php";
+
+requireLogin();
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: categorias.php");
     exit();
 }
+
+csrfRequire();
 
 $user = $_SESSION["user"];
 $idRol = (int)($user["id_rol"] ?? 0);
@@ -17,18 +25,16 @@ if ($idRol !== 1) {
     exit();
 }
 
-/** @var PDO $connection */
-$connection = require "./sql/db.php";
-
-$id = isset($_GET["id"]) && ctype_digit((string)$_GET["id"])
-    ? (int)$_GET["id"]
-    : 0;
+$id = isset($_POST["id"]) ? (int)$_POST["id"] : 0;
 
 if ($id <= 0) {
     $_SESSION["flash_error"] = "Categoría no válida.";
     header("Location: categorias.php");
     exit();
 }
+
+/** @var PDO $connection */
+$connection = require "./sql/db.php";
 
 try {
     $stmtDel = $connection->prepare("
@@ -41,9 +47,16 @@ try {
 
     $resultado = $stmtDel->fetch(PDO::FETCH_ASSOC);
 
-    $_SESSION["flash_success"] = !empty($resultado["eliminado"])
-        ? "Categoría eliminada correctamente."
-        : "La categoría especificada no existe.";
+    if (!empty($resultado["eliminado"])) {
+        $_SESSION["flash_success"] = "Categoría eliminada correctamente.";
+
+        notificar("categoria_eliminada", "Categoría eliminada", "Se eliminó la categoría ID #{$id}", [
+            "id_usuario_origen" => (int)$user["id_usuario"],
+            "rol_origen" => $user["rol"] ?? "",
+        ]);
+    } else {
+        $_SESSION["flash_error"] = "La categoría especificada no existe.";
+    }
 } catch (PDOException $e) {
     if ($e->getCode() === "23503") {
         $_SESSION["flash_error"] = "No se puede eliminar la categoría porque tiene productos asociados.";

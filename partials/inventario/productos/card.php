@@ -67,12 +67,14 @@ $rutaImagen = $imagen !== "" ? "uploads/productos/" . $imagen : "assets/img/no-p
                     </a>
                 <?php endif; ?>
 
-                <a
-                    href="eliminar_producto.php?id=<?= (int)$prod["id_producto"] ?>"
-                    class="btn-accion-xs btn-accion-eliminar-xs"
-                    onclick="return confirm('¿Seguro que desea eliminar este producto?');">
-                    Eliminar
-                </a>
+                <form method="POST" action="eliminar_producto.php" style="display:inline;"
+                      onsubmit="return confirm('¿Seguro que desea eliminar este producto?');">
+                    <input type="hidden" name="id" value="<?= (int)$prod["id_producto"] ?>">
+                    <?= csrfField() ?>
+                    <button type="submit" class="btn-accion-xs btn-accion-eliminar-xs">
+                        Eliminar
+                    </button>
+                </form>
             <?php endif; ?>
         </div>
     </div>

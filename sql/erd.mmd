@@ -1,0 +1,141 @@
+erDiagram
+    ROL {
+        int id_rol PK
+        varchar nombre
+    }
+    SECCION {
+        int id_seccion PK
+        varchar nombre
+    }
+    USUARIO {
+        int id_usuario PK
+        varchar nombre
+        varchar email UK
+        text password
+        int id_rol FK
+        int id_seccion FK
+    }
+    CATEGORIA {
+        int id_categoria PK
+        varchar nombre UK
+    }
+    PROVEEDOR {
+        int id_proveedor PK
+        varchar nombre
+        varchar telefono
+        varchar email
+        varchar direccion
+    }
+    CLIENTE {
+        int id_cliente PK
+        varchar nombres
+        varchar apellidos
+        varchar telefono
+        varchar direccion
+        varchar identificacion
+        varchar tipo_cliente
+        date fecha_registro
+    }
+    PRODUCTO {
+        int id_producto PK
+        varchar codigo UK
+        varchar nombre
+        text descripcion
+        varchar imagen
+        int id_categoria FK
+        int id_proveedor FK
+        numeric precio_compra
+        numeric precio_venta
+        int stock
+    }
+    COMPRA {
+        int id_compra PK
+        timestamp fecha
+        int id_proveedor FK
+        int id_usuario FK
+        numeric total
+    }
+    DETALLE_COMPRA {
+        int id_detalle PK
+        int id_compra FK
+        int id_producto FK
+        int cantidad
+        numeric costo_unitario
+        numeric total_linea
+    }
+    FACTURA {
+        int id_factura PK
+        timestamp fecha
+        int id_cliente FK
+        int id_usuario FK
+        int id_seccion FK
+        numeric subtotal
+        numeric descuento
+        numeric impuesto
+        numeric total
+        varchar tipo_cliente_venta
+        varchar nombre_cliente_fugaz
+        numeric monto_pagado
+        numeric saldo_pendiente
+        numeric porcentaje_pagado
+        varchar estado_pago
+        varchar estado_produccion
+        timestamp fecha_orden_produccion
+        date fecha_entrega_estimada
+        date fecha_entrega_real
+    }
+    DETALLE_FACTURA {
+        int id_detalle PK
+        int id_factura FK
+        int id_producto FK
+        int cantidad
+        numeric precio_unitario
+        numeric descuento_linea
+        numeric total_linea
+    }
+    FACTURA_ESTADO_HISTORIAL {
+        int id_historial PK
+        int id_factura FK
+        varchar tipo_evento
+        varchar estado_pago_anterior
+        varchar estado_pago_nuevo
+        varchar estado_produccion_anterior
+        varchar estado_produccion_nuevo
+        numeric monto_pagado_anterior
+        numeric monto_pagado_nuevo
+        numeric monto_abonado
+        numeric saldo_anterior
+        numeric saldo_nuevo
+        date fecha_entrega_estimada_anterior
+        date fecha_entrega_estimada_nueva
+        text comentario
+        timestamp fecha_evento
+    }
+    AUDITORIA {
+        int id_auditoria PK
+        varchar usuario
+        varchar accion
+        varchar tabla_afectada
+        text descripcion
+        timestamp fecha_registro
+        timestamp fecha
+        int id_usuario FK
+        text registro_id
+        jsonb datos_anteriores
+    }
+
+    ROL ||--o{ USUARIO : "tiene"
+    SECCION ||--o{ USUARIO : "asignada a"
+    SECCION ||--o{ FACTURA : "procesa"
+    CATEGORIA ||--o{ PRODUCTO : "clasifica"
+    PROVEEDOR ||--o{ PRODUCTO : "suministra"
+    PROVEEDOR ||--o{ COMPRA : "provee"
+    USUARIO ||--o{ COMPRA : "registra"
+    USUARIO ||--o{ FACTURA : "emite"
+    USUARIO ||--o{ AUDITORIA : "genera"
+    CLIENTE ||--o{ FACTURA : "realiza"
+    PRODUCTO ||--o{ DETALLE_COMPRA : "incluido en"
+    PRODUCTO ||--o{ DETALLE_FACTURA : "incluido en"
+    COMPRA ||--|{ DETALLE_COMPRA : "contiene"
+    FACTURA ||--|{ DETALLE_FACTURA : "contiene"
+    FACTURA ||--o{ FACTURA_ESTADO_HISTORIAL : "historial de"

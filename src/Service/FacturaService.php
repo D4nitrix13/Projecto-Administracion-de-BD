@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+require_once __DIR__ . "/../../helpers/notificaciones.php";
+
 class FacturaService
 {
     public function __construct(
@@ -62,6 +64,13 @@ class FacturaService
 
             $this->connection->commit();
 
+            \notificar("factura_creada", "Factura creada", "Nueva factura #{$idFactura} — $" . number_format($totales["total"], 2), [
+                "id_usuario_origen" => (int) $user["id_usuario"],
+                "id_seccion" => $idSeccion,
+                "rol_origen" => $user["rol"] ?? "",
+                "metadata" => ["factura_id" => $idFactura, "total" => $totales["total"]],
+            ]);
+
             return ["success" => true, "message" => "Factura registrada.", "id_factura" => $idFactura];
         } catch (\Throwable $e) {
             $this->rollback();
@@ -77,11 +86,18 @@ class FacturaService
             }
 
             $this->connection->beginTransaction();
-            $this->connection->prepare("CALL eliminar_factura_sistema(:id_factura)")
-                ->execute([":id_factura" => $idFactura]);
+            $stmt = $this->connection->prepare(
+                "SELECT eliminar_factura_sistema(:id_factura) AS eliminado"
+            );
+            $stmt->execute([":id_factura" => $idFactura]);
+            $resultado = $stmt->fetch(\PDO::FETCH_ASSOC);
             $this->connection->commit();
 
-            return ["success" => true, "message" => "Factura eliminada y stock restaurado."];
+            if (!empty($resultado["eliminado"])) {
+                return ["success" => true, "message" => "Factura eliminada y stock restaurado."];
+            }
+
+            return ["success" => false, "message" => "No se pudo eliminar la factura."];
         } catch (\Throwable $e) {
             $this->rollback();
             return ["success" => false, "message" => "Error: " . $e->getMessage()];
@@ -276,6 +292,23 @@ class FacturaService
             ":estado_produccion"     => $datos["estado_produccion"],
             ":fecha_entrega_estimada" => $datos["fecha_entrega_estimada"],
         ]);
+
+        if ($datos["monto_pagado"] > 0) {
+            $monto = $datos["monto_pagado"];
+            $mensaje = "Abono de $" . number_format($monto, 2) . " en factura #{$idFactura}";
+
+            if ($datos["estado_pago"] === "Pagado") {
+                \notificar("factura_pagada", "Factura pagada", "La factura #{$idFactura} ha sido pagada completamente", [
+                    "id_seccion" => null,
+                    "metadata" => ["factura_id" => $idFactura, "monto" => $monto],
+                ]);
+            } else {
+                \notificar("pago_recibido", "Pago recibido", $mensaje, [
+                    "id_seccion" => null,
+                    "metadata" => ["factura_id" => $idFactura, "monto" => $monto],
+                ]);
+            }
+        }
     }
 
     private function rollback(): void

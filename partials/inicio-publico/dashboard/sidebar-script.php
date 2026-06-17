@@ -1,6 +1,43 @@
+<style>
+    .notif-sidebar-badge {
+        margin-left: auto;
+        background: #dc2626;
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 800;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+    }
+</style>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const body = document.body;
+
+        function actualizarBadgeNotificaciones() {
+            fetch("notificacion_contador.php")
+                .then(r => r.json())
+                .then(data => {
+                    const badge = document.getElementById("notifBadge");
+                    if (!badge) return;
+                    if (data.ok && data.sin_leer > 0) {
+                        badge.textContent = data.sin_leer;
+                        badge.style.display = "inline-flex";
+                    } else {
+                        badge.style.display = "none";
+                    }
+                })
+                .catch(() => {});
+        }
+
+        actualizarBadgeNotificaciones();
+        setInterval(actualizarBadgeNotificaciones, 30000);
         const sidebarToggle = document.getElementById("sidebarToggle");
         const sidebarToggleFloating = document.getElementById("sidebarToggleFloating");
 

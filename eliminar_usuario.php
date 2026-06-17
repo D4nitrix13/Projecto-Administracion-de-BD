@@ -3,29 +3,36 @@
 
 session_start();
 
-if (!isset($_SESSION["user"])) {
-    header("Location: login.php");
+require_once __DIR__ . "/includes/auth_guard.php";
+require_once __DIR__ . "/helpers/csrf.php";
+require_once __DIR__ . "/helpers/notificaciones.php";
+
+requireLogin();
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: trabajadores.php");
     exit();
 }
 
+csrfRequire();
+
 $user = $_SESSION["user"];
 
-// Solo administradores
 if (($user["rol"] ?? "") !== "Administrador") {
     $_SESSION["flash_error"] = "No tiene permiso para eliminar trabajadores.";
     header("Location: trabajadores.php");
     exit();
 }
 
-$connection = require "./sql/db.php";
-
-$id = isset($_GET["id"]) ? (int) $_GET["id"] : 0;
+$id = isset($_POST["id"]) ? (int) $_POST["id"] : 0;
 
 if ($id <= 0) {
     $_SESSION["flash_error"] = "Trabajador no válido.";
     header("Location: trabajadores.php");
     exit();
 }
+
+$connection = require "./sql/db.php";
 
 try {
     $stmtDel = $connection->prepare("
@@ -43,6 +50,11 @@ try {
 
     if ($filasAfectadas > 0) {
         $_SESSION["flash_success"] = "Trabajador eliminado correctamente.";
+
+        notificar("usuario_eliminado", "Usuario eliminado", "Se eliminó el usuario ID #{$id}", [
+            "id_usuario_origen" => (int)$user["id_usuario"],
+            "rol_origen" => $user["rol"] ?? "",
+        ]);
     } else {
         $_SESSION["flash_error"] = "El trabajador especificado no existe.";
     }
