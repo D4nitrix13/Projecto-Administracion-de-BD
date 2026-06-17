@@ -7,6 +7,7 @@
     </div>
 
     <form action="categorias.php" method="POST" class="category-form">
+        <?= csrfField() ?>
         <div class="form-group">
             <label class="label" for="nombre">Nombre de la categoría</label>
             <input

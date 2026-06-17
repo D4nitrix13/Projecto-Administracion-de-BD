@@ -1,27 +1,39 @@
 <?php
-require_once "./sql/config.php";
 
-function connect(
-    string $dsnDb,
-    string $hostDb,
-    string $portDb,
-    string $nameDb,
-    string $userDb,
-    string $passwordDb
-): PDO {
+declare(strict_types=1);
+
+require_once __DIR__ . "/../config/database.php";
+
+function createConnection(): PDO
+{
+    $config = getDbConfig();
+
+    $dsn = sprintf(
+        "pgsql:host=%s;port=%s;dbname=%s",
+        $config["host"],
+        $config["port"],
+        $config["database"]
+    );
+
     try {
-        $pdo = new PDO(
-            "pgsql:host={$hostDb};port={$portDb};dbname={$nameDb};",
-            $userDb,
-            $passwordDb,
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        return new PDO(
+            $dsn,
+            $config["username"],
+            $config["password"],
+            [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]
         );
-
-        if ($pdo) return $pdo;
     } catch (PDOException $e) {
-        echo ("[x] Error Database $e!" . PHP_EOL);
-        die($e->getMessage());
+        error_log("Error de conexión a BD: " . $e->getMessage());
+        die("Error al conectar con la base de datos.");
     }
 }
 
-return connect($dsnDb, $hostDb, $portDb, $nameDb, $userDb, $passwordDb);
+function connect(): PDO
+{
+    return createConnection();
+}
+
+return createConnection();

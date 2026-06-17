@@ -1,4 +1,5 @@
 <form action="auth.php" method="POST" class="login-form">
+    <?= csrfField() ?>
     <div class="form-group">
         <label for="email" class="label">Email</label>
 

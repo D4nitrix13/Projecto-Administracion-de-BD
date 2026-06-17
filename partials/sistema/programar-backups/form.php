@@ -12,6 +12,7 @@
     </div>
 
     <form method="POST" class="programar-form">
+        <?= csrfField() ?>
         <input type="hidden" name="action" value="save_schedule">
 
         <div class="programar-field">

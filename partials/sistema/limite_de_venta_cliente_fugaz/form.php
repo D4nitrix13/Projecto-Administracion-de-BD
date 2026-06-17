@@ -14,6 +14,7 @@
         </div>
 
         <form method="POST" class="config-form">
+        <?= csrfField() ?>
             <input type="hidden" name="action" value="save_config">
 
             <div class="config-field">
@@ -97,6 +98,7 @@
             </p>
 
             <form method="POST">
+                <?= csrfField() ?>
                 <input type="hidden" name="action" value="reset_config">
 
                 <button

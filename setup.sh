@@ -1,15 +1,51 @@
 #!/usr/bin/env bash
 set -e
 
+# =============================================
+# 1) Detener y limpiar contenedores
+# =============================================
 docker compose -f docker/docker-compose.yml down --remove-orphans -v
 
+# =============================================
+# 2) Eliminar datos anteriores
+# =============================================
 sudo rm -rf storage/ backups/ database/
 
+# =============================================
+# 3) Crear estructura del proyecto
+# =============================================
 mkdir -p storage/system
 mkdir -p backups/manual backups/full backups/diff backups/logs
-mkdir -p database/postgresql database/logs database/wal_archive database/pgadmin
+mkdir -p database/postgresql database/wal_archive database/pgadmin
 mkdir -p uploads/productos
 
+# =============================================
+# 4) Generar .env si no existe
+# =============================================
+if [ ! -f .env ]; then
+    cp .env.example .env
+    echo ".env creado desde .env.example — edítalo con tus credenciales reales si es necesario."
+fi
+
+# =============================================
+# 5) Instalar dependencias PHP (Composer)
+# =============================================
+if [ ! -d "vendor" ]; then
+    echo "Levantando PostgreSQL..."
+    docker compose -f docker/docker-compose.yml up -d postgres
+
+    echo "Esperando que PostgreSQL esté listo..."
+    until docker exec pandas_bd pg_isready -U postgres >/dev/null 2>&1; do
+        sleep 2
+    done
+
+    echo "Instalando dependencias con Composer..."
+    docker compose -f docker/docker-compose.yml run --rm app composer install --no-interaction --prefer-dist
+fi
+
+# =============================================
+# 6) Archivos de configuración iniciales
+# =============================================
 cat > storage/system/backup_schedule.json <<'EOF'
 {
     "enabled": true,
@@ -29,18 +65,17 @@ echo '{
 echo "[]" > storage/system/maintenance_history.json
 echo "[]" > backups/logs/delete_queue.json
 
+# =============================================
+# 7) Permisos
+# =============================================
 sudo chown -R 33:33 storage backups uploads
 sudo chmod -R 775 storage backups uploads
 sudo find storage backups uploads -type f -exec chmod 664 {} \;
 sudo find storage backups uploads -type d -exec chmod 775 {} \;
 
-sudo chown -R 999:999 database/postgresql database/logs database/wal_archive
+sudo chown -R 999:999 database/postgresql database/wal_archive
 
 sudo chmod -R 700 database/postgresql
-
-sudo chmod -R 755 database/logs
-sudo find database/logs -type f -exec chmod 644 {} \;
-sudo find database/logs -type d -exec chmod 755 {} \;
 
 sudo chmod -R 775 database/wal_archive
 sudo find database/wal_archive -type f -exec chmod 664 {} \;
@@ -54,7 +89,11 @@ chmod +x scripts/backup_diff.sh
 chmod +x scripts/backup_logs.sh
 chmod +x scripts/mantenimiento_bd.sh
 
-docker compose -f docker/docker-compose.yml up -d --build
+# =============================================
+# 8) Levantar Docker
+# =============================================
+docker compose -f docker/docker-compose.yml build --no-cache app
+docker compose -f docker/docker-compose.yml up -d
 
 echo "Esperando que PostgreSQL esté listo..."
 until docker exec pandas_bd pg_isready -U postgres -d pandas_estampados_y_kitsune >/dev/null 2>&1; do
@@ -68,3 +107,9 @@ docker exec -i pandas_bd psql \
     < sql/01_data.sql
 
 echo "Datos iniciales cargados correctamente."
+echo ""
+echo "=========================================="
+echo "  Proyecto listo!"
+echo "  URL: http://localhost:8080"
+echo "  pgAdmin: http://localhost:5050"
+echo "=========================================="

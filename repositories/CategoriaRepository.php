@@ -1,24 +1,7 @@
 <?php
-// * Stored function or procedure has been executed
 
-class CategoriaRepository
-{
-    private PDO $connection;
+declare(strict_types=1);
 
-    public function __construct(PDO $connection)
-    {
-        $this->connection = $connection;
-    }
+require_once __DIR__ . "/../bootstrap.php";
 
-    public function obtenerCategoriasOrdenadas(): array
-    {
-        $statement = $this->connection->query("
-            SELECT
-                id_categoria,
-                nombre
-            FROM listar_categorias_ordenadas()
-        ");
-
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
-    }
-}
+class_alias(\App\Repository\CategoriaRepository::class, 'CategoriaRepository');

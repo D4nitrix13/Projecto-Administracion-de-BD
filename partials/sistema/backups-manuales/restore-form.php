@@ -10,6 +10,7 @@
     </div>
 
     <form method="POST" class="backup-form">
+        <?= csrfField() ?>
         <input type="hidden" name="action" value="restore">
 
         <div class="form-group">

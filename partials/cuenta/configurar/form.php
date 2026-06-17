@@ -13,6 +13,7 @@
     <?php endif; ?>
 
     <form action="configurar_cuenta.php" method="POST" class="account-settings-form">
+    <?= csrfField() ?>
 
         <section class="account-section">
             <div class="account-section-header">

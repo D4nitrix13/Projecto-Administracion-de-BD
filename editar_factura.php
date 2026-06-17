@@ -16,7 +16,11 @@ $user = $_SESSION["user"] ?? [];
 $currentPage = basename($_SERVER["PHP_SELF"]);
 
 $connection = require __DIR__ . "/sql/db.php";
-$facturaService = new FacturaService($connection);
+$facturaService = new FacturaService(
+    $connection,
+    new FacturaValidationService($connection),
+    new FacturaCalculationService($connection, new ProductoRepository($connection)),
+);
 
 $error = null;
 $success = null;

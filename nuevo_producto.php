@@ -194,6 +194,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <?php endif; ?>
 
             <form action="nuevo_producto.php" method="POST" enctype="multipart/form-data" class="form-grid">
+                <?= csrfField() ?>
 
                 <div class="form-group">
                     <label for="codigo" class="label">Código (*)</label>

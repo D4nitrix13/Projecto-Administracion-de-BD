@@ -136,6 +136,7 @@ if ($idRol === 1) {
             <?php endif; ?>
 
             <form action="nuevo_cliente.php" method="POST" class="invoice-form-grid cols-2">
+                <?= csrfField() ?>
 
                 <input
                     type="hidden"

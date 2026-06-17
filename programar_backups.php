@@ -359,6 +359,7 @@ $typeDescription = obtenerDescripcionTipoBackup($type);
                     </p>
 
                     <form method="POST">
+                        <?= csrfField() ?>
                         <input type="hidden" name="action" value="reset_schedule">
 
                         <button
@@ -383,6 +384,7 @@ $typeDescription = obtenerDescripcionTipoBackup($type);
                     </p>
 
                     <form method="POST">
+                        <?= csrfField() ?>
                         <input type="hidden" name="action" value="reset_history">
 
                         <button

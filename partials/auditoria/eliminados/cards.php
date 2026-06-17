@@ -160,6 +160,7 @@ function obtenerCamposResumenAuditoria(array $datos): array
                                 method="post"
                                 class="audit-action-form"
                                 onsubmit="return confirm('¿Desea restaurar este registro eliminado?');">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="id_auditoria" value="<?= (int)$registro["id_auditoria"] ?>">
                                 <input type="hidden" name="accion" value="restaurar">
 
@@ -172,6 +173,7 @@ function obtenerCamposResumenAuditoria(array $datos): array
                                 method="post"
                                 class="audit-action-form"
                                 onsubmit="return confirm('Esta acción eliminará permanentemente este registro de auditoría. ¿Desea continuar?');">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="id_auditoria" value="<?= (int)$registro["id_auditoria"] ?>">
                                 <input type="hidden" name="accion" value="eliminar_permanente">
 

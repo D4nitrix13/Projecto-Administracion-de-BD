@@ -5,10 +5,6 @@ require_once __DIR__ . "/../repositories/ProductoRepository.php";
 require_once __DIR__ . "/../repositories/SeccionRepository.php";
 require_once __DIR__ . "/../services/FacturaService.php";
 
-const IVA_RATE = 0.15;
-const TIPO_CLIENTE_HABITUAL = "Habitual";
-const TIPO_CLIENTE_FUGAZ = "Fugaz";
-
 function obtenerDatosNuevaFactura(): array
 {
     $user = $_SESSION["user"];
@@ -20,7 +16,11 @@ function obtenerDatosNuevaFactura(): array
     $clienteRepository = new ClienteRepository($connection);
     $productoRepository = new ProductoRepository($connection);
     $seccionRepository = new SeccionRepository($connection);
-    $facturaService = new FacturaService($connection);
+    $facturaService = new FacturaService(
+        $connection,
+        new FacturaValidationService($connection),
+        new FacturaCalculationService($connection, $productoRepository),
+    );
 
     $error = null;
 

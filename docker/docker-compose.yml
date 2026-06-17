@@ -10,16 +10,12 @@ services:
       - ..:/var/www/html
       - ../conf/php.ini:/usr/local/etc/php/conf.d/custom.ini
       - ../backups:/var/www/html/backups
-      - ../database/logs:/var/www/html/database/logs:ro
     depends_on:
       - postgres
+    env_file:
+      - ../.env
     environment:
       TZ: America/Managua
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: pandas_estampados_y_kitsune
-      DB_USERNAME: postgres
-      DB_PASSWORD: root
     restart: unless-stopped
 
   postgres:
@@ -27,16 +23,17 @@ services:
     container_name: pandas_bd
     ports:
       - "5432:5432"
+    env_file:
+      - ../.env
     environment:
       TZ: America/Managua
       PGTZ: America/Managua
-      POSTGRES_DB: pandas_estampados_y_kitsune
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ${DB_DATABASE:-pandas_estampados_y_kitsune}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
       PGDATA: /var/lib/postgresql/data
     volumes:
       - ../database/postgresql:/var/lib/postgresql/data
-      - ../database/logs:/var/log/postgresql
       - ../database/wal_archive:/wal_archive
       - ../backups:/backups
     command: >
@@ -45,10 +42,6 @@ services:
       -c wal_level=replica
       -c archive_mode=on
       -c archive_command='test ! -f /wal_archive/%f && cp %p /wal_archive/%f'
-      -c logging_collector=on
-      -c log_directory=/var/log/postgresql
-      -c log_filename=postgresql-%Y-%m-%d.log
-      -c log_file_mode=0644
     restart: unless-stopped
 
   backup_scheduler:
@@ -61,14 +54,10 @@ services:
     volumes:
       - ..:/var/www/html
       - ../backups:/var/www/html/backups
-      - ../database/logs:/var/www/html/database/logs:ro
+    env_file:
+      - ../.env
     environment:
       TZ: America/Managua
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: pandas_estampados_y_kitsune
-      DB_USERNAME: postgres
-      DB_PASSWORD: root
     command: >
       sh -c "while true; do
         php /var/www/html/utils/cron_backup.php;

@@ -122,6 +122,7 @@ function obtenerResumenDatosAuditoria(array $datos): array
                                 method="post"
                                 class="auditoria-action-form"
                                 onsubmit="return confirm('¿Desea restaurar este registro eliminado?');">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="id_auditoria" value="<?= (int)$registro["id_auditoria"] ?>">
                                 <input type="hidden" name="accion" value="restaurar">
 
@@ -134,6 +135,7 @@ function obtenerResumenDatosAuditoria(array $datos): array
                                 method="post"
                                 class="auditoria-action-form"
                                 onsubmit="return confirm('Esta acción eliminará permanentemente el historial de este registro. ¿Desea continuar?');">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="id_auditoria" value="<?= (int)$registro["id_auditoria"] ?>">
                                 <input type="hidden" name="accion" value="eliminar_permanente">
 

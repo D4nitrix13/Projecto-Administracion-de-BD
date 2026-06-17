@@ -7,6 +7,7 @@
     <?php endif; ?>
 
     <form action="editar_cliente.php?id=<?= (int)$id ?>" method="POST" class="form-grid">
+        <?= csrfField() ?>
 
         <div class="form-group">
             <label class="label">Nombres (*)</label>

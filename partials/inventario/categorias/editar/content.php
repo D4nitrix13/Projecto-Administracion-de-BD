@@ -16,6 +16,7 @@
     <?php endif; ?>
 
     <form action="editar_categoria.php" method="POST" class="edit-category-form">
+        <?= csrfField() ?>
         <input
             type="hidden"
             name="id_categoria"

@@ -89,6 +89,7 @@
 
                         <?php if ($log["delete_pending"]): ?>
                             <form method="POST">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="action" value="cancel_delete">
                                 <input type="hidden" name="source" value="<?= htmlspecialchars($log["source"]) ?>">
                                 <input type="hidden" name="filename" value="<?= htmlspecialchars($log["filename"]) ?>">
@@ -102,6 +103,7 @@
                             </form>
                         <?php else: ?>
                             <form method="POST">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="action" value="schedule_delete">
                                 <input type="hidden" name="source" value="<?= htmlspecialchars($log["source"]) ?>">
                                 <input type="hidden" name="filename" value="<?= htmlspecialchars($log["filename"]) ?>">

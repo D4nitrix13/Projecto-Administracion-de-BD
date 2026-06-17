@@ -7,6 +7,7 @@
     <?php endif; ?>
 
     <form action="editar_producto.php" method="POST" enctype="multipart/form-data" class="product-edit-form">
+        <?= csrfField() ?>
         <input
             type="hidden"
             name="id_producto"

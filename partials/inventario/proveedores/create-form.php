@@ -4,6 +4,7 @@
     </h2>
 
     <form action="proveedores.php" method="POST" class="form-grid" style="margin-bottom:18px;">
+        <?= csrfField() ?>
 
         <div class="form-group">
             <label class="label">Nombre del proveedor *</label>

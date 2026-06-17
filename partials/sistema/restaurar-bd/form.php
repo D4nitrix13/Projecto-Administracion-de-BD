@@ -38,6 +38,7 @@
             ?>
 
             <form method="POST" class="restore-form">
+                <?= csrfField() ?>
                 <input type="hidden" name="action" value="restore">
 
                 <div class="restore-field">

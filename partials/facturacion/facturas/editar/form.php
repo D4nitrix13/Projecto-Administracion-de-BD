@@ -9,6 +9,7 @@ $fechaEntregaEstimadaActual = $factura["fecha_entrega_estimada"] ?? "";
 ?>
 
 <form method="POST" class="factura-edit-card" id="facturaEditForm">
+    <?= csrfField() ?>
     <input type="hidden" name="id_factura" value="<?= (int)$idFactura ?>">
 
     <section class="factura-edit-block">

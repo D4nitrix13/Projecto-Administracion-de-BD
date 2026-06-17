@@ -17,6 +17,7 @@
 
         <div class="mantenimiento-actions-grid">
             <form method="POST" class="mantenimiento-action-card">
+                <?= csrfField() ?>
                 <input type="hidden" name="action" value="backup_full">
 
                 <div>
@@ -34,6 +35,7 @@
             </form>
 
             <form method="POST" class="mantenimiento-action-card">
+                <?= csrfField() ?>
                 <input type="hidden" name="action" value="backup_diff">
 
                 <div>
@@ -51,6 +53,7 @@
             </form>
 
             <form method="POST" class="mantenimiento-action-card">
+                <?= csrfField() ?>
                 <input type="hidden" name="action" value="backup_logs">
 
                 <div>
@@ -68,6 +71,7 @@
             </form>
 
             <form method="POST" class="mantenimiento-action-card mantenimiento-action-card-blue">
+                <?= csrfField() ?>
                 <input type="hidden" name="action" value="mantenimiento_completo">
 
                 <div>

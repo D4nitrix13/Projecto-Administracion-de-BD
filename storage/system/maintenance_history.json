@@ -2,13 +2,28 @@
     {
         "type": "full",
         "success": true,
-        "executed_at": "2026-05-12 22:15:12",
-        "next_run_at": "2026-05-19 22:15:12",
+        "executed_at": "2026-06-16 22:29:30",
+        "next_run_at": "2026-06-23 22:29:30",
         "results": [
             {
                 "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
                 "success": true,
                 "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-06-16 22:28:30",
+        "next_run_at": "2026-05-12 22:15:01",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
                 "output": "",
                 "error": ""
             }

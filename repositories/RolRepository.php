@@ -1,24 +1,7 @@
 <?php
-// * Stored function or procedure has been executed
 
-class RolRepository
-{
-    private PDO $connection;
+declare(strict_types=1);
 
-    public function __construct(PDO $connection)
-    {
-        $this->connection = $connection;
-    }
+require_once __DIR__ . "/../bootstrap.php";
 
-    public function obtenerRolesOrdenados(): array
-    {
-        $statement = $this->connection->query("
-            SELECT
-                id_rol,
-                nombre
-            FROM listar_roles_ordenados()
-        ");
-
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
-    }
-}
+class_alias(\App\Repository\RolRepository::class, 'RolRepository');

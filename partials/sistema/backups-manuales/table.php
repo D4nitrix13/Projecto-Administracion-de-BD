@@ -345,6 +345,7 @@ sort($tiposDisponibles);
 
                         <?php if ($pendiente): ?>
                             <form method="POST" class="backup-inline-form">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="action" value="cancel_delete">
                                 <input type="hidden" name="archivo" value="<?= htmlspecialchars($nombreReal) ?>">
 
@@ -354,6 +355,7 @@ sort($tiposDisponibles);
                             </form>
                         <?php else: ?>
                             <form method="POST" class="backup-inline-form">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="action" value="schedule_delete">
                                 <input type="hidden" name="archivo" value="<?= htmlspecialchars($nombreReal) ?>">
 

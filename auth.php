@@ -3,10 +3,13 @@
 
 session_start();
 
+require_once __DIR__ . "/helpers/csrf.php";
+
 // limpiar mensajes anteriores
 unset($_SESSION["error"], $_SESSION["success"]);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    csrfRequire();
 
     // 1) Leer y normalizar datos
     $email    = trim($_POST["email"] ?? "");

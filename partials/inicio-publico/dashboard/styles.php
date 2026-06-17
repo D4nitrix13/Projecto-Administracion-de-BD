@@ -179,6 +179,25 @@
         font-weight: 800;
     }
 
+    .sidebar-icon {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        flex-shrink: 0;
+        margin-right: 10px;
+        opacity: 0.75;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .sidebar-nav a.active .sidebar-icon,
+    .sidebar-nav a:hover .sidebar-icon {
+        opacity: 1;
+    }
+
     .sidebar-sublink {
         margin-left: 12px;
         font-size: 0.84rem !important;

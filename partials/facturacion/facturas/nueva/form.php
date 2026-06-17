@@ -7,6 +7,7 @@
     <?php endif; ?>
 
     <form action="nueva_factura.php" method="POST" id="form-factura">
+        <?= csrfField() ?>
 
         <?php require __DIR__ . "/client-section.php"; ?>
 

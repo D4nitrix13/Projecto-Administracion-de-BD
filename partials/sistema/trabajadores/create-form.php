@@ -4,6 +4,7 @@
     </h2>
 
     <form action="trabajadores.php" method="POST" class="form-grid">
+        <?= csrfField() ?>
 
         <div class="form-group">
             <label class="label">Nombre completo *</label>

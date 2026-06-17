@@ -7,6 +7,7 @@
     <?php endif; ?>
 
     <form action="editar_proveedor.php" method="POST" class="supplier-edit-form">
+        <?= csrfField() ?>
         <input
             type="hidden"
             name="id_proveedor"

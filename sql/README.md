@@ -1,49 +1,151 @@
-# Usuarios y contraseñas
+# SQL — Base de Datos
 
-```sql
-------------------------------------------------------------
+Directorio con el schema completo, procedimientos almacenados y datos iniciales del sistema.
 
--- USUARIOS (30 usuarios, con tus 30 hashes)
--- password0  → Admin General
--- password1  → Daniel Pérez
--- ...
--- password29 → Reportes BI
-------------------------------------------------------------
+## Archivos
 
-INSERT INTO Usuario (nombre, email, password, id_rol, id_seccion) VALUES
-('Leonel Messi', 'leonel.messi@admin.pandakitsune.com', '$2y$12$eNT2qKeNt3ra8jeYrXM72.dGnzKPH7Sk1sUsKA/VVgBqNJfEh5p1S', 1, NULL),
+| Archivo                  | Contenido                                                                                | Lineas |
+| ------------------------ | ---------------------------------------------------------------------------------------- | ------ |
+| `01_data.sql`            | Schema DDL completo: tablas, funciones, procedimientos, triggers, indices, datos semilla | ~5,770 |
+| `02_procedures.sql`      | Versiones alternativas/addicionales de funciones (CREATE OR REPLACE)                     | ~3,040 |
+| `data_default.sql`       | Script de generacion de datos de prueba (120 productos, 40 compras, 80 facturas)         | ~366   |
+| `00_create_database.sql` | Creacion de la base de datos (vacio — se crea via Docker)                                | 0      |
+| `db.php`                 | Conexion PDO a PostgreSQL                                                                | 39     |
 
-('Daniel Pérez',    'daniel.perez@kitsune.com',          '$2y$12$q/FLcSnscgAJx5KLw6ZfkeKmqVNjVgsid.NzF1vIA7bFvwqZvrtEm', 2, 2),
-('Jeremy Pérez',    'jeremy.perez@kitsune.com',          '$2y$12$9cCSd.m5eccghVDHnx1hZOM1KYPHUzQZsJP3Wx4rVYA6L.zbRLuiK', 2, 2),
-('Jhossep Ramos',   'jhossep.ramos@kitsune.com',         '$2y$12$6iu4FfS3vWAN3g0dCpaJH./pq4u2fsOQmujzvPxtcoxX1/VhgmV8W', 2, 2),
-('Diego Torres',    'diego.torres@kitsune.com',          '$2y$12$8rYAJPYHfmBYfUsvSQ6JQeYzXY/dfhv5minqtioSOT/OYNpYhKfx2', 2, 2),
-('Carlos Núñez',    'carlos.nunez@kitsune.com',          '$2y$12$Wktc.2kJD1t1addvJTy6h.HZsofpoPdinZfkNuQpOzT6x1PdxjcbW', 2, 2),
-('Mónica Larios',   'monica.larios@kitsune.com',         '$2y$12$VfV8bO4qFkH5AW42IEEeBebUH2OG8E24/adYxBHpkgNxxbpwpDlKe', 2, 2),
-('Esteban Rodríguez','esteban.rodriguez@kitsune.com',    '$2y$12$6xrE3MOnkmTmYvQDepNuB.dxG7I2BFg9enlTc2Qu8s0JzmDYVm1ze', 2, 2),
-('Eduardo Molina',  'eduardo.molina@kitsune.com',        '$2y$12$NHgiv5ky8RBEP.vlKcDZUeiV2ZjiRENZmcmnS9lWm7NsFl3N8Gqom', 2, 2),
+## Credenciales de Prueba
 
--- TODOS LOS FACTURADORES (id_rol = 3) EN KITSUNE (id_seccion = 2)
-('Andy Sánchez',    'andy.sanchez@panda.com',            '$2y$12$h/WagOY4zymqWqcyccvi7.ikKYZxbFknFzm6bqlEfySGINOBxM5US', 3, 2),
-('Sofía Gómez',     'sofia.gomez@kitsune.com',           '$2y$12$hVV/KUpCbUX9EOKMueVA3Ozsdgx4na8c9K.HN7Y2LDB9YpoOuX72a', 3, 2),
-('Luis Torres',     'luis.torres@panda.com',             '$2y$12$NMsgDw0o0RgTCGtdX9EY8eyhderZcaV4/VPHZOPYR52NJIrde/8q.', 3, 2),
-('Carla Bermúdez',  'carla.bermudez@kitsune.com',        '$2y$12$ZuE7Qa26mz2IlL0hl7CW1u/1KL5Bw.Sx8syeol1a7Xm2LXssw7oC6', 3, 2),
-('Karla Medina',    'karla.medina@panda.com',            '$2y$12$D5j0CPjHq4paoSBtFFBCDeFHcAd4Lm9onOQYPM9zBRRDJ3OWN/ml6', 3, 2),
-('Wilmer Ruiz',     'wilmer.ruiz@kitsune.com',           '$2y$12$br0QmLjZnqcHE.UzWSpQieJYav6W4Fxqi1s8vrBwQuC0g2q0OSnHi', 3, 2),
-('Miguel Hernández','miguel.hernandez@panda.com',        '$2y$12$H.Ui0n/1U4Ae32AI.C9bbOfSISzETo2MHFKkZWFot8UrObFuesTQ2', 3, 2),
-('Paola López',     'paola.lopez@panda.com',             '$2y$12$FDyaXbpcOqlWn0dIk/XHTumo42ZM1aX1U.XZ5wMHtQ7lQo7LgQMOa', 3, 2),
-('Kevin Castillo',  'kevin.castillo@panda.com',          '$2y$12$2kA9hBSf/QPIJuDf90I2luKFTeh95mGZqISMqBIdtIe8oFnbk45H2', 3, 2),
-('María Fernández', 'maria.fernandez@kitsune.com',       '$2y$12$c1izNLMr5EpE1qhi4qB67evlAxuc8EDdQK09lFcoJzUeNdt0RoWTm', 3, 2),
-('Josefina Rivas',  'josefina.rivas@kitsune.com',        '$2y$12$UBJcyEORA9eFtgMVbFqu3u327RnKP1PkiA2Fd.XmA.rKom1FrDISG', 3, 2),
-('Roberto Gutiérrez','roberto.gutierrez@kitsune.com',    '$2y$12$.PixiEX1MN9hves7DgCE1eUm3vsLz04Mqdd35rzbPX8yFCLEqOpzG', 3, 2),
-('Lucía Herrera',   'lucia.herrera@kitsune.com',         '$2y$12$zmQ8NBBVOrw.aO2Umt.hNumWlPWAJ2aA1PxMlz/A0I.jT6o6tl2Rq', 3, 2),
-('Brandon Morales', 'brandon.morales@kitsune.com',       '$2y$12$xuhd3.8.x3E4ZKo9nh0yZev8bIXCxd1aDhzlhfpD8YcxTfDTBdUf2', 3, 2),
-('Andrea Vega',     'andrea.vega@panda.com',             '$2y$12$CBUWv03lSPKoAbh6gVnbyO4xlbmSAJW0Tkl.QQWbpPHbj7iumaYoG', 3, 2),
-('Sergio Mairena',  'sergio.mairena@panda.com',          '$2y$12$2i1oGVK1n6q9D0Iluy3mnuE.lCulA0tfM1pc09Xc8zHn/zAKLZIdW', 3, 2),
-('Julia Campos',    'julia.campos@panda.com',            '$2y$12$F7zrVU53XF1dSiV3F8xcjuJrcXNAXgieRNXAhFXMOyBOeRdZPswoy', 3, 2),
+### Convencion de contrasenas
 
-('Laura Castillo',  'laura.castillo@admin.pandakitsune.com', '$2y$12$.inALdr.Qy5DIq3dSxKjVuPSYFTL20B3VL3orm2BwxSSqwKsM3UkC', 1, NULL),
-('Óscar Mejía',     'oscar.mejia@admin.pandakitsune.com',    '$2y$12$n1ZhPkXE/LMCwggOgwtHkus4Lt/XPkpgBDkz.lCdIGTU9.Kt1CV2y', 1, NULL),
+| Patron                       | Contrasena   |
+| ---------------------------- | ------------ |
+| Admin General (Leonel Messi) | `password0`  |
+| Daniel Perez                 | `password1`  |
+| ...                          | `passwordN`  |
+| Nidia Solis (ultimo usuario) | `password29` |
 
-('Carmen Rojas',    'carmen.rojas@panda.com',            '$2y$12$PsrYOcMFI9eBZlOJzV9RQOMx7uI9cm.3qqPk1tQYz6jxr2fIqhIjO', 3, 2),
-('Nidia Solís',     'nidia.solis@kitsune.com',           '$2y$12$a9PzdMLz8ZNtGEDl6tPxnuMRq2qoYHCh55RlpcCDgC7nGvRxl2D7C', 3, 2);
+### Administradores (rol 1)
+
+| Usuario        | Email                                   | Contrasena  |
+| -------------- | --------------------------------------- | ----------- |
+| Leonel Messi   | `leonel.messi@admin.pandakitsune.com`   | `password0` |
+| Laura Castillo | `laura.castillo@admin.pandakitsune.com` | `password0` |
+| Oscar Mejia    | `oscar.mejia@admin.pandakitsune.com`    | `password0` |
+
+### Supervisores (rol 2, seccion Kitsune)
+
+| Usuario           | Email                           | Contrasena  |
+| ----------------- | ------------------------------- | ----------- |
+| Daniel Perez      | `daniel.perez@kitsune.com`      | `password1` |
+| Jeremy Perez      | `jeremy.perez@kitsune.com`      | `password2` |
+| Jhossep Ramos     | `jhossep.ramos@kitsune.com`     | `password3` |
+| Diego Torres      | `diego.torres@kitsune.com`      | `password4` |
+| Carlos Nunez      | `carlos.nunez@kitsune.com`      | `password5` |
+| Monica Larios     | `monica.larios@kitsune.com`     | `password6` |
+| Esteban Rodriguez | `esteban.rodriguez@kitsune.com` | `password7` |
+| Eduardo Molina    | `eduardo.molina@kitsune.com`    | `password8` |
+
+### Facturadores (rol 3, seccion Kitsune)
+
+| Usuario           | Email                           | Contrasena   |
+| ----------------- | ------------------------------- | ------------ |
+| Andy Sanchez      | `andy.sanchez@panda.com`        | `password9`  |
+| Sofia Gomez       | `sofia.gomez@kitsune.com`       | `password10` |
+| Luis Torres       | `luis.torres@panda.com`         | `password11` |
+| Carla Bermudez    | `carla.bermudez@kitsune.com`    | `password12` |
+| Karla Medina      | `karla.medina@panda.com`        | `password13` |
+| Wilmer Ruiz       | `wilmer.ruiz@kitsune.com`       | `password14` |
+| Miguel Hernandez  | `miguel.hernandez@panda.com`    | `password15` |
+| Paola Lopez       | `paola.lopez@panda.com`         | `password16` |
+| Kevin Castillo    | `kevin.castillo@panda.com`      | `password17` |
+| Maria Fernandez   | `maria.fernandez@kitsune.com`   | `password18` |
+| Josefina Rivas    | `josefina.rivas@kitsune.com`    | `password19` |
+| Roberto Gutierrez | `roberto.gutierrez@kitsune.com` | `password20` |
+| Lucia Herrera     | `lucia.herrera@kitsune.com`     | `password21` |
+| Brandon Morales   | `brandon.morales@kitsune.com`   | `password22` |
+| Andrea Vega       | `andrea.vega@panda.com`         | `password23` |
+| Sergio Mairena    | `sergio.mairena@panda.com`      | `password24` |
+| Julia Campos      | `julia.campos@panda.com`        | `password25` |
+| Carmen Rojas      | `carmen.rojas@panda.com`        | `password26` |
+| Nidia Solis       | `nidia.solis@kitsune.com`       | `password27` |
+
+## Schema Resumido
+
 ```
+rol (1) ──< (N) usuario (N) >── (1) seccion
+                                  │
+cliente (1) ──< (N) factura ──> (1) seccion
+                                 ├──> (1) usuario
+                                 ├──< (N) detallefactura >── (1) producto
+                                 └──< (N) factura_estado_historial
+
+proveedor (1) ──< (N) compra ──> (1) usuario
+                        └──< (N) detallecompra >── (1) producto
+
+categoria (1) ──< (N) producto (N) >── (1) proveedor
+
+usuario (1) ──< (N) auditoria
+```
+
+### Tablas (13)
+
+| Tabla                      | Proposito                                         |
+| -------------------------- | ------------------------------------------------- |
+| `rol`                      | Roles del sistema (Admin, Supervisor, Facturador) |
+| `seccion`                  | Secciones (Panda Estampados, Kitsune)             |
+| `usuario`                  | Usuarios del sistema                              |
+| `cliente`                  | Clientes (Habitual o Detallista)                  |
+| `categoria`                | Categorias de productos                           |
+| `proveedor`                | Proveedores                                       |
+| `producto`                 | Productos con precios y stock                     |
+| `factura`                  | Facturas/ventas con estados                       |
+| `detallefactura`           | Lineas de detalle de facturas                     |
+| `factura_estado_historial` | Historial de cambios de estado                    |
+| `compra`                   | Compras a proveedores                             |
+| `detallecompra`            | Lineas de detalle de compras                      |
+| `auditoria`                | Registro de eliminaciones (soft delete)           |
+
+### Funciones Almacenadas (62)
+
+| Categoria         | Cantidad | Ejemplos                                                                       |
+| ----------------- | -------- | ------------------------------------------------------------------------------ |
+| CRUD Clientes     | 6        | `registrar_cliente_sistema()`, `obtener_cliente_por_id()`                      |
+| CRUD Productos    | 5        | `registrar_producto_formulario()`, `buscar_productos_inventario()`             |
+| CRUD Proveedores  | 5        | `crear_proveedor_sistema()`, `buscar_proveedores_filtrados()`                  |
+| CRUD Categorias   | 4        | `registrar_categoria()`, `buscar_categorias()`                                 |
+| CRUD Usuarios     | 6        | `crear_usuario_sistema()`, `buscar_usuarios_filtrados()`                       |
+| CRUD Facturas     | 7        | `registrar_factura_sistema()`, `eliminar_factura_sistema()`                    |
+| CRUD Compras      | 2        | `obtener_compra_por_id()`, `obtener_detalles_compra()`                         |
+| Dashboard         | 6        | `obtener_metricas_dashboard()`, `obtener_ventas_dashboard()`                   |
+| Reportes          | 8        | `obtener_total_ventas_reportes()`, `obtener_productos_mas_vendidos_reportes()` |
+| Busqueda/Filtros  | 8        | `buscar_facturas_filtradas()`, `buscar_clientes_filtrados()`                   |
+| Listas/Referencia | 11       | `listar_categorias_ordenadas()`, `listar_roles_ordenados()`                    |
+| Clientes          | 3        | `obtener_resumen_cliente()`, `obtener_ultimas_facturas_cliente()`              |
+| Detalle Factura   | 4        | `obtener_lineas_detalle_factura()`, `obtener_productos_factura_por_ids()`      |
+| Calculos          | 2        | `calcular_subtotal_factura()`, `calcular_total_compra()`                       |
+| Autenticacion     | 2        | `obtener_usuario_login()`, `actualizar_password_usuario_login()`               |
+| Secciones         | 2        | `obtener_seccion_por_id()`, `obtener_seccion_por_nombre()`                     |
+
+### Procedimientos (10)
+
+| Procedimiento                | Proposito                                                         |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `registrar_producto`         | INSERT producto (version simplificada)                            |
+| `registrar_cliente`          | INSERT cliente (version simplificada)                             |
+| `registrar_auditoria`        | INSERT registro de auditoria manual                               |
+| `agregar_detalle_compra`     | INSERT linea de compra + actualizar stock + total                 |
+| `agregar_detalle_factura`    | INSERT linea de factura + descontar stock + totales               |
+| `aumentar_stock_producto`    | Incrementar stock                                                 |
+| `disminuir_stock_producto`   | Decrementar stock                                                 |
+| `editar_factura_sistema`     | Edicion completa: restaurar stock, reconstruir lineas, recalcular |
+| `actualizar_totales_factura` | Recalcular subtotal/impuesto/total                                |
+| `actualizar_total_compra`    | Recalcular total de compra                                        |
+
+### Triggers (5)
+
+| Trigger                        | Tabla     | Evento        | Funcion                                |
+| ------------------------------ | --------- | ------------- | -------------------------------------- |
+| `trg_auditar_delete_categoria` | categoria | DELETE        | `fn_auditar_delete_generico()`         |
+| `trg_auditar_delete_cliente`   | cliente   | DELETE        | `fn_auditar_delete_generico()`         |
+| `trg_auditar_delete_producto`  | producto  | DELETE        | `fn_auditar_delete_generico()`         |
+| `trg_auditar_delete_proveedor` | proveedor | DELETE        | `fn_auditar_delete_generico()`         |
+| `trg_factura_estado_historial` | factura   | INSERT/UPDATE | `registrar_historial_estado_factura()` |

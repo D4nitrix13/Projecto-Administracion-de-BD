@@ -7,6 +7,7 @@
     <?php endif; ?>
 
     <form action="editar_trabajador.php" method="POST" class="form-grid user-edit-form">
+        <?= csrfField() ?>
         <input
             type="hidden"
             name="id_usuario"

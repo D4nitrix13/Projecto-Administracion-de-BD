@@ -13,6 +13,7 @@
     <?php endif; ?>
 
     <form action="cambiar_numero_de_whatsapp.php" method="POST" class="form-grid">
+    <?= csrfField() ?>
 
         <div class="form-group">
             <label class="label">Número actual</label>

@@ -1,0 +1,17 @@
+{
+    "name": "panda-estampados/administracion-bd",
+    "description": "Sistema de administración de base de datos - Panda Estampados / Kitsune",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "config/constants.php"
+        ]
+    },
+    "require": {
+        "php": ">=8.1",
+        "vlucas/phpdotenv": "^5.5"
+    }
+}
