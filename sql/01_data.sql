@@ -5765,6 +5765,8 @@ ALTER TABLE ONLY public.usuario
 -- SEED DATA: Datos completos para dashboard y pruebas
 -- Solo inserta si las tablas estan vacias
 -- =========================================================
+SET search_path TO public;
+
 BEGIN;
 
 -- Secciones
@@ -5783,38 +5785,38 @@ SELECT v.nombre FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM categoria LIMIT 1);
 
 -- Proveedores
-INSERT INTO proveedor (nombre, telefono, direccion, email, estado)
-SELECT v.nombre, v.telefono, v.direccion, v.email, v.estado FROM (VALUES
-    ('Distribuidora Norte', '2255-1001', 'Managua, Barrio Martha Quezada', 'norte@proveedor.com', 'Activo'),
-    ('Importadora Central', '2255-1002', 'Managua, Villa Libertad', 'central@proveedor.com', 'Activo'),
-    ('Suministros del Sur', '2255-1003', 'Masaya, 2da Calle', 'sur@proveedor.com', 'Activo')
-) AS v(nombre, telefono, direccion, email, estado)
+INSERT INTO proveedor (nombre, telefono, direccion, email)
+SELECT v.nombre, v.telefono, v.direccion, v.email FROM (VALUES
+    ('Distribuidora Norte', '2255-1001', 'Managua, Barrio Martha Quezada', 'norte@proveedor.com'),
+    ('Importadora Central', '2255-1002', 'Managua, Villa Libertad', 'central@proveedor.com'),
+    ('Suministros del Sur', '2255-1003', 'Masaya, 2da Calle', 'sur@proveedor.com')
+) AS v(nombre, telefono, direccion, email)
 WHERE NOT EXISTS (SELECT 1 FROM proveedor LIMIT 1);
 
 -- Productos (precios en C$)
-INSERT INTO producto (nombre, descripcion, precio_compra, precio_venta, stock, id_categoria, id_proveedor, estado)
-SELECT v.nombre, v.desc, v.pc, v.pv, v.stock, v.cat, v.prov, 'Activo' FROM (VALUES
-    ('Camiseta Panda Basica', 'Camiseta 100% algodon estampa panda', 120.00, 250.00, 50, 1, 1),
-    ('Camiseta Kitsune Edition', 'Camiseta premium estampa zorro', 150.00, 320.00, 35, 1, 1),
-    ('Hoodie Panda Negro', 'Hoodie negro con logo panda bordado', 280.00, 550.00, 20, 2, 2),
-    ('Hoodie Kitsune Rojo', 'Hoodie rojo con logo kitsune', 300.00, 600.00, 15, 2, 2),
-    ('Sticker Panda Pack x10', 'Pack de 10 stickers panda variados', 30.00, 80.00, 100, 3, 3),
-    ('Sticker Kitsune Pack x10', 'Pack de 10 stickers kitsune variados', 30.00, 80.00, 80, 3, 3),
-    ('Taza Panda Ceramic', 'Taza ceramica 350ml estampa panda', 60.00, 150.00, 40, 4, 1),
-    ('Taza Kitsune Ceramic', 'Taza ceramica 350ml estampa kitsune', 60.00, 150.00, 35, 4, 1),
-    ('Gorra Panda Trucker', 'Gorra trucker bordado panda', 80.00, 180.00, 25, 5, 2),
-    ('Gorra Kitsune Snapback', 'Gorra snapbacklogo kitsune', 85.00, 190.00, 20, 5, 2),
-    ('Llavero Panda Metal', 'Llavero metalico panda 4cm', 25.00, 65.00, 60, 6, 3),
-    ('Llavero Kitsune Metal', 'Llavero metalico kitsune 4cm', 25.00, 65.00, 55, 6, 3),
-    ('Poster Panda A3', 'Poster arte digital panda A3', 35.00, 90.00, 30, 7, 1),
-    ('Poster Kitsune A3', 'Poster arte digital kitsune A3', 35.00, 90.00, 28, 7, 1),
-    ('Bolso Panda Canvas', 'Bolso canvas estampa panda', 90.00, 200.00, 18, 8, 2),
-    ('Mousepad Panda XL', 'Mousepad XXL estampa panda 900x400mm', 70.00, 160.00, 22, 9, 3),
-    ('Mousepad Kitsune XL', 'Mousepad XXL estampa kitsune 900x400mm', 70.00, 160.00, 20, 9, 3),
-    ('Pin Panda Durosedoso', 'Pin acrilico panda 3cm', 15.00, 45.00, 70, 10, 1),
-    ('Pin Kitsune Durosedoso', 'Pin acrilico kitsune 3cm', 15.00, 45.00, 65, 10, 1),
-    ('Camiseta Personalizada', 'Camiseta personalizada impresion DTG', 180.00, 400.00, 10, 1, 1)
-) AS v(nombre, desc, pc, pv, stock, cat, prov)
+INSERT INTO producto (codigo, nombre, descripcion, precio_compra, precio_venta, stock, id_categoria, id_proveedor)
+SELECT v.codigo, v.nombre, v.descripcion, v.pc, v.pv, v.stock, v.cat, v.prov FROM (VALUES
+    ('PAN-CAM-001', 'Camiseta Panda Basica', 'Camiseta 100% algodon estampa panda', 120.00, 250.00, 50, 1, 1),
+    ('PAN-CAM-002', 'Camiseta Kitsune Edition', 'Camiseta premium estampa zorro', 150.00, 320.00, 35, 1, 1),
+    ('PAN-HOO-001', 'Hoodie Panda Negro', 'Hoodie negro con logo panda bordado', 280.00, 550.00, 20, 2, 2),
+    ('PAN-HOO-002', 'Hoodie Kitsune Rojo', 'Hoodie rojo con logo kitsune', 300.00, 600.00, 15, 2, 2),
+    ('PAN-STI-001', 'Sticker Panda Pack x10', 'Pack de 10 stickers panda variados', 30.00, 80.00, 100, 3, 3),
+    ('PAN-STI-002', 'Sticker Kitsune Pack x10', 'Pack de 10 stickers kitsune variados', 30.00, 80.00, 80, 3, 3),
+    ('PAN-TAZ-001', 'Taza Panda Ceramic', 'Taza ceramica 350ml estampa panda', 60.00, 150.00, 40, 4, 1),
+    ('PAN-TAZ-002', 'Taza Kitsune Ceramic', 'Taza ceramica 350ml estampa kitsune', 60.00, 150.00, 35, 4, 1),
+    ('PAN-GOR-001', 'Gorra Panda Trucker', 'Gorra trucker bordado panda', 80.00, 180.00, 25, 5, 2),
+    ('PAN-GOR-002', 'Gorra Kitsune Snapback', 'Gorra snapbacklogo kitsune', 85.00, 190.00, 20, 5, 2),
+    ('PAN-LLA-001', 'Llavero Panda Metal', 'Llavero metalico panda 4cm', 25.00, 65.00, 60, 6, 3),
+    ('PAN-LLA-002', 'Llavero Kitsune Metal', 'Llavero metalico kitsune 4cm', 25.00, 65.00, 55, 6, 3),
+    ('PAN-POS-001', 'Poster Panda A3', 'Poster arte digital panda A3', 35.00, 90.00, 30, 7, 1),
+    ('PAN-POS-002', 'Poster Kitsune A3', 'Poster arte digital kitsune A3', 35.00, 90.00, 28, 7, 1),
+    ('PAN-BOL-001', 'Bolso Panda Canvas', 'Bolso canvas estampa panda', 90.00, 200.00, 18, 8, 2),
+    ('PAN-MOU-001', 'Mousepad Panda XL', 'Mousepad XXL estampa panda 900x400mm', 70.00, 160.00, 22, 9, 3),
+    ('PAN-MOU-002', 'Mousepad Kitsune XL', 'Mousepad XXL estampa kitsune 900x400mm', 70.00, 160.00, 20, 9, 3),
+    ('PAN-PIN-001', 'Pin Panda Durosedoso', 'Pin acrilico panda 3cm', 15.00, 45.00, 70, 10, 1),
+    ('PAN-PIN-002', 'Pin Kitsune Durosedoso', 'Pin acrilico kitsune 3cm', 15.00, 45.00, 65, 10, 1),
+    ('PAN-CAM-003', 'Camiseta Personalizada', 'Camiseta personalizada impresion DTG', 180.00, 400.00, 10, 1, 1)
+) AS v(codigo, nombre, descripcion, pc, pv, stock, cat, prov)
 WHERE NOT EXISTS (SELECT 1 FROM producto LIMIT 1);
 
 -- Clientes
@@ -5851,7 +5853,7 @@ INSERT INTO factura (
     estado_pago, estado_produccion
 )
 SELECT
-    (CURRENT_DATE - (30 - (gs % 30)) || ' days')::DATE
+    (CURRENT_DATE - (30 - (gs % 30)))
         + (((gs * 3 + 7) % 12 + 8) || ' hours')::INTERVAL
         + (((gs * 17) % 40) || ' minutes')::INTERVAL,
     ((gs % (SELECT COUNT(*) FROM cliente)) + 1),
@@ -5935,13 +5937,29 @@ SET
     estado_produccion = CASE
         WHEN f.id_factura % 5 = 0 THEN 'Entregada'
         WHEN f.id_factura % 5 = 1 THEN 'Lista para entregar'
-        WHEN f.id_factura % 5 = 2 THEN 'En produccion'
+        WHEN f.id_factura % 5 = 2 THEN 'En producción'
         ELSE 'Pendiente'
     END;
 
 -- Historial de estados para las facturas
-INSERT INTO factura_estado_historial (id_factura, estado_anterior, estado_nuevo, fecha_cambio, id_usuario_cambio)
-SELECT id_factura, NULL, 'Pendiente', fecha, id_usuario FROM factura;
+INSERT INTO factura_estado_historial (
+    id_factura, tipo_evento,
+    estado_pago_nuevo, estado_produccion_nuevo,
+    monto_pagado_anterior, monto_pagado_nuevo,
+    saldo_anterior, saldo_nuevo,
+    fecha_evento
+)
+SELECT
+    id_factura,
+    'Factura creada',
+    'Pendiente',
+    'Pendiente',
+    0.00,
+    0.00,
+    total,
+    total,
+    fecha
+FROM factura;
 
 COMMIT;
 
@@ -5954,6 +5972,54 @@ SELECT setval('public.categoria_id_categoria_seq', (SELECT COALESCE(MAX(id_categ
 SELECT setval('public.proveedor_id_proveedor_seq', (SELECT COALESCE(MAX(id_proveedor), 1) FROM proveedor));
 SELECT setval('public.cliente_id_cliente_seq', (SELECT COALESCE(MAX(id_cliente), 1) FROM cliente));
 SELECT setval('public.usuario_id_usuario_seq', (SELECT COALESCE(MAX(id_usuario), 1) FROM usuario));
+
+-- ============================================================================
+-- Recalcular fechas de facturas para que estén dentro de los últimos 30 días
+-- Esto asegura que la gráfica del dashboard muestre datos actualizados
+-- cada vez que se ejecuta setup.sh
+-- ============================================================================
+DO $$
+DECLARE
+    max_fecha DATE;
+    offset_dias INTEGER;
+BEGIN
+    -- Encontrar la fecha más reciente de las facturas seed
+    SELECT MAX(fecha::date) INTO max_fecha FROM factura;
+
+    -- Calcular cuántos días hay que retroceder para que la más reciente sea hoy - 2
+    offset_dias := (CURRENT_DATE - interval '2 days')::date - max_fecha;
+
+    -- Solo ajustar si el offset es positivo (las fechas están en el pasado)
+    IF offset_dias > 0 THEN
+        -- Actualizar fechas de facturas
+        UPDATE factura SET
+            fecha = fecha + make_interval(days => offset_dias),
+            fecha_orden_produccion = fecha_orden_produccion + make_interval(days => offset_dias),
+            fecha_entrega_estimada = fecha_entrega_estimada + make_interval(days => offset_dias),
+            fecha_entrega_real = CASE
+                WHEN fecha_entrega_real IS NOT NULL
+                THEN fecha_entrega_real + make_interval(days => offset_dias)
+                ELSE NULL
+            END;
+
+        -- Actualizar fechas en el historial de estados
+        UPDATE factura_estado_historial SET
+            fecha_evento = fecha_evento + make_interval(days => offset_dias),
+            fecha_entrega_estimada_anterior = CASE
+                WHEN fecha_entrega_estimada_anterior IS NOT NULL
+                THEN fecha_entrega_estimada_anterior + make_interval(days => offset_dias)
+                ELSE NULL
+            END,
+            fecha_entrega_estimada_nueva = CASE
+                WHEN fecha_entrega_estimada_nueva IS NOT NULL
+                THEN fecha_entrega_estimada_nueva + make_interval(days => offset_dias)
+                ELSE NULL
+            END;
+
+        RAISE NOTICE 'Fechas de facturas ajustadas en % días para mostrar datos recientes.', offset_dias;
+    END IF;
+END
+$$;
 
 \unrestrict V5NevU0EBVHxMwc8Gie6sxI6SNUjy50UZHb49fCN6zZwXSZW0RMbbgEd4tR1cgg
 
