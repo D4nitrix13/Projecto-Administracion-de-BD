@@ -91,5 +91,10 @@
                 body.classList.add("sidebar-collapsed");
             }
         });
+
+        var activeLink = document.querySelector(".sidebar-scroll .active");
+        if (activeLink) {
+            activeLink.scrollIntoView({ block: "center", behavior: "instant" });
+        }
     });
 </script>
