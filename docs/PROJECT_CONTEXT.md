@@ -19,9 +19,17 @@ Antes del sistema, no existia una plataforma centralizada que integrara todas es
 
 Pagina publica (sin login) que muestra productos con precios, disponibilidad e integracion a WhatsApp para consultas.
 
-### Modulo 2: Autenticacion
+### Modulo 2: Autenticacion y Recuperacion de Contrasena
 
 Login con sesiones PHP, hash bcrypt, soporte para contraseñas legacy con auto-rehash.
+
+**Recuperacion de contrasena via email:**
+
+- Formulario "Olvide mi contrasena" en la pantalla de login
+- Email con link de reseteo (HMAC SHA-256 firmado, expira en 30 minutos)
+- Cambio de contrasena y actualizacion automatica del hash
+- MailPit captura emails en desarrollo (puerto 8025)
+- Sin nueva tabla DB — tokens se invalidan automaticamente al cambiar contrasena
 
 ### Modulo 3: Dashboard
 
@@ -53,7 +61,7 @@ Ciclo de vida completo:
 - Historial de estados con timeline
 - Impresion de facturas (formato media carta)
 - Edicion de facturas (solo Admin)
-- Eliminacion con restauracion de stock
+- Eliminacion con restauracion de stock y CSRF
 
 ### Modulo 9: Compras
 
@@ -66,6 +74,8 @@ CRUD de usuarios con roles (Admin, Supervisor, Facturador) y secciones (Panda Es
 ### Modulo 11: Reportes
 
 Dashboard analitico con ventas por dia, top productos, ranking de clientes, filtros por rango de fechas.
+
+Exportacion a Excel via PhpSpreadsheet 5.8 con botones por tabla (ventas_diarias, productos_mas_vendidos, clientes_top, resumen_ventas).
 
 ### Modulo 12: Backups
 
@@ -87,6 +97,16 @@ Visor de logs del sistema y archivos Write-Ahead Log de PostgreSQL.
 
 Cuenta de usuario, limite de venta fugaz, numero de WhatsApp.
 
+### Modulo 17: Notificaciones
+
+Sistema de notificaciones en tiempo real:
+
+- Almacena en JSON (`storage/system/notificaciones.json`)
+- Polling cada 15 segundos via AJAX
+- Campanita en el sidebar con badge de no leidas
+- Notificaciones por facturacion, stock bajo, eliminaciones
+- Endpoints: `notificaciones.php`, `marcar_leida.php`, `marcar_todas_leidas.php`
+
 ## Decisiones Tecnicas Tomadas
 
 | Decision               | Eleccion              | Razon                                                |
@@ -96,10 +116,14 @@ Cuenta de usuario, limite de venta fugaz, numero de WhatsApp.
 | Autoloading            | Composer PSR-4        | Namespaces en `App\Repository\*` y `App\Service\*`   |
 | Backward compatibility | class_alias wrappers  | Controladores legacy funcionan sin modificar         |
 | CSRF                   | Token por sesion      | Proteccion basica en todos los POST                  |
-| Contraseñas            | bcrypt (cost 12)      | Seguridad + rehash automatico de legacy              |
+| Contrasenas            | bcrypt (cost 12)      | Seguridad + rehash automatico de legacy              |
 | Configuracion          | .env via Dotenv       | Credenciales fuera del codigo                        |
-| Contenedores           | Docker Compose        | PHP/Apache + PostgreSQL + pgAdmin + Backup Scheduler |
+| Contenedores           | Docker Compose        | PHP/Apache + PostgreSQL + pgAdmin + Backup + MailPit |
 | Imagenes               | Upload directo        | `uploads/productos/` con nombres unicos              |
+| Password reset         | HMAC SHA-256 token    | Sin nueva tabla DB — se invalida automaticamente     |
+| Email SMTP             | PHPMailer 7.1         | Envio de emails para password recovery               |
+| SMTP testing           | MailPit               | Captura de emails en desarrollo (puerto 8025)        |
+| Excel export           | PhpSpreadsheet 5.8    | Exportacion de reportes a Excel                      |
 
 ## Estado del Proyecto
 
@@ -116,16 +140,18 @@ Cuenta de usuario, limite de venta fugaz, numero de WhatsApp.
 - Configuracion del sistema
 - Autenticacion y control de roles
 - Proteccion CSRF en todos los POST
-- Docker multi-servicio
+- Docker multi-servicio (app, postgres, pgadmin, backup_scheduler, mailpit)
+- Recuperacion de contrasena via email con HMAC tokens
+- Sistema de notificaciones en tiempo real
+- Exportacion de reportes a Excel
+- 177 tests automatizados (129 CRUD + 32 integracion + 32 notificaciones)
 
 ### Incompleto / Pendiente
 
 - 5 controllers vacios (WAL, backups manuales, logs, mantenimiento, programar backups, restaurar)
 - 5 services vacios (BackupFile, BackupSchedule, LogFile, MantenimientoBd, WalFile)
 - No hay tests unitarios
-- No hay tests de integracion
-- Eliminaciones via GET (deberian ser POST para CSRF completo)
-- reportes_controller.php y configurar_cuenta_controller.php bypass repositorios
+- Convertir remaining `catalogo_controller.php` queries a CatalogoRepository
 
 ### Suposiciones Importantes
 
@@ -137,3 +163,26 @@ Cuenta de usuario, limite de venta fugaz, numero de WhatsApp.
 - Zona horaria: `America/Managua`
 - Puerto de la app: 8080
 - Puerto de pgAdmin: 5050
+- Puerto de MailPit web: 8025
+- Puerto de MailPit SMTP: 1025
+
+## Como Ejecutar
+
+```bash
+# Instalar y ejecutar todo (recomendado)
+bash setup.sh
+
+# Verificar que funcione
+curl http://localhost:8080/
+# Login: leonel.messi@admin.pandakitsune.com / password0
+```
+
+## Estructura de Docker
+
+| Servicio         | Contenedor                | Puerto    | Funcion                              |
+| ---------------- | ------------------------- | --------- | ------------------------------------ |
+| PHP/Apache       | `pandas_app`              | 8080      | Servidor web de la aplicacion        |
+| PostgreSQL       | `pandas_bd`               | 5432      | Base de datos                        |
+| pgAdmin          | `pandas_pgadmin`          | 5050      | Admin web de PostgreSQL              |
+| Backup Scheduler | `pandas_backup_scheduler` | (no)      | Ejecuta backups automaticos cada 60s |
+| MailPit          | `pandas_mailpit`          | 8025/1025 | Captura de emails en desarrollo      |

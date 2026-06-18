@@ -48,23 +48,31 @@ class PROVEEDOR {
 }
 
 class USUARIO {
-  - idUsuario: int
-  - nombre: String
-  - email: String
-  - password: String
-  - idRol: int {FK}
-  - idSeccion: int {FK, nullable}
-  --
-  + getIdUsuario(): int
-  + getNombre(): String
-  + getEmail(): String
-  + getRol(): ROL
-  + getSeccion(): SECCION
-  + setNombre(nombre: String): void
-  + setEmail(email: String): void
-  + esAdmin(): boolean
-  + puedeEliminar(): boolean
+
+  * idUsuario: int
+  * nombre: String
+  * email: String
+  * password: String
+  * idRol: int {FK}
+  * idSeccion: int {FK, nullable}
+    --
+
+  - getIdUsuario(): int
+  - getNombre(): String
+  - getEmail(): String
+  - getRol(): ROL
+  - getSeccion(): SECCION
+  - setNombre(nombre: String): void
+  - setEmail(email: String): void
+  - esAdmin(): boolean
+  - puedeEliminar(): boolean
+  - solicitarRecuperacionPassword(): void
+  - generarEnlaceRecuperacion(expiraMinutos: int): String
+  - validarEnlaceRecuperacion(token: String): boolean
+  - cambiarPassword(nuevaPassword: String): void
+  - enviarCorreoRecuperacion(enlace: String): boolean
 }
+
 
 class CLIENTE {
   - idCliente: int

@@ -1,6 +1,13 @@
 <?php
 
 session_start();
+
+// If already logged in, redirect to dashboard immediately
+if (isset($_SESSION["user"])) {
+    header("Location: dashboard.php");
+    exit;
+}
+
 require_once __DIR__ . "/bootstrap.php";
 
 $pageTitle = "Acceso de Trabajadores - Panda Estampados / Kitsune";

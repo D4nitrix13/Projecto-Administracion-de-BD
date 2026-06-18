@@ -2,6 +2,7 @@
 // * Stored function or procedure has been executed
 
 use App\Repository\ConfiguracionRepository;
+use App\Service\EmailService;
 
 function obtenerDatosConfigurarCuenta(): array
 {
@@ -125,6 +126,11 @@ function actualizarCuentaDesdePost(
                 "nombre" => $nombre,
                 "email" => $email,
             ];
+        }
+
+        if ($quiereCambiarPassword) {
+            $emailService = new EmailService();
+            $emailService->sendPasswordChangedNotification($email, $nombre);
         }
 
         return [

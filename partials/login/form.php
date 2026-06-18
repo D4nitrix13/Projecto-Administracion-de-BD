@@ -29,4 +29,8 @@
     <button type="submit" class="btn-primary">
         Iniciar sesión
     </button>
+
+    <a href="forgot_password.php" class="forgot-link">
+        ¿Olvidaste tu contraseña?
+    </a>
 </form>

@@ -397,13 +397,15 @@
         border-color: #7dd3fc;
     }
 
-    .btn-accion-danger {
+    .btn-accion-danger,
+    .btn-accion-eliminar {
         background: #fee2e2;
         color: #991b1b;
         border-color: #fecaca;
     }
 
-    .btn-accion-danger:hover {
+    .btn-accion-danger:hover,
+    .btn-accion-eliminar:hover {
         background: #fecaca;
         border-color: #fca5a5;
     }

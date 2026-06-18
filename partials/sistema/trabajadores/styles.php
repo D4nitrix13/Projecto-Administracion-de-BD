@@ -129,6 +129,20 @@
         background: #f8fafc;
     }
 
+    .usuarios-card form input[type="hidden"] {
+        display: none !important;
+    }
+
+    .table-products .acciones form {
+        display: inline !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        grid-template-columns: none !important;
+        gap: 0 !important;
+    }
+
     .form-group,
     .filter-field,
     .user-field {
@@ -462,6 +476,7 @@
 
     .btn-accion-danger,
     .btn-action-delete,
+    .btn-accion-eliminar,
     .btn-delete {
         background: #fee2e2;
         color: #991b1b;
@@ -470,9 +485,25 @@
 
     .btn-accion-danger:hover,
     .btn-action-delete:hover,
+    .btn-accion-eliminar:hover,
     .btn-delete:hover {
         background: #fecaca;
         border-color: #fca5a5;
+    }
+
+    .table-products .acciones .btn-accion-eliminar,
+    .table-products .acciones .btn-accion-danger {
+        background: #fee2e2 !important;
+        color: #991b1b !important;
+        border-color: #fecaca !important;
+        box-shadow: none !important;
+    }
+
+    .table-products .acciones .btn-accion-eliminar:hover,
+    .table-products .acciones .btn-accion-danger:hover {
+        background: #fecaca !important;
+        border-color: #fca5a5 !important;
+        transform: none !important;
     }
 
     .badge,

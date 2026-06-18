@@ -12,6 +12,7 @@ services:
       - ../backups:/var/www/html/backups
     depends_on:
       - postgres
+      - mailpit
     env_file:
       - ../.env
     environment:
@@ -80,4 +81,14 @@ services:
       - ../database/pgadmin:/var/lib/pgadmin
     depends_on:
       - postgres
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: pandas_mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      TZ: America/Managua
     restart: unless-stopped

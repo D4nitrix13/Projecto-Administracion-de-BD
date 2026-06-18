@@ -5761,5 +5761,199 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
+-- =========================================================
+-- SEED DATA: Datos completos para dashboard y pruebas
+-- Solo inserta si las tablas estan vacias
+-- =========================================================
+BEGIN;
+
+-- Secciones
+INSERT INTO seccion (id_seccion, nombre)
+SELECT 1, 'Panda Estampados' WHERE NOT EXISTS (SELECT 1 FROM seccion);
+INSERT INTO seccion (id_seccion, nombre)
+SELECT 2, 'Kitsune' WHERE NOT EXISTS (SELECT 1 FROM seccion WHERE id_seccion = 2);
+SELECT setval('seccion_id_seccion_seq', (SELECT COALESCE(MAX(id_seccion), 2) FROM seccion));
+
+-- Categorias
+INSERT INTO categoria (nombre)
+SELECT v.nombre FROM (VALUES
+    ('Camisetas'), ('Hoodies'), ('Stickers'), ('Tazas'), ('Gorras'),
+    ('Llaveros'), ('Posters'), ('Bolsos'), ('Mousepads'), ('Accesorios personalizados')
+) AS v(nombre)
+WHERE NOT EXISTS (SELECT 1 FROM categoria LIMIT 1);
+
+-- Proveedores
+INSERT INTO proveedor (nombre, telefono, direccion, email, estado)
+SELECT v.nombre, v.telefono, v.direccion, v.email, v.estado FROM (VALUES
+    ('Distribuidora Norte', '2255-1001', 'Managua, Barrio Martha Quezada', 'norte@proveedor.com', 'Activo'),
+    ('Importadora Central', '2255-1002', 'Managua, Villa Libertad', 'central@proveedor.com', 'Activo'),
+    ('Suministros del Sur', '2255-1003', 'Masaya, 2da Calle', 'sur@proveedor.com', 'Activo')
+) AS v(nombre, telefono, direccion, email, estado)
+WHERE NOT EXISTS (SELECT 1 FROM proveedor LIMIT 1);
+
+-- Productos (precios en C$)
+INSERT INTO producto (nombre, descripcion, precio_compra, precio_venta, stock, id_categoria, id_proveedor, estado)
+SELECT v.nombre, v.desc, v.pc, v.pv, v.stock, v.cat, v.prov, 'Activo' FROM (VALUES
+    ('Camiseta Panda Basica', 'Camiseta 100% algodon estampa panda', 120.00, 250.00, 50, 1, 1),
+    ('Camiseta Kitsune Edition', 'Camiseta premium estampa zorro', 150.00, 320.00, 35, 1, 1),
+    ('Hoodie Panda Negro', 'Hoodie negro con logo panda bordado', 280.00, 550.00, 20, 2, 2),
+    ('Hoodie Kitsune Rojo', 'Hoodie rojo con logo kitsune', 300.00, 600.00, 15, 2, 2),
+    ('Sticker Panda Pack x10', 'Pack de 10 stickers panda variados', 30.00, 80.00, 100, 3, 3),
+    ('Sticker Kitsune Pack x10', 'Pack de 10 stickers kitsune variados', 30.00, 80.00, 80, 3, 3),
+    ('Taza Panda Ceramic', 'Taza ceramica 350ml estampa panda', 60.00, 150.00, 40, 4, 1),
+    ('Taza Kitsune Ceramic', 'Taza ceramica 350ml estampa kitsune', 60.00, 150.00, 35, 4, 1),
+    ('Gorra Panda Trucker', 'Gorra trucker bordado panda', 80.00, 180.00, 25, 5, 2),
+    ('Gorra Kitsune Snapback', 'Gorra snapbacklogo kitsune', 85.00, 190.00, 20, 5, 2),
+    ('Llavero Panda Metal', 'Llavero metalico panda 4cm', 25.00, 65.00, 60, 6, 3),
+    ('Llavero Kitsune Metal', 'Llavero metalico kitsune 4cm', 25.00, 65.00, 55, 6, 3),
+    ('Poster Panda A3', 'Poster arte digital panda A3', 35.00, 90.00, 30, 7, 1),
+    ('Poster Kitsune A3', 'Poster arte digital kitsune A3', 35.00, 90.00, 28, 7, 1),
+    ('Bolso Panda Canvas', 'Bolso canvas estampa panda', 90.00, 200.00, 18, 8, 2),
+    ('Mousepad Panda XL', 'Mousepad XXL estampa panda 900x400mm', 70.00, 160.00, 22, 9, 3),
+    ('Mousepad Kitsune XL', 'Mousepad XXL estampa kitsune 900x400mm', 70.00, 160.00, 20, 9, 3),
+    ('Pin Panda Durosedoso', 'Pin acrilico panda 3cm', 15.00, 45.00, 70, 10, 1),
+    ('Pin Kitsune Durosedoso', 'Pin acrilico kitsune 3cm', 15.00, 45.00, 65, 10, 1),
+    ('Camiseta Personalizada', 'Camiseta personalizada impresion DTG', 180.00, 400.00, 10, 1, 1)
+) AS v(nombre, desc, pc, pv, stock, cat, prov)
+WHERE NOT EXISTS (SELECT 1 FROM producto LIMIT 1);
+
+-- Clientes
+INSERT INTO cliente (nombres, apellidos, telefono, direccion, identificacion, tipo_cliente)
+SELECT v.n, v.a, v.t, v.d, v.i, v.tipo FROM (VALUES
+    ('Carlos', 'Mendoza', '8888-1001', 'Managua, Bello Horizonte', '001-010185-0001A', 'Mayorista'),
+    ('Maria', 'Gonzalez', '8888-1002', 'Managua, Los Vanegas', '001-020290-0002B', 'Detallista'),
+    ('Jose', 'Ramirez', '8888-1003', 'Masaya, Centro', '001-030388-0003C', 'Detallista'),
+    ('Lucia', 'Perez', '8888-1004', 'Granada, Parque Central', '001-040492-0004D', 'Mayorista'),
+    ('Pedro', 'Martinez', '8888-1005', 'Leon, Universidad', '001-050587-0005E', 'Detallista'),
+    ('Ana', 'Lopez', '8888-1006', 'Managua, Reparto San Juan', '001-060695-0006F', 'Detallista'),
+    ('Roberto', 'Hernandez', '8888-1007', 'Matagalpa, Centro', '001-070783-0007G', 'Mayorista'),
+    ('Laura', 'Castillo', '8888-1008', 'Chinandega, 1a Calle', '001-080891-0008H', 'Detallista'),
+    ('Miguel', 'Ortega', '8888-1009', 'Juigalpa, Principal', '001-090986-0009I', 'Detallista'),
+    ('Sofia', 'Ramirez', '8888-1010', 'Bluefields, Costera', '001-101094-0010J', 'Mayorista')
+) AS v(n, a, t, d, i, tipo)
+WHERE NOT EXISTS (SELECT 1 FROM cliente LIMIT 1);
+
+-- Usuarios (admin ya existe, crear solo si la tabla esta vacia)
+INSERT INTO usuario (nombre, email, password, id_rol, id_seccion)
+SELECT v.nombre, v.email, v.pass, v.rol, v.sec FROM (VALUES
+    ('Leonel Messi', 'leonel.messi@admin.pandakitsune.com', '$2y$12$x3m7SHevHbXLXNX2100ER.NRfv3QXFtUIu3GxcaRt7DfF3UkrOp9O', 1, NULL),
+    ('Supervisor Panda', 'supervisor@pandakitsune.com', '$2y$12$x3m7SHevHbXLXNX2100ER.NRfv3QXFtUIu3GxcaRt7DfF3UkrOp9O', 2, 1),
+    ('Facturador Uno', 'facturador@pandakitsune.com', '$2y$12$x3m7SHevHbXLXNX2100ER.NRfv3QXFtUIu3GxcaRt7DfF3UkrOp9O', 3, 1)
+) AS v(nombre, email, pass, rol, sec)
+WHERE NOT EXISTS (SELECT 1 FROM usuario LIMIT 1);
+
+-- Facturas: 40 registros en los ultimos 30 dias
+INSERT INTO factura (
+    fecha, id_cliente, id_usuario, id_seccion,
+    subtotal, descuento, impuesto, total,
+    tipo_cliente_venta, nombre_cliente_fugaz,
+    monto_pagado, saldo_pendiente, porcentaje_pagado,
+    estado_pago, estado_produccion
+)
+SELECT
+    (CURRENT_DATE - (30 - (gs % 30)) || ' days')::DATE
+        + (((gs * 3 + 7) % 12 + 8) || ' hours')::INTERVAL
+        + (((gs * 17) % 40) || ' minutes')::INTERVAL,
+    ((gs % (SELECT COUNT(*) FROM cliente)) + 1),
+    ((gs % (SELECT COUNT(*) FROM usuario)) + 1),
+    ((gs % 2) + 1),
+    0, 0, 0, 0,
+    CASE WHEN gs % 8 = 0 THEN 'Fugaz' ELSE 'Habitual' END,
+    CASE WHEN gs % 8 = 0 THEN
+        CASE gs % 4
+            WHEN 0 THEN 'Carlos Mendoza'
+            WHEN 1 THEN 'Maria Gonzalez'
+            WHEN 2 THEN 'Jose Ramirez'
+            ELSE 'Lucia Perez'
+        END
+    ELSE NULL END,
+    0, 0, 0,
+    'Pendiente',
+    'Pendiente'
+FROM generate_series(1, 40) AS gs
+WHERE EXISTS (SELECT 1 FROM cliente LIMIT 1);
+
+-- Detalle de facturas
+INSERT INTO detallefactura (
+    id_factura, id_producto, cantidad,
+    precio_unitario, descuento_linea, total_linea
+)
+SELECT
+    f.id_factura,
+    p.id_producto,
+    1 + (f.id_factura % 3),
+    p.precio_venta,
+    CASE WHEN f.id_factura % 7 = 0 THEN 10.00 ELSE 0.00 END,
+    (1 + (f.id_factura % 3)) * p.precio_venta
+        - CASE WHEN f.id_factura % 7 = 0 THEN 10.00 ELSE 0.00 END
+FROM factura f
+JOIN producto p ON p.id_producto = ((f.id_factura * 3) % (SELECT COUNT(*) FROM producto)) + 1;
+
+-- Calcular totales de facturas
+UPDATE factura f
+SET
+    subtotal = COALESCE((
+        SELECT SUM(df.total_linea)
+        FROM detallefactura df
+        WHERE df.id_factura = f.id_factura
+    ), 0),
+    impuesto = ROUND(COALESCE((
+        SELECT SUM(df.total_linea)
+        FROM detallefactura df
+        WHERE df.id_factura = f.id_factura
+    ), 0) * 0.15, 2),
+    total = ROUND(COALESCE((
+        SELECT SUM(df.total_linea)
+        FROM detallefactura df
+        WHERE df.id_factura = f.id_factura
+    ), 0) * 1.15, 2);
+
+-- Calcular pagos y estados
+UPDATE factura f
+SET
+    monto_pagado = CASE
+        WHEN f.id_factura % 3 = 0 THEN f.total
+        WHEN f.id_factura % 3 = 1 THEN ROUND(f.total * 0.5, 2)
+        ELSE 0
+    END,
+    saldo_pendiente = CASE
+        WHEN f.id_factura % 3 = 0 THEN 0
+        WHEN f.id_factura % 3 = 1 THEN ROUND(f.total * 0.5, 2)
+        ELSE f.total
+    END,
+    porcentaje_pagado = CASE
+        WHEN f.total = 0 THEN 0
+        WHEN f.id_factura % 3 = 0 THEN 100.00
+        WHEN f.id_factura % 3 = 1 THEN 50.00
+        ELSE 0.00
+    END,
+    estado_pago = CASE
+        WHEN f.id_factura % 3 = 0 THEN 'Pagado'
+        WHEN f.id_factura % 3 = 1 THEN 'Parcial'
+        ELSE 'Pendiente'
+    END,
+    estado_produccion = CASE
+        WHEN f.id_factura % 5 = 0 THEN 'Entregada'
+        WHEN f.id_factura % 5 = 1 THEN 'Lista para entregar'
+        WHEN f.id_factura % 5 = 2 THEN 'En produccion'
+        ELSE 'Pendiente'
+    END;
+
+-- Historial de estados para las facturas
+INSERT INTO factura_estado_historial (id_factura, estado_anterior, estado_nuevo, fecha_cambio, id_usuario_cambio)
+SELECT id_factura, NULL, 'Pendiente', fecha, id_usuario FROM factura;
+
+COMMIT;
+
+-- Reset sequences to correct values after seed
+SELECT setval('public.factura_id_factura_seq', (SELECT COALESCE(MAX(id_factura), 1) FROM factura));
+SELECT setval('public.detallefactura_id_detalle_seq', (SELECT COALESCE(MAX(id_detalle), 1) FROM detallefactura));
+SELECT setval('public.factura_estado_historial_id_historial_seq', (SELECT COALESCE(MAX(id_historial), 1) FROM factura_estado_historial));
+SELECT setval('public.producto_id_producto_seq', (SELECT COALESCE(MAX(id_producto), 1) FROM producto));
+SELECT setval('public.categoria_id_categoria_seq', (SELECT COALESCE(MAX(id_categoria), 1) FROM categoria));
+SELECT setval('public.proveedor_id_proveedor_seq', (SELECT COALESCE(MAX(id_proveedor), 1) FROM proveedor));
+SELECT setval('public.cliente_id_cliente_seq', (SELECT COALESCE(MAX(id_cliente), 1) FROM cliente));
+SELECT setval('public.usuario_id_usuario_seq', (SELECT COALESCE(MAX(id_usuario), 1) FROM usuario));
+
 \unrestrict V5NevU0EBVHxMwc8Gie6sxI6SNUjy50UZHb49fCN6zZwXSZW0RMbbgEd4tR1cgg
 

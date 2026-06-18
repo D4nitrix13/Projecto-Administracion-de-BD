@@ -3,6 +3,8 @@
 require_once __DIR__ . "/../repositories/UsuarioRepository.php";
 require_once __DIR__ . "/../repositories/RolRepository.php";
 
+use App\Service\EmailService;
+
 function obtenerDatosEditarUsuario(): array
 {
     $user = $_SESSION["user"];
@@ -105,6 +107,11 @@ function actualizarTrabajadorDesdePost(
 
     try {
         $usuarioRepository->actualizarUsuario($datos);
+
+        if ($password !== "") {
+            $emailService = new EmailService();
+            $emailService->sendPasswordChangedNotification($email, $nombre);
+        }
 
         return [
             "success" => true,

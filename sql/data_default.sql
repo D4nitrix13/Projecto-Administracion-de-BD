@@ -168,9 +168,9 @@ INSERT INTO factura (
     nombre_cliente_fugaz
 )
 SELECT
-    TIMESTAMP '2026-02-01 09:15:00'
-        + (gs || ' days')::INTERVAL
-        + ((gs % 7) || ' hours')::INTERVAL,
+    TIMESTAMP '2026-05-18 08:00:00'
+        + ((gs % 30) || ' days')::INTERVAL
+        + ((gs % 12) || ' hours')::INTERVAL,
     (
         SELECT id_cliente
         FROM cliente

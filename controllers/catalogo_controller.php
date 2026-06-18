@@ -1,13 +1,18 @@
 <?php
-// * Stored function or procedure has been executed
+
+declare(strict_types=1);
+
+require_once __DIR__ . "/../sql/db.php";
+require_once __DIR__ . "/../src/Repository/CatalogoRepository.php";
+
+use App\Repository\CatalogoRepository;
 
 function obtenerDatosCatalogo(): array
 {
-    /** @var PDO $connection */
-    $connection = require __DIR__ . "/../sql/db.php";
+    $connection = createConnection();
+    $catalogoRepo = new CatalogoRepository($connection);
 
     $usuario = $_SESSION["user"] ?? null;
-
     $numeroWhatsApp = obtenerNumeroWhatsAppCatalogo();
 
     $busquedaTexto = trim($_GET["q"] ?? "");
@@ -15,28 +20,23 @@ function obtenerDatosCatalogo(): array
     $filtroDisponibilidad = $_GET["disponibilidad"] ?? "";
 
     $filtroCategoria = ctype_digit($filtroCategoriaRaw)
-        ? (int)$filtroCategoriaRaw
+        ? (int) $filtroCategoriaRaw
         : null;
 
-    $disponibilidadesPermitidas = [
-        "disponible",
-        "stock_bajo",
-        "agotado",
-    ];
+    $disponibilidadesPermitidas = ["disponible", "stock_bajo", "agotado"];
 
     if (!in_array($filtroDisponibilidad, $disponibilidadesPermitidas, true)) {
         $filtroDisponibilidad = "";
     }
 
     return [
-        "usuario" => $usuario,
-        "numeroWhatsApp" => $numeroWhatsApp,
-        "busquedaTexto" => $busquedaTexto,
-        "filtroCategoria" => $filtroCategoria,
+        "usuario"             => $usuario,
+        "numeroWhatsApp"      => $numeroWhatsApp,
+        "busquedaTexto"       => $busquedaTexto,
+        "filtroCategoria"     => $filtroCategoria,
         "filtroDisponibilidad" => $filtroDisponibilidad,
-        "categorias" => obtenerCategoriasCatalogo($connection),
-        "productos" => obtenerProductosCatalogo(
-            $connection,
+        "categorias"          => $catalogoRepo->obtenerCategorias(),
+        "productos"           => $catalogoRepo->buscarProductos(
             $busquedaTexto,
             $filtroCategoria,
             $filtroDisponibilidad
@@ -61,53 +61,9 @@ function obtenerNumeroWhatsAppCatalogo(): string
     return preg_replace("/\D+/", "", $contenido);
 }
 
-function obtenerCategoriasCatalogo(PDO $connection): array
-{
-    $statement = $connection->query("
-        SELECT
-            id_categoria,
-            nombre
-        FROM listar_categorias_catalogo()
-    ");
-
-    return $statement->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function obtenerProductosCatalogo(
-    PDO $connection,
-    string $busquedaTexto,
-    ?int $filtroCategoria,
-    string $filtroDisponibilidad
-): array {
-    $statement = $connection->prepare("
-        SELECT
-            id_producto,
-            codigo,
-            nombre,
-            descripcion,
-            imagen,
-            categoria,
-            precio_venta,
-            stock
-        FROM buscar_productos_catalogo(
-            :busqueda,
-            :id_categoria,
-            :disponibilidad
-        )
-    ");
-
-    $statement->execute([
-        ":busqueda" => $busquedaTexto,
-        ":id_categoria" => $filtroCategoria,
-        ":disponibilidad" => $filtroDisponibilidad,
-    ]);
-
-    return $statement->fetchAll(PDO::FETCH_ASSOC);
-}
-
 function recortarTextoCatalogo(?string $texto, int $limite = 145): string
 {
-    $texto = trim((string)$texto);
+    $texto = trim((string) $texto);
 
     if ($texto === "") {
         return "Sin descripción disponible.";

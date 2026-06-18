@@ -167,6 +167,21 @@
         text-decoration: underline;
     }
 
+    .forgot-link {
+        display: block;
+        margin-top: 12px;
+        color: var(--login-muted);
+        text-align: center;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.88rem;
+    }
+
+    .forgot-link:hover {
+        color: var(--login-primary);
+        text-decoration: underline;
+    }
+
     @media (max-width: 520px) {
         .login-wrapper {
             padding: 18px;

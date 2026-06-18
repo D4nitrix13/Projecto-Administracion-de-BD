@@ -104,6 +104,10 @@
                         placeholder="Repita la nueva contraseña">
                 </div>
             </div>
+
+            <p class="dashboard-muted account-help" style="margin-top: 12px;">
+                ¿No recuerda su contraseña actual? <a href="forgot_password.php" style="color: #2563eb; font-weight: 700; text-decoration: none;">Restablecer contraseña</a>
+            </p>
         </section>
 
         <div class="account-actions">
