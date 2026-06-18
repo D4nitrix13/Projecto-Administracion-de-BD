@@ -63,6 +63,9 @@ echo '{
 }' > storage/system/configuracion_sistema.json
 
 echo "[]" > storage/system/maintenance_history.json
+echo "[]" > storage/system/notificaciones.json
+echo "[]" > storage/system/wal_delete_queue.json
+echo '{}' > storage/system/backup_metadata.json
 echo "[]" > backups/logs/delete_queue.json
 
 # =============================================
