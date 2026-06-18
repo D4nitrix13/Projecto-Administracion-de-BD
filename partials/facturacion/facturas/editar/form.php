@@ -681,7 +681,7 @@ $fechaEntregaEstimadaActual = $factura["fecha_entrega_estimada"] ?? "";
     }
 
     function actualizarResumenPago(total) {
-        const minimo = total * 0.50;
+        const minimo = Math.round(total * 0.50 * 100) / 100;
         let montoPagado = Number(montoPagadoInput.value || 0);
 
         if (Number.isNaN(montoPagado) || montoPagado < 0) {
@@ -795,7 +795,7 @@ $fechaEntregaEstimadaActual = $factura["fecha_entrega_estimada"] ?? "";
         const tipo = document.querySelector('input[name="tipo_cliente_venta"]:checked')?.value;
         const total = calcularTotales();
         const montoPagado = Number(montoPagadoInput.value || 0);
-        const minimo = total * 0.50;
+        const minimo = Math.round(total * 0.50 * 100) / 100;
 
         if (tipo === "<?= TIPO_CLIENTE_HABITUAL ?>" && !document.getElementById("facturaEditClienteId").value) {
             event.preventDefault();

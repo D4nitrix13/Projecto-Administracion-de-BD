@@ -83,7 +83,7 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                 montoPagadoInput.value = total.toFixed(2);
             }
 
-            const minimoRequerido = total * 0.50;
+            const minimoRequerido = Math.round(total * 0.50 * 100) / 100;
             const saldoPendiente = Math.max(0, total - montoPagado);
 
             if (minimoRequeridoView) {
@@ -673,7 +673,7 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                 const totalFactura = recalcTotals();
 
                 const montoPagado = parseFloat(montoPagadoInput?.value || "0");
-                const minimoRequerido = totalFactura * 0.50;
+                const minimoRequerido = Math.round(totalFactura * 0.50 * 100) / 100;
 
                 if (Number.isNaN(montoPagado) || montoPagado < minimoRequerido) {
                     event.preventDefault();
