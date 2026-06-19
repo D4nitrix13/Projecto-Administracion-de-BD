@@ -1,4 +1,86 @@
 <style>
+    .dashboard-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        margin-bottom: 24px;
+    }
+
+    .form-grid {
+        display: grid;
+        gap: 18px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group .label {
+        display: block;
+        margin-bottom: 6px;
+        color: #111827;
+        font-size: 0.88rem;
+        font-weight: 800;
+    }
+
+    .form-group .input {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 0.94rem;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .form-group .input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .form-actions {
+        margin-top: 8px;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 10px;
+        background: #2563eb;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 0.94rem;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.16);
+        transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .alert-danger {
+        padding: 14px 18px;
+        border-radius: 12px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
     .cliente-page-heading {
         background: #ffffff;
         border: 1px solid #e5e7eb;

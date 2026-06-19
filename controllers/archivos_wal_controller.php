@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . "/../helpers/pagination.php";
+
 function obtenerDatosArchivosWal(): array
 {
     $user = $_SESSION["user"];
@@ -39,15 +41,20 @@ function obtenerDatosArchivosWal(): array
 
     $filteredWal = walOrdenarArchivos($filteredWal, $sortFilter);
 
+    $totalFiltrados = count($filteredWal);
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+    $paginacion = calcularPaginacion($totalFiltrados, $paginaActual);
+    $paginatedWal = array_slice($filteredWal, $paginacion["offset"], $paginacion["porPagina"]);
+
     return [
         "user" => $user,
         "error" => $error,
         "success" => $success,
         "archivosWal" => $archivosWal,
-        "filteredWal" => $filteredWal,
+        "filteredWal" => $paginatedWal,
         "tiposDisponibles" => $tiposDisponibles,
         "totalArchivos" => count($archivosWal),
-        "totalFiltrados" => count($filteredWal),
+        "totalFiltrados" => $totalFiltrados,
         "totalTamano" => walCalcularTamanoTotal($archivosWal),
         "totalPendingDelete" => walContarPendientes($archivosWal),
         "ultimoArchivo" => $archivosWal[0] ?? null,
@@ -56,6 +63,7 @@ function obtenerDatosArchivosWal(): array
         "dateFilter" => $dateFilter,
         "deleteFilter" => $deleteFilter,
         "sortFilter" => $sortFilter,
+        "paginacion" => $paginacion,
     ];
 }
 

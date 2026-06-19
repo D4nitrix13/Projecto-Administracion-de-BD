@@ -83,11 +83,11 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                 montoPagadoInput.value = total.toFixed(2);
             }
 
-            const minimoRequerido = Math.round(total * 0.50 * 100) / 100;
             const saldoPendiente = Math.max(0, total - montoPagado);
+            const porcentajePagado = total > 0 ? Math.round((montoPagado / total) * 100 * 100) / 100 : 0;
 
             if (minimoRequeridoView) {
-                minimoRequeridoView.textContent = formatMoney(minimoRequerido);
+                minimoRequeridoView.textContent = porcentajePagado.toFixed(1) + "%";
             }
 
             if (saldoPendienteView) {
@@ -110,8 +110,9 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
             }
 
             if (paymentWarning) {
+                const mitadTotal = Math.round(total * 0.50 * 100) / 100;
                 paymentWarning.style.display =
-                    total > 0 && montoPagado < minimoRequerido ? "flex" : "none";
+                    total > 0 && montoPagado > 0 && montoPagado < mitadTotal ? "flex" : "none";
             }
         }
 
@@ -468,7 +469,20 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
             document.getElementById("impuesto-view").textContent = formatMoney(impuesto);
             document.getElementById("total-view").textContent = formatMoney(total);
 
+            const totalCalculadoInput = document.getElementById("total-calculado-input");
+            if (totalCalculadoInput) {
+                totalCalculadoInput.value = total.toFixed(2);
+            }
+
             actualizarResumenPago(total);
+
+            if (typeof initPlazos === "function" && !window._plazosRecalculando) {
+                window._plazosRecalculando = true;
+                setTimeout(() => {
+                    initPlazos();
+                    window._plazosRecalculando = false;
+                }, 10);
+            }
 
             return total;
         }
@@ -675,23 +689,32 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                 const montoPagado = parseFloat(montoPagadoInput?.value || "0");
                 const minimoRequerido = Math.round(totalFactura * 0.50 * 100) / 100;
 
-                if (Number.isNaN(montoPagado) || montoPagado < minimoRequerido) {
+                if (Number.isNaN(montoPagado) || montoPagado < 0) {
                     event.preventDefault();
-
-                    alert(
-                        "El cliente debe pagar al menos el 50% del total para iniciar la producción.\n\n" +
-                        "Mínimo requerido: " + formatMoney(minimoRequerido)
-                    );
-
+                    alert("El monto pagado no puede ser negativo.");
                     return;
                 }
 
                 if (montoPagado > totalFactura) {
                     event.preventDefault();
-
                     alert("El monto pagado no puede ser mayor al total de la factura.");
-
                     return;
+                }
+
+                if (totalFactura > 0 && montoPagado < minimoRequerido) {
+                    const saldoPendiente = totalFactura - montoPagado;
+                    const confirmar = confirm(
+                        "El pago inicial es menor al 50% del total.\n\n" +
+                        "Total: " + formatMoney(totalFactura) + "\n" +
+                        "Pago inicial: " + formatMoney(montoPagado) + "\n" +
+                        "Saldo pendiente: " + formatMoney(saldoPendiente) + "\n\n" +
+                        "¿Desea continuar y configurar un plan de pagos para el saldo pendiente?"
+                    );
+
+                    if (!confirmar) {
+                        event.preventDefault();
+                        return;
+                    }
                 }
 
                 if (fechaEntregaEstimadaInput && fechaEntregaEstimadaInput.value.trim() === "") {
@@ -746,5 +769,264 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
         actualizarClienteSeleccionado();
         actualizarMensajeVacio();
         recalcTotals();
+
+        // =========================================
+        // PLAZOS - Payment Plan Configuration
+        // =========================================
+
+        const plazosSection = document.getElementById("invoice-plazos-section");
+        const plazosNumeroInput = document.getElementById("plazos-numero");
+        const plazosTableWrapper = document.getElementById("plazos-table-wrapper");
+        const plazosTbody = document.getElementById("plazos-tbody");
+        const plazosDataInput = document.getElementById("plazos-data-input");
+
+        let plazosData = [];
+
+        function formatMoney(value) {
+            return `C$ ${value.toFixed(2)}`;
+        }
+
+        function getTodayStr() {
+            const d = new Date();
+            return d.toISOString().split("T")[0];
+        }
+
+        function addDays(dateStr, days) {
+            const d = new Date(dateStr + "T00:00:00");
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split("T")[0];
+        }
+
+        function generarPlazos() {
+            const total = recalcTotals();
+            const montoPagado = parseFloat(montoPagadoInput?.value || "0");
+            const saldoPendiente = Math.max(0, total - montoPagado);
+
+            if (saldoPendiente <= 0.01) {
+                plazosTableWrapper.style.display = "none";
+                plazosData = [];
+                plazosDataInput.value = "";
+                return;
+            }
+
+            const numCuotas = parseInt(plazosNumeroInput?.value || "1", 10);
+
+            if (numCuotas < 1 || isNaN(numCuotas)) {
+                plazosTableWrapper.style.display = "none";
+                plazosData = [];
+                plazosDataInput.value = "";
+                return;
+            }
+
+            plazosTableWrapper.style.display = "block";
+
+            const hoy = getTodayStr();
+            const diasVentana = 15;
+            const diasPorCuota = Math.max(1, Math.floor(diasVentana / numCuotas));
+
+            const porcentajePorCuota = Math.round((100 / numCuotas) * 100) / 100;
+            let porcentajeAcumulado = 0;
+
+            plazosData = [];
+
+            for (let i = 0; i < numCuotas; i++) {
+                let porcentaje = porcentajePorCuota;
+
+                if (i === numCuotas - 1) {
+                    porcentaje = Math.round((100 - porcentajeAcumulado) * 100) / 100;
+                }
+
+                porcentajeAcumulado += porcentaje;
+
+                const montoCuota = Math.round(saldoPendiente * porcentaje / 100 * 100) / 100;
+                const fechaCuota = addDays(hoy, diasPorCuota * (i + 1));
+
+                plazosData.push({
+                    numero: i + 1,
+                    porcentaje: porcentaje,
+                    monto: montoCuota,
+                    fecha_pago: fechaCuota,
+                    observaciones: ""
+                });
+            }
+
+            renderPlazosTable();
+            updatePlazosHiddenInput();
+        }
+
+        function renderPlazosTable() {
+            if (!plazosTbody) return;
+
+            plazosTbody.innerHTML = "";
+
+            let totalConfigurado = 0;
+
+            plazosData.forEach((cuota, index) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${cuota.numero}</td>
+                    <td>
+                        <input
+                            type="number"
+                            class="input plazo-porcentaje"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value="${cuota.porcentaje}"
+                            data-index="${index}">
+                    </td>
+                    <td>
+                        <input
+                            type="number"
+                            class="input plazo-monto"
+                            min="0"
+                            step="0.01"
+                            value="${cuota.monto.toFixed(2)}"
+                            data-index="${index}">
+                    </td>
+                    <td>
+                        <input
+                            type="date"
+                            class="input plazo-fecha"
+                            value="${cuota.fecha_pago}"
+                            data-index="${index}">
+                    </td>
+                    <td>
+                        <input
+                            type="text"
+                            class="input plazo-obs"
+                            value="${cuota.observaciones || ""}"
+                            placeholder="Opcional..."
+                            data-index="${index}">
+                    </td>
+                    <td>
+                        <button type="button" class="btn-remove-plazo" data-index="${index}">×</button>
+                    </td>
+                `;
+                totalConfigurado += cuota.monto;
+                plazosTbody.appendChild(tr);
+            });
+        }
+
+        function updatePlazosHiddenInput() {
+            if (plazosDataInput) {
+                plazosDataInput.value = JSON.stringify(plazosData);
+            }
+        }
+
+        function recalcPlazosFromInputs() {
+            const total = recalcTotals();
+            const montoPagado = parseFloat(montoPagadoInput?.value || "0");
+            const saldoPendiente = Math.max(0, total - montoPagado);
+
+            plazosData.forEach(cuota => {
+                cuota.monto = Math.round(saldoPendiente * cuota.porcentaje / 100 * 100) / 100;
+            });
+
+            let totalConfig = 0;
+            plazosData.forEach(c => { totalConfig += c.monto; });
+
+            if (plazosTotalConfigurado) {
+                plazosTotalConfigurado.textContent = formatMoney(totalConfig);
+            }
+
+            renderPlazosTable();
+            updatePlazosHiddenInput();
+        }
+
+        if (plazosNumeroInput) {
+            plazosNumeroInput.addEventListener("input", generarPlazos);
+        }
+
+        if (plazosTbody) {
+            plazosTbody.addEventListener("input", event => {
+                const target = event.target;
+                const index = parseInt(target.dataset.index, 10);
+
+                if (Number.isNaN(index) || !plazosData[index]) return;
+
+                if (target.classList.contains("plazo-porcentaje")) {
+                    let val = parseFloat(target.value);
+                    if (Number.isNaN(val) || val < 0) val = 0;
+                    if (val > 100) val = 100;
+                    plazosData[index].porcentaje = val;
+                    recalcPlazosFromInputs();
+                }
+
+                if (target.classList.contains("plazo-monto")) {
+                    const total = recalcTotals();
+                    const montoPagado = parseFloat(montoPagadoInput?.value || "0");
+                    const saldoPendiente = Math.max(0, total - montoPagado);
+
+                    let val = parseFloat(target.value);
+                    if (Number.isNaN(val) || val < 0) val = 0;
+                    if (val > saldoPendiente) val = saldoPendiente;
+
+                    plazosData[index].monto = val;
+                    plazosData[index].porcentaje = saldoPendiente > 0
+                        ? Math.round((val / saldoPendiente) * 100 * 100) / 100
+                        : 0;
+
+                    let totalConfig = 0;
+                    plazosData.forEach(c => { totalConfig += c.monto; });
+                    if (plazosTotalConfigurado) {
+                        plazosTotalConfigurado.textContent = formatMoney(totalConfig);
+                    }
+
+                    renderPlazosTable();
+                    updatePlazosHiddenInput();
+                }
+
+                if (target.classList.contains("plazo-fecha")) {
+                    plazosData[index].fecha_pago = target.value;
+                    updatePlazosHiddenInput();
+                }
+
+                if (target.classList.contains("plazo-obs")) {
+                    plazosData[index].observaciones = target.value;
+                    updatePlazosHiddenInput();
+                }
+            });
+
+            plazosTbody.addEventListener("click", event => {
+                const btn = event.target.closest(".btn-remove-plazo");
+                if (!btn) return;
+
+                const index = parseInt(btn.dataset.index, 10);
+                if (Number.isNaN(index) || !plazosData[index]) return;
+
+                plazosData.splice(index, 1);
+
+                plazosData.forEach((c, i) => {
+                    c.numero = i + 1;
+                });
+
+                renderPlazosTable();
+                updatePlazosHiddenInput();
+            });
+        }
+
+        function initPlazos() {
+            const total = recalcTotals();
+            const montoPagado = parseFloat(montoPagadoInput?.value || "0");
+            const saldoPendiente = Math.max(0, total - montoPagado);
+
+            const numCuotas = parseInt(plazosNumeroInput?.value || "1", 10);
+            if (numCuotas >= 1 && !isNaN(numCuotas) && total > 0 && saldoPendiente > 0.01) {
+                generarPlazos();
+            } else {
+                plazosTableWrapper.style.display = "none";
+                plazosData = [];
+                plazosDataInput.value = "";
+            }
+        }
+
+        if (montoPagadoInput) {
+            montoPagadoInput.addEventListener("input", () => {
+                setTimeout(initPlazos, 50);
+            });
+        }
+
+        initPlazos();
     })();
 </script>

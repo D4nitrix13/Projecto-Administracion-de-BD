@@ -16,7 +16,7 @@ sudo rm -rf storage/ backups/ database/
 # =============================================
 mkdir -p storage/system
 mkdir -p backups/manual backups/full backups/diff backups/logs
-mkdir -p database/postgresql database/wal_archive database/pgadmin
+mkdir -p database/postgresql database/wal_archive database/pgadmin database/logs
 mkdir -p uploads/productos
 
 # =============================================
@@ -66,12 +66,19 @@ echo "[]" > storage/system/maintenance_history.json
 echo "[]" > storage/system/notificaciones.json
 echo "[]" > storage/system/wal_delete_queue.json
 echo '{}' > storage/system/backup_metadata.json
+echo "[]" > storage/system/plazos.json
 echo "[]" > backups/logs/delete_queue.json
+
+if [ ! -f numero_de_whatsapp.txt ]; then
+    echo "+50500000000" > numero_de_whatsapp.txt
+fi
 
 # =============================================
 # 7) Permisos
 # =============================================
 sudo chown -R 33:33 storage backups uploads
+sudo chown 33:33 numero_de_whatsapp.txt 2>/dev/null || true
+sudo chmod 664 numero_de_whatsapp.txt 2>/dev/null || true
 sudo chmod -R 775 storage backups uploads
 sudo find storage backups uploads -type f -exec chmod 664 {} \;
 sudo find storage backups uploads -type d -exec chmod 775 {} \;
@@ -91,6 +98,9 @@ chmod +x scripts/backup_full.sh
 chmod +x scripts/backup_diff.sh
 chmod +x scripts/backup_logs.sh
 chmod +x scripts/mantenimiento_bd.sh
+
+# Notification cron for inventory alerts
+(crontab -l 2>/dev/null; echo "*/30 * * * * cd /var/www/html && php scripts/notificaciones_inventario.php >> storage/system/logs/notificaciones_cron.log 2>&1") | crontab -
 
 # =============================================
 # 8) Levantar Docker

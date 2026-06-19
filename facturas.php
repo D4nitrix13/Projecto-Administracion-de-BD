@@ -25,6 +25,8 @@ $fechaHasta = $datos["fechaHasta"] ?? "";
 $textoSubtitulo = $datos["textoSubtitulo"];
 $flashSuccess = $datos["flashSuccess"];
 $flashError = $datos["flashError"];
+$paginacion = $datos["paginacion"];
+$filtrosGET = $datos["filtrosGET"];
 ?>
 
 <!DOCTYPE html>

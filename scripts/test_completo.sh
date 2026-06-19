@@ -1738,7 +1738,6 @@ run_module() {
 }
 
 if [ -n "$SELECTED_MODULE" ]; then
-    run_moduD_MODULE" ]; then
     run_module "$SELECTED_MODULE"
 else
     test_auth

@@ -4,6 +4,7 @@ require_once __DIR__ . "/../repositories/ClienteRepository.php";
 require_once __DIR__ . "/../repositories/ProductoRepository.php";
 require_once __DIR__ . "/../repositories/SeccionRepository.php";
 require_once __DIR__ . "/../services/FacturaService.php";
+require_once __DIR__ . "/../services/PlazoService.php";
 
 function obtenerDatosNuevaFactura(): array
 {
@@ -48,8 +49,33 @@ function obtenerDatosNuevaFactura(): array
         $resultado = $facturaService->registrarFactura($_POST, $user);
 
         if ($resultado["success"]) {
+            $idFacturaCreada = (int)$resultado["id_factura"];
+
+            $plazosData = $_POST["plazos_data"] ?? "";
+            if (!empty($plazosData)) {
+                $plazosParsed = json_decode($plazosData, true);
+                if (is_array($plazosParsed) && count($plazosParsed) > 0) {
+                    $totalFactura = (float)($_POST["total_calculado"] ?? 0);
+                    $montoPagadoVal = (float)($_POST["monto_pagado"] ?? 0);
+                    $saldoPendiente = max(0, $totalFactura - $montoPagadoVal);
+
+                    if ($saldoPendiente > 0.01) {
+                        $fechaLimite = end($plazosParsed)["fecha_pago"] ?? "";
+                        if (!empty($fechaLimite)) {
+                            $plazoService = new PlazoService();
+                            $plazoService->crearPlan(
+                                $idFacturaCreada,
+                                $totalFactura,
+                                $fechaLimite,
+                                $plazosParsed
+                            );
+                        }
+                    }
+                }
+            }
+
             $_SESSION["flash_success"] = "Factura registrada correctamente.";
-            header("Location: detalle_factura.php?id=" . (int)$resultado["id_factura"]);
+            header("Location: detalle_factura.php?id=" . $idFacturaCreada);
             exit();
         }
 

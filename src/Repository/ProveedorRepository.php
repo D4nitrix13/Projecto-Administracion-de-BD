@@ -34,16 +34,33 @@ class ProveedorRepository
         ]);
     }
 
-    public function obtenerProveedoresFiltrados(string $busqueda): array
+    public function obtenerProveedoresFiltrados(string $busqueda, int $pagina = 1, int $porPagina = 15): array
     {
+        $offset = ($pagina - 1) * $porPagina;
+
         $statement = $this->connection->prepare("
             SELECT id_proveedor, nombre, telefono, email, direccion
-            FROM buscar_proveedores_filtrados(:busqueda)
+            FROM buscar_proveedores_filtrados(:busqueda, :limit, :offset)
+        ");
+
+        $statement->execute([
+            ":busqueda" => trim($busqueda),
+            ":limit"    => $porPagina,
+            ":offset"   => $offset,
+        ]);
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function contarProveedoresFiltrados(string $busqueda): int
+    {
+        $statement = $this->connection->prepare("
+            SELECT COUNT(*) FROM buscar_proveedores_filtrados(:busqueda)
         ");
 
         $statement->execute([":busqueda" => trim($busqueda)]);
 
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return (int) $statement->fetchColumn();
     }
 
     public function obtenerProveedorPorId(int $idProveedor): ?array

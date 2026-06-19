@@ -186,5 +186,11 @@ function obtenerCamposResumenAuditoria(array $datos): array
                 </article>
             <?php endforeach; ?>
         </div>
+
+        <?php
+        $baseUrl = "auditoria_eliminados.php";
+        $filtrosActuales = $filtrosGET ?? [];
+        require __DIR__ . "/../../shared/pagination.php";
+        ?>
     <?php endif; ?>
 </section>

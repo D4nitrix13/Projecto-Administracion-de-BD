@@ -8,8 +8,6 @@ unset($_SESSION["flash_success"], $_SESSION["flash_error"]);
 $error = null;
 $success = null;
 
-$busqueda = trim($_GET["q"] ?? "");
-
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!$canManageCategories) {
         $error = "Su rol no tiene permisos para crear categorías.";
@@ -46,15 +44,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
+$stmtCount = $connection->prepare("
+    SELECT COUNT(*) FROM buscar_categorias(:busqueda)
+");
+
+$stmtCount->execute([":busqueda" => $busqueda]);
+
+$totalRegistros = (int) $stmtCount->fetchColumn();
+$paginacion = calcularPaginacion($totalRegistros, $paginaActual, 15);
+
+$offset = $paginacion["offset"];
+$limit = $paginacion["porPagina"];
+
 $stmtCat = $connection->prepare("
     SELECT
         id_categoria,
         nombre
-    FROM buscar_categorias(:busqueda)
+    FROM buscar_categorias(:busqueda, :limit, :offset)
 ");
 
 $stmtCat->execute([
-    ":busqueda" => $busqueda
+    ":busqueda" => $busqueda,
+    ":limit"    => $limit,
+    ":offset"   => $offset,
 ]);
 
 $categorias = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
+
+$filtrosGET = array_filter([
+    "q" => $busqueda ?: null,
+], fn($v) => $v !== null);

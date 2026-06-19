@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../repositories/ClienteRepository.php";
+require_once __DIR__ . "/../helpers/pagination.php";
 
 function obtenerDatosClientes(): array
 {
@@ -17,16 +18,8 @@ function obtenerDatosClientes(): array
 
     $busqueda = trim($_GET["q"] ?? "");
     $tipoFiltro = trim($_GET["tipo"] ?? "");
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
 
-    /*
-        Reglas de visibilidad por rol:
-
-        Admin (1):
-        Puede ver Mayorista y Detallista.
-
-        Supervisor (2) y Facturador (3):
-        Solo pueden ver clientes Detallista.
-    */
     $soloDetallista = in_array($idRol, [2, 3], true);
 
     if ($soloDetallista) {
@@ -35,12 +28,22 @@ function obtenerDatosClientes(): array
 
     $clienteRepository = new ClienteRepository($connection);
 
+    $totalRegistros = $clienteRepository->contarClientesFiltrados($busqueda, $tipoFiltro);
+    $paginacion = calcularPaginacion($totalRegistros, $paginaActual, 15);
+
     $clientes = $clienteRepository->obtenerClientesFiltrados(
         $busqueda,
-        $tipoFiltro
+        $tipoFiltro,
+        $paginacion["paginaActual"],
+        $paginacion["porPagina"]
     );
 
     $textoSubtitulo = obtenerTextoSubtituloClientes($idRol);
+
+    $filtrosGET = array_filter([
+        "q" => $busqueda ?: null,
+        "tipo" => $tipoFiltro ?: null,
+    ], fn($v) => $v !== null);
 
     return [
         "user" => $user,
@@ -52,6 +55,8 @@ function obtenerDatosClientes(): array
         "textoSubtitulo" => $textoSubtitulo,
         "flashSuccess" => $flashSuccess,
         "flashError" => $flashError,
+        "paginacion" => $paginacion,
+        "filtrosGET" => $filtrosGET,
     ];
 }
 

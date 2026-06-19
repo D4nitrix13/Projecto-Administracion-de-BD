@@ -1,3 +1,6 @@
+$baseUrl = "clientes.php";
+$filtrosActuales = $filtrosGET ?? [];
+?>
 <div class="table-wrapper">
     <table class="table-products">
         <thead>
@@ -64,4 +67,6 @@
             <?php endif; ?>
         </tbody>
     </table>
+
+    <?php require __DIR__ . "/../../shared/pagination.php"; ?>
 </div>

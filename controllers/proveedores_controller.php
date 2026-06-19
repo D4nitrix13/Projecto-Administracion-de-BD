@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../repositories/ProveedorRepository.php";
+require_once __DIR__ . "/../helpers/pagination.php";
 
 function obtenerDatosProveedores(): array
 {
@@ -22,6 +23,7 @@ function obtenerDatosProveedores(): array
     $success = null;
 
     $busqueda = trim($_GET["q"] ?? "");
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (!$puedeGestionar) {
@@ -37,7 +39,18 @@ function obtenerDatosProveedores(): array
         }
     }
 
-    $proveedores = $proveedorRepository->obtenerProveedoresFiltrados($busqueda);
+    $totalRegistros = $proveedorRepository->contarProveedoresFiltrados($busqueda);
+    $paginacion = calcularPaginacion($totalRegistros, $paginaActual, 15);
+
+    $proveedores = $proveedorRepository->obtenerProveedoresFiltrados(
+        $busqueda,
+        $paginacion["paginaActual"],
+        $paginacion["porPagina"]
+    );
+
+    $filtrosGET = array_filter([
+        "q" => $busqueda ?: null,
+    ], fn($v) => $v !== null);
 
     return [
         "user" => $user,
@@ -49,6 +62,8 @@ function obtenerDatosProveedores(): array
         "flashError" => $flashError,
         "busqueda" => $busqueda,
         "proveedores" => $proveedores,
+        "paginacion" => $paginacion,
+        "filtrosGET" => $filtrosGET,
     ];
 }
 

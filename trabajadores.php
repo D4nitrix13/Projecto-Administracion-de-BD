@@ -21,6 +21,8 @@ $usuarios         = $viewData["usuarios"];
 $busqueda         = $viewData["busqueda"];
 $rolFiltroInt     = $viewData["rolFiltroInt"];
 $seccionFiltro    = $viewData["seccionFiltro"];
+$paginacion       = $viewData["paginacion"];
+$filtrosGET       = $viewData["filtrosGET"];
 
 ?>
 

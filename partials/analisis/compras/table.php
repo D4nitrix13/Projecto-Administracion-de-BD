@@ -1,3 +1,8 @@
+<?php
+$baseUrl = "compras.php";
+$filtrosActuales = $filtrosGET ?? [];
+?>
+
 <div class="section-heading">
     <div>
         <h2>Listado de compras</h2>
@@ -51,5 +56,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+
+        <?php require __DIR__ . "/../../shared/pagination.php"; ?>
     </div>
 <?php endif; ?>

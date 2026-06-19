@@ -15,6 +15,8 @@
 
         <?php require __DIR__ . "/totals-section.php"; ?>
 
+        <input type="hidden" name="total_calculado" id="total-calculado-input" value="0">
+
         <div class="invoice-create-actions">
             <a href="facturas.php" class="btn-secondary-inline">
                 Cancelar

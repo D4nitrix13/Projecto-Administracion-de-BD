@@ -117,5 +117,11 @@ function historialBadgeClass(?string $estado): string
                 </tbody>
             </table>
         </div>
+
+        <?php
+        $baseUrl = "historial_estados_facturas.php";
+        $filtrosActuales = $filtrosGET ?? [];
+        require __DIR__ . "/../../shared/pagination.php";
+        ?>
     <?php endif; ?>
 </section>

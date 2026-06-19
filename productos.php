@@ -13,6 +13,7 @@ $idRol = (int)($user["id_rol"] ?? 0);
 
 $connection = require "./sql/db.php";
 
+require_once __DIR__ . "/helpers/pagination.php";
 require __DIR__ . "/partials/inventario/productos/queries.php";
 ?>
 
@@ -63,6 +64,13 @@ require __DIR__ . "/partials/inventario/productos/queries.php";
                         <?php require __DIR__ . "/partials/inventario/productos/card.php"; ?>
                     <?php endforeach; ?>
                 </div>
+
+                <?php
+                $paginacion = $paginacionProductosList;
+                $baseUrl = "productos.php";
+                $filtrosActuales = ["q" => $busquedaTexto, "categoria" => $filtroCategoriaRaw, "proveedor" => $filtroProveedorRaw, "id" => $filtroIdRaw, "stock" => $filtroStock];
+                require __DIR__ . "/partials/shared/pagination.php";
+                ?>
             <?php endif; ?>
 
         </section>

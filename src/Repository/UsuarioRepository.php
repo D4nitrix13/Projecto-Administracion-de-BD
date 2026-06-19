@@ -25,12 +25,33 @@ class UsuarioRepository
         ]);
     }
 
-    public function obtenerUsuariosFiltrados(array $filtros): array
+    public function obtenerUsuariosFiltrados(array $filtros, int $pagina = 1, int $porPagina = 15): array
     {
+        $offset = ($pagina - 1) * $porPagina;
+
         $statement = $this->connection->prepare("
             SELECT
                 id_usuario, nombre, email, id_rol, id_seccion, rol, seccion
             FROM buscar_usuarios_filtrados(
+                :busqueda, :id_rol, :seccion_filtro, :limit, :offset
+            )
+        ");
+
+        $statement->execute([
+            ":busqueda"      => trim($filtros["busqueda"] ?? ""),
+            ":id_rol"        => $filtros["rolFiltroInt"] ?? null,
+            ":seccion_filtro" => $filtros["seccionFiltro"] ?? "",
+            ":limit"         => $porPagina,
+            ":offset"        => $offset,
+        ]);
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function contarUsuariosFiltrados(array $filtros): int
+    {
+        $statement = $this->connection->prepare("
+            SELECT COUNT(*) FROM buscar_usuarios_filtrados(
                 :busqueda, :id_rol, :seccion_filtro
             )
         ");
@@ -41,7 +62,7 @@ class UsuarioRepository
             ":seccion_filtro" => $filtros["seccionFiltro"] ?? "",
         ]);
 
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return (int) $statement->fetchColumn();
     }
 
     public function obtenerUsuariosOrdenados(): array

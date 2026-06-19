@@ -75,6 +75,42 @@ class NotificacionService
         return $this->repo->limpiarHistorial();
     }
 
+    public function existeNotificacionHoy(string $tipo, int $idEntidad): bool
+    {
+        $hoy = date("Y-m-d");
+        $notificaciones = $this->repo->obtenerTodas();
+
+        foreach ($notificaciones as $n) {
+            if (
+                $n["tipo"] === $tipo
+                && substr($n["fecha"], 0, 10) === $hoy
+                && ($n["metadata"]["id_producto"] ?? null) === $idEntidad
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function existeNotificacionHoyCategoria(string $tipo, int $idCategoria): bool
+    {
+        $hoy = date("Y-m-d");
+        $notificaciones = $this->repo->obtenerTodas();
+
+        foreach ($notificaciones as $n) {
+            if (
+                $n["tipo"] === $tipo
+                && substr($n["fecha"], 0, 10) === $hoy
+                && ($n["metadata"]["id_categoria"] ?? null) === $idCategoria
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function tipoLabel(string $tipo): string
     {
         return match ($tipo) {
@@ -95,6 +131,8 @@ class NotificacionService
             "mantenimiento_bd"      => "Mantenimiento BD",
             "usuario_creado"        => "Nuevo usuario",
             "usuario_eliminado"     => "Usuario eliminado",
+            "producto_sin_rotacion" => "Sin rotación",
+            "categoria_debil"       => "Categoría débil",
             default                 => $tipo,
         };
     }
@@ -119,6 +157,8 @@ class NotificacionService
             "mantenimiento_bd"      => "settings",
             "usuario_creado"        => "user-plus",
             "usuario_eliminado"     => "user-minus",
+            "producto_sin_rotacion" => "package",
+            "categoria_debil"       => "folder",
             default                 => "bell",
         };
     }
@@ -143,6 +183,8 @@ class NotificacionService
             "mantenimiento_bd"      => "#6b7280",
             "usuario_creado"        => "#7c3aed",
             "usuario_eliminado"     => "#dc2626",
+            "producto_sin_rotacion" => "#d97706",
+            "categoria_debil"       => "#d97706",
             default                 => "#6b7280",
         };
     }

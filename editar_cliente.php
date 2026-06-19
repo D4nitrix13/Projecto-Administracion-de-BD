@@ -27,7 +27,8 @@ $isRestrictedRole = $viewData["isRestrictedRole"];
 <!DOCTYPE html>
 <html lang="es">
 
-
+<?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
+<?php require __DIR__ . "/partials/compradores/clientes/editar/styles.php"; ?>
 
 <body class="dashboard-body">
 
@@ -43,7 +44,6 @@ $isRestrictedRole = $viewData["isRestrictedRole"];
 
     </main>
 
-    <?php require __DIR__ . "/partials/inicio-publico/dashboard/styles.php"; ?>
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
 
 </body>

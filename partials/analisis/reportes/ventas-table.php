@@ -1,4 +1,5 @@
 <?php if ($tipoReporte === "general" || $tipoReporte === "ventas"): ?>
+    <?php $baseUrl = "reportes.php"; $filtrosActuales = $filtrosGETVentas ?? []; ?>
     <section class="reports-section">
         <div class="reports-section-header">
             <div>
@@ -65,5 +66,10 @@
                 </table>
             </div>
         <?php endif; ?>
+
+        <?php
+        $paginacion = $paginacionVentas;
+        require __DIR__ . "/../../shared/pagination.php";
+        ?>
     </section>
 <?php endif; ?>

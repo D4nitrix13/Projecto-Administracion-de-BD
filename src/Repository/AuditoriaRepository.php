@@ -18,7 +18,7 @@ class AuditoriaRepository
         ];
     }
 
-    public function obtenerRegistrosEliminados(array $filtros): array
+    public function obtenerRegistrosEliminados(array $filtros, int $limit = 15, int $offset = 0): array
     {
         $sql = "
             SELECT
@@ -62,11 +62,62 @@ class AuditoriaRepository
         }
 
         $sql .= " ORDER BY fecha DESC, id_auditoria DESC";
+        $sql .= " LIMIT :limit OFFSET :offset";
+
+        $params[":limit"] = $limit;
+        $params[":offset"] = $offset;
 
         $statement = $this->connection->prepare($sql);
         $statement->execute($params);
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function contarRegistrosEliminados(array $filtros): int
+    {
+        $sql = "
+            SELECT COUNT(*)
+            FROM auditoria
+            WHERE accion = 'DELETE'
+              AND datos_anteriores IS NOT NULL
+        ";
+
+        $params = [];
+        $busqueda = trim($filtros["busqueda"] ?? "");
+        $tablaFiltro = $filtros["tablaFiltro"] ?? "";
+        $fechaDesde = $filtros["fechaDesde"] ?? "";
+        $fechaHasta = $filtros["fechaHasta"] ?? "";
+
+        if ($tablaFiltro !== "") {
+            $sql .= " AND tabla_afectada = :tabla";
+            $params[":tabla"] = $tablaFiltro;
+        }
+
+        if ($busqueda !== "") {
+            $sql .= " AND (
+                registro_id ILIKE :busqueda
+                OR tabla_afectada ILIKE :busqueda
+                OR usuario ILIKE :busqueda
+                OR descripcion ILIKE :busqueda
+                OR datos_anteriores::TEXT ILIKE :busqueda
+            )";
+            $params[":busqueda"] = "%" . $busqueda . "%";
+        }
+
+        if ($fechaDesde !== "") {
+            $sql .= " AND fecha::DATE >= :fecha_desde";
+            $params[":fecha_desde"] = $fechaDesde;
+        }
+
+        if ($fechaHasta !== "") {
+            $sql .= " AND fecha::DATE <= :fecha_hasta";
+            $params[":fecha_hasta"] = $fechaHasta;
+        }
+
+        $statement = $this->connection->prepare($sql);
+        $statement->execute($params);
+
+        return (int) $statement->fetchColumn();
     }
 
     public function obtenerResumenEliminados(): array

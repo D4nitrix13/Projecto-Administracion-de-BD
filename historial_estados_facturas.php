@@ -19,6 +19,9 @@ $estadoPagoFiltro = $datos["estadoPagoFiltro"];
 $estadoProduccionFiltro = $datos["estadoProduccionFiltro"];
 $fechaDesde = $datos["fechaDesde"];
 $fechaHasta = $datos["fechaHasta"];
+$paginacion = $datos["paginacion"];
+
+$filtrosGET = ["q" => $busqueda, "tipo_evento" => $tipoEventoFiltro, "estado_pago" => $estadoPagoFiltro, "estado_produccion" => $estadoProduccionFiltro, "desde" => $fechaDesde, "hasta" => $fechaHasta];
 ?>
 
 <!DOCTYPE html>

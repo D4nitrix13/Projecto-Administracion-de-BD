@@ -116,5 +116,5 @@ function obtenerUrlWhatsAppCatalogo(
         . $producto["codigo"]
         . "). ¿Podrían brindarme más información?";
 
-    return "https://wa.me/" . $numeroWhatsApp . "?text=" . urlencode($texto);
+    return "https://wa.me/" . preg_replace("/[^0-9]/", "", $numeroWhatsApp) . "?text=" . urlencode($texto);
 }

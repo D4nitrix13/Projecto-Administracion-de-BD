@@ -88,7 +88,13 @@ $stmt->bindValue(":stock_bajo", $filtroStockBajo, PDO::PARAM_BOOL);
 
 $stmt->execute();
 
-$productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$allProductos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$totalProductos = count($allProductos);
+$paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+$porPagina = 15;
+$paginacionProductosList = calcularPaginacion($totalProductos, $paginaActual, $porPagina);
+$productos = array_slice($allProductos, $paginacionProductosList["offset"], $porPagina);
 
 if ($idRol === 1) {
     $textoSubtitulo = "Consulte, edite, compre stock o elimine productos del inventario.";

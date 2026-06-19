@@ -10,50 +10,67 @@ class FacturaRepository
 
     public function obtenerFacturasFiltradas(array $filtros): array
     {
-        $whereExtra = [];
+        $pagina = (int) ($filtros["pagina"] ?? 1);
+        $porPagina = (int) ($filtros["porPagina"] ?? 15);
+        $offset = ($pagina - 1) * $porPagina;
+
         $params = [
-            ":id_rol"       => (int) ($filtros["idRol"] ?? 0),
-            ":busqueda"     => trim($filtros["busqueda"] ?? ""),
-            ":id_seccion"   => $filtros["seccionFiltroInt"] ?? null,
-            ":id_usuario"   => $filtros["usuarioFiltroInt"] ?? null,
-            ":fecha_desde"  => ($filtros["fechaDesde"] ?? "") !== ""
+            ":id_rol"            => (int) ($filtros["idRol"] ?? 0),
+            ":busqueda"          => trim($filtros["busqueda"] ?? ""),
+            ":id_seccion"        => $filtros["seccionFiltroInt"] ?? null,
+            ":id_usuario"        => $filtros["usuarioFiltroInt"] ?? null,
+            ":fecha_desde"       => ($filtros["fechaDesde"] ?? "") !== ""
                 ? $filtros["fechaDesde"] . " 00:00:00" : null,
-            ":fecha_hasta"  => ($filtros["fechaHasta"] ?? "") !== ""
+            ":fecha_hasta"       => ($filtros["fechaHasta"] ?? "") !== ""
                 ? $filtros["fechaHasta"] . " 23:59:59" : null,
+            ":estado_pago"       => ($filtros["estadoPagoFiltro"] ?? "") !== ""
+                ? $filtros["estadoPagoFiltro"] : null,
+            ":estado_produccion" => ($filtros["estadoProduccionFiltro"] ?? "") !== ""
+                ? $filtros["estadoProduccionFiltro"] : null,
+            ":limit"             => $porPagina,
+            ":offset"            => $offset,
         ];
 
-        $estadoPago = $filtros["estadoPagoFiltro"] ?? "";
-        if ($estadoPago !== "") {
-            $whereExtra[] = "f.estado_pago = :estado_pago";
-            $params[":estado_pago"] = $estadoPago;
-        }
-
-        $estadoProduccion = $filtros["estadoProduccionFiltro"] ?? "";
-        if ($estadoProduccion !== "") {
-            $whereExtra[] = "f.estado_produccion = :estado_produccion";
-            $params[":estado_produccion"] = $estadoProduccion;
-        }
-
-        $whereExtraSql = !empty($whereExtra)
-            ? "WHERE " . implode(" AND ", $whereExtra)
-            : "";
-
         $statement = $this->connection->prepare("
-            SELECT
-                bf.id_factura, bf.fecha, bf.total, bf.cliente,
-                bf.usuario, bf.seccion, f.estado_pago, f.estado_produccion
-            FROM buscar_facturas_filtradas(
+            SELECT * FROM buscar_facturas_filtradas(
                 :id_rol, :busqueda, :id_seccion, :id_usuario,
-                :fecha_desde, :fecha_hasta
-            ) AS bf
-            INNER JOIN factura f ON f.id_factura = bf.id_factura
-            $whereExtraSql
-            ORDER BY bf.fecha DESC, bf.id_factura DESC
+                :fecha_desde, :fecha_hasta,
+                :estado_pago, :estado_produccion,
+                :limit, :offset
+            )
         ");
 
         $statement->execute($params);
-
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function contarFacturasFiltradas(array $filtros): int
+    {
+        $params = [
+            ":id_rol"            => (int) ($filtros["idRol"] ?? 0),
+            ":busqueda"          => trim($filtros["busqueda"] ?? ""),
+            ":id_seccion"        => $filtros["seccionFiltroInt"] ?? null,
+            ":id_usuario"        => $filtros["usuarioFiltroInt"] ?? null,
+            ":fecha_desde"       => ($filtros["fechaDesde"] ?? "") !== ""
+                ? $filtros["fechaDesde"] . " 00:00:00" : null,
+            ":fecha_hasta"       => ($filtros["fechaHasta"] ?? "") !== ""
+                ? $filtros["fechaHasta"] . " 23:59:59" : null,
+            ":estado_pago"       => ($filtros["estadoPagoFiltro"] ?? "") !== ""
+                ? $filtros["estadoPagoFiltro"] : null,
+            ":estado_produccion" => ($filtros["estadoProduccionFiltro"] ?? "") !== ""
+                ? $filtros["estadoProduccionFiltro"] : null,
+        ];
+
+        $statement = $this->connection->prepare("
+            SELECT COUNT(*) FROM buscar_facturas_filtradas(
+                :id_rol, :busqueda, :id_seccion, :id_usuario,
+                :fecha_desde, :fecha_hasta,
+                :estado_pago, :estado_produccion
+            )
+        ");
+
+        $statement->execute($params);
+        return (int) $statement->fetchColumn();
     }
 
     public function obtenerFacturaPorId(int $idFactura): ?array

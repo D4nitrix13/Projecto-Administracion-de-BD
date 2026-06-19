@@ -5,6 +5,7 @@ session_start();
 $pageTitle = "Notificaciones - Panda Estampados / Kitsune";
 
 require_once __DIR__ . "/includes/auth_guard.php";
+require_once __DIR__ . "/helpers/pagination.php";
 require_once __DIR__ . "/services/NotificacionService.php";
 
 requireLogin();
@@ -14,8 +15,13 @@ $idUsuario = (int)$user["id_usuario"];
 $esAdmin = ($user["rol"] ?? "") === "Administrador";
 
 $service = new NotificacionService();
-$notificaciones = $service->obtenerParaUsuario($idUsuario);
+$allNotificaciones = $service->obtenerParaUsuario($idUsuario);
 $sinLeer = $service->contarSinLeer($idUsuario);
+
+$totalNotificaciones = count($allNotificaciones);
+$paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+$paginacion = calcularPaginacion($totalNotificaciones, $paginaActual);
+$notificaciones = array_slice($allNotificaciones, $paginacion["offset"], $paginacion["porPagina"]);
 
 $flashSuccess = $_SESSION["flash_success"] ?? null;
 $flashError = $_SESSION["flash_error"] ?? null;
@@ -171,6 +177,12 @@ unset($_SESSION["flash_success"], $_SESSION["flash_error"]);
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+
+        <?php
+        $baseUrl = "notificaciones.php";
+        $filtrosActuales = [];
+        require __DIR__ . "/partials/shared/pagination.php";
+        ?>
 
     </main>
 

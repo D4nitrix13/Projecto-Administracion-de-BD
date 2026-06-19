@@ -599,7 +599,7 @@
         display: grid;
         grid-template-columns: minmax(280px, 0.85fr) minmax(420px, 1.15fr);
         gap: 22px;
-        align-items: stretch;
+        align-items: start;
         margin-top: 8px;
     }
 
@@ -790,6 +790,251 @@
 
         .invoice-total-final strong {
             font-size: 1.3rem;
+        }
+    }
+
+    /* =========================================
+       PLAZOS SECTION
+       ========================================= */
+
+    .invoice-plazos-section {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        background: #ffffff;
+        padding: 22px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .invoice-plazos-header {
+        margin-bottom: 18px;
+    }
+
+    .invoice-plazos-header span {
+        display: inline-flex;
+        margin-bottom: 8px;
+        color: #7c3aed;
+        font-size: 0.76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .invoice-plazos-header h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.15rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+
+    .invoice-plazos-fields {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .invoice-plazos-fields .form-group {
+        margin: 0;
+    }
+
+    .invoice-plazos-fields .label {
+        display: block;
+        margin-bottom: 6px;
+        color: #111827;
+        font-size: 0.82rem;
+        font-weight: 800;
+    }
+
+    .invoice-plazos-fields .input {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 8px 12px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 0.9rem;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .invoice-plazos-fields .input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .plazos-numero-input {
+        font-size: 1rem !important;
+        font-weight: 800 !important;
+        text-align: center;
+    }
+
+    .invoice-plazos-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .invoice-plazos-mini-card {
+        padding: 16px;
+        border-radius: 16px;
+        background: #f5f3ff;
+        border: 1px solid #e9e5ff;
+    }
+
+    .invoice-plazos-mini-card span {
+        display: block;
+        margin-bottom: 8px;
+        color: #6b7280;
+        font-size: 0.74rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .invoice-plazos-mini-card strong {
+        display: block;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .invoice-plazos-step-1 {
+        margin-bottom: 18px;
+    }
+
+    .invoice-plazos-step-1 .form-group {
+        max-width: 300px;
+    }
+
+    .plazos-numero-input {
+        font-size: 1.5rem !important;
+        font-weight: 900 !important;
+        text-align: center;
+        min-height: 56px !important;
+    }
+
+    .invoice-plazos-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: #ffffff;
+    }
+
+    .invoice-plazos-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .invoice-plazos-table thead {
+        background: #f5f3ff;
+    }
+
+    .invoice-plazos-table th {
+        padding: 12px 14px;
+        color: #6b7280;
+        font-size: 0.82rem;
+        font-weight: 900;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .invoice-plazos-table td {
+        padding: 10px 14px;
+        color: #111827;
+        font-size: 0.9rem;
+        border-top: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .invoice-plazos-table .input {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .invoice-plazos-table td:nth-child(1) {
+        width: 50px;
+        text-align: center;
+        font-weight: 700;
+        color: #7c3aed;
+    }
+
+    .invoice-plazos-table td:nth-child(2),
+    .invoice-plazos-table td:nth-child(3) {
+        width: 120px;
+    }
+
+    .invoice-plazos-table td:nth-child(4) {
+        width: 160px;
+    }
+
+    .invoice-plazos-table td:nth-child(5) {
+        width: auto;
+    }
+
+    .invoice-plazos-table td:nth-child(6) {
+        width: 50px;
+        text-align: center;
+    }
+
+    .invoice-plazos-total-row {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 14px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .invoice-plazos-total-row span {
+        color: #6b7280;
+        font-weight: 800;
+        font-size: 0.95rem;
+    }
+
+    .invoice-plazos-total-row strong {
+        color: #7c3aed;
+        font-weight: 900;
+        font-size: 1.15rem;
+    }
+
+    .btn-remove-plazo {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #fca5a5;
+        border-radius: 8px;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-size: 1.1rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .btn-remove-plazo:hover {
+        background: #fecaca;
+        transform: translateY(-1px);
+    }
+
+    .plazos-validacion-error {
+        color: #dc2626;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    @media (max-width: 900px) {
+        .invoice-plazos-fields,
+        .invoice-plazos-summary {
+            grid-template-columns: 1fr;
         }
     }
 </style>

@@ -1,3 +1,8 @@
+<?php
+$baseUrl = "trabajadores.php";
+$filtrosActuales = $filtrosGET ?? [];
+?>
+
 <h2 class="dashboard-card-title" style="margin-bottom:8px;">
     Listado de trabajadores
 </h2>
@@ -56,5 +61,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+
+        <?php require __DIR__ . "/../../shared/pagination.php"; ?>
     </div>
 <?php endif; ?>

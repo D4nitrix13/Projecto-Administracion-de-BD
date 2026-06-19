@@ -20,6 +20,8 @@ $soloDetallista   = $viewData["soloDetallista"];
 $textoSubtitulo   = $viewData["textoSubtitulo"];
 $flashSuccess     = $viewData["flashSuccess"];
 $flashError       = $viewData["flashError"];
+$paginacion       = $viewData["paginacion"];
+$filtrosGET       = $viewData["filtrosGET"];
 
 ?>
 

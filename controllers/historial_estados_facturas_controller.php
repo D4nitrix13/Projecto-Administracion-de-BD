@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . "/../helpers/pagination.php";
 require_once __DIR__ . "/../repositories/FacturaEstadoHistorialRepository.php";
 
 function obtenerDatosHistorialEstadosFacturas(): array
@@ -44,9 +45,19 @@ function obtenerDatosHistorialEstadosFacturas(): array
         "fechaHasta" => $fechaHasta,
     ];
 
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+    $totalRegistros = $repository->contarHistorialGeneralFiltrado($filtros);
+    $paginacion = calcularPaginacion($totalRegistros, $paginaActual);
+
+    $historialEstados = $repository->obtenerHistorialGeneralFiltrado(
+        $filtros,
+        $paginacion["porPagina"],
+        $paginacion["offset"]
+    );
+
     return [
         "user" => $user,
-        "historialEstados" => $repository->obtenerHistorialGeneralFiltrado($filtros),
+        "historialEstados" => $historialEstados,
         "resumen" => $repository->obtenerResumenHistorial($filtros),
         "tiposEvento" => $repository->obtenerTiposEvento(),
         "busqueda" => $busqueda,
@@ -55,5 +66,6 @@ function obtenerDatosHistorialEstadosFacturas(): array
         "estadoProduccionFiltro" => $estadoProduccionFiltro,
         "fechaDesde" => $fechaDesde,
         "fechaHasta" => $fechaHasta,
+        "paginacion" => $paginacion,
     ];
 }

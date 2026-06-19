@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../repositories/FacturaRepository.php";
 require_once __DIR__ . "/../repositories/SeccionRepository.php";
 require_once __DIR__ . "/../repositories/UsuarioRepository.php";
+require_once __DIR__ . "/../helpers/pagination.php";
 
 function obtenerDatosFacturas(): array
 {
@@ -28,6 +29,7 @@ function obtenerDatosFacturas(): array
     $estadoProduccionFiltro = $_GET["estado_produccion"] ?? "";
     $fechaDesde = $_GET["desde"] ?? "";
     $fechaHasta = $_GET["hasta"] ?? "";
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
 
     $estadosPagoPermitidos = ["Pendiente", "Parcial", "Pagado"];
     $estadosProduccionPermitidos = [
@@ -57,7 +59,7 @@ function obtenerDatosFacturas(): array
 
     $usuariosFiltro = $usuarioRepository->obtenerUsuariosOrdenados();
 
-    $facturas = $facturaRepository->obtenerFacturasFiltradas([
+    $filtros = [
         "idRol" => $idRol,
         "busqueda" => $busqueda,
         "seccionFiltroInt" => $seccionFiltroInt,
@@ -66,9 +68,27 @@ function obtenerDatosFacturas(): array
         "estadoProduccionFiltro" => $estadoProduccionFiltro,
         "fechaDesde" => $fechaDesde,
         "fechaHasta" => $fechaHasta,
-    ]);
+    ];
+
+    $totalRegistros = $facturaRepository->contarFacturasFiltradas($filtros);
+    $paginacion = calcularPaginacion($totalRegistros, $paginaActual, 15);
+
+    $facturas = $facturaRepository->obtenerFacturasFiltradas(array_merge($filtros, [
+        "pagina" => $paginacion["paginaActual"],
+        "porPagina" => $paginacion["porPagina"],
+    ]));
 
     $textoSubtitulo = obtenerTextoSubtituloFacturas($idRol);
+
+    $filtrosGET = array_filter([
+        "q" => $busqueda ?: null,
+        "seccion" => $seccionFiltro ?: null,
+        "usuario" => $usuarioFiltro ?: null,
+        "estado_pago" => $estadoPagoFiltro ?: null,
+        "estado_produccion" => $estadoProduccionFiltro ?: null,
+        "desde" => $fechaDesde ?: null,
+        "hasta" => $fechaHasta ?: null,
+    ], fn($v) => $v !== null);
 
     return [
         "user" => $user,
@@ -86,6 +106,8 @@ function obtenerDatosFacturas(): array
         "textoSubtitulo" => $textoSubtitulo,
         "flashSuccess" => $flashSuccess,
         "flashError" => $flashError,
+        "paginacion" => $paginacion,
+        "filtrosGET" => $filtrosGET,
     ];
 }
 

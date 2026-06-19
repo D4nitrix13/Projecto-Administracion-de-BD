@@ -30,6 +30,9 @@ $typeFilter = $viewData["typeFilter"];
 $dateFilter = $viewData["dateFilter"];
 $deleteFilter = $viewData["deleteFilter"];
 $sortFilter = $viewData["sortFilter"];
+$paginacion = $viewData["paginacion"];
+
+$filtrosGET = ["search" => $searchFilter, "type" => $typeFilter, "date" => $dateFilter, "delete_status" => $deleteFilter, "sort" => $sortFilter];
 
 ?>
 

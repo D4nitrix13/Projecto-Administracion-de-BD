@@ -146,10 +146,8 @@ class FacturaValidationService
             return "La fecha de entrega no puede ser anterior a hoy.";
         }
 
-        $minimo = round($total * 0.50, 2);
-
-        if ($montoPagado < $minimo) {
-            return "Debe pagar al menos el 50%. Mínimo: C$ " . number_format($minimo, 2);
+        if ($montoPagado < 0) {
+            return "El monto pagado no puede ser negativo.";
         }
 
         if ($montoPagado > $total) {

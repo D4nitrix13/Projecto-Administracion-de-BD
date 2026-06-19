@@ -20,6 +20,8 @@ $flashSuccess     = $viewData["flashSuccess"];
 $flashError       = $viewData["flashError"];
 $busqueda         = $viewData["busqueda"];
 $proveedores      = $viewData["proveedores"];
+$paginacion       = $viewData["paginacion"];
+$filtrosGET       = $viewData["filtrosGET"];
 
 ?>
 

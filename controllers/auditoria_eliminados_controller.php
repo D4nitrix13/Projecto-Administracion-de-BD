@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . "/../helpers/pagination.php";
 require_once __DIR__ . "/../repositories/AuditoriaRepository.php";
 
 function obtenerDatosAuditoriaEliminados(): array
@@ -31,12 +32,22 @@ function obtenerDatosAuditoriaEliminados(): array
         $tablaFiltro = "";
     }
 
-    $registros = $auditoriaRepository->obtenerRegistrosEliminados([
+    $filtros = [
         "busqueda" => $busqueda,
         "tablaFiltro" => $tablaFiltro,
         "fechaDesde" => $fechaDesde,
         "fechaHasta" => $fechaHasta,
-    ]);
+    ];
+
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+    $totalRegistros = $auditoriaRepository->contarRegistrosEliminados($filtros);
+    $paginacion = calcularPaginacion($totalRegistros, $paginaActual);
+
+    $registros = $auditoriaRepository->obtenerRegistrosEliminados(
+        $filtros,
+        $paginacion["porPagina"],
+        $paginacion["offset"]
+    );
 
     $resumen = $auditoriaRepository->obtenerResumenEliminados();
 
@@ -50,6 +61,7 @@ function obtenerDatosAuditoriaEliminados(): array
         "fechaHasta" => $fechaHasta,
         "flashSuccess" => $flashSuccess,
         "flashError" => $flashError,
+        "paginacion" => $paginacion,
     ];
 }
 

@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../repositories/CompraRepository.php";
+require_once __DIR__ . "/../helpers/pagination.php";
 
 function obtenerDatosCompras(): array
 {
@@ -21,6 +22,7 @@ function obtenerDatosCompras(): array
     $usuarioFiltro   = $_GET["usuario"] ?? "";
     $fechaDesde      = $_GET["desde"] ?? "";
     $fechaHasta      = $_GET["hasta"] ?? "";
+    $paginaActual    = max(1, (int) ($_GET["pagina"] ?? 1));
 
     $proveedorFiltroInt = ctype_digit((string)$proveedorFiltro)
         ? (int)$proveedorFiltro
@@ -33,13 +35,33 @@ function obtenerDatosCompras(): array
     $proveedores = $repository->obtenerProveedores();
     $usuarios    = $repository->obtenerUsuarios();
 
-    $compras = $repository->obtenerComprasFiltradas(
+    $totalRegistros = $repository->contarComprasFiltradas(
         busqueda: $busqueda,
         proveedorId: $proveedorFiltroInt,
         usuarioId: $usuarioFiltroInt,
         fechaDesde: $fechaDesde,
         fechaHasta: $fechaHasta
     );
+
+    $paginacion = calcularPaginacion($totalRegistros, $paginaActual, 15);
+
+    $compras = $repository->obtenerComprasFiltradas(
+        busqueda: $busqueda,
+        proveedorId: $proveedorFiltroInt,
+        usuarioId: $usuarioFiltroInt,
+        fechaDesde: $fechaDesde,
+        fechaHasta: $fechaHasta,
+        pagina: $paginacion["paginaActual"],
+        porPagina: $paginacion["porPagina"]
+    );
+
+    $filtrosGET = array_filter([
+        "q"        => $busqueda ?: null,
+        "proveedor" => $proveedorFiltro ?: null,
+        "usuario"  => $usuarioFiltro ?: null,
+        "desde"    => $fechaDesde ?: null,
+        "hasta"    => $fechaHasta ?: null,
+    ], fn($v) => $v !== null);
 
     return [
         "user"               => $user,
@@ -53,5 +75,7 @@ function obtenerDatosCompras(): array
         "proveedores"        => $proveedores,
         "usuarios"           => $usuarios,
         "compras"            => $compras,
+        "paginacion"         => $paginacion,
+        "filtrosGET"         => $filtrosGET,
     ];
 }

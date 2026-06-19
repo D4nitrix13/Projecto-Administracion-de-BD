@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . "/../helpers/pagination.php";
+
 function obtenerDatosLogsSistema(): array
 {
     $user = $_SESSION["user"];
@@ -55,6 +57,10 @@ function obtenerDatosLogsSistema(): array
 
     $availableTypes = logsObtenerTiposDisponibles($logs);
 
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+    $paginacion = calcularPaginacion($totalFiltered, $paginaActual);
+    $paginatedLogs = array_slice($filteredLogs, $paginacion["offset"], $paginacion["porPagina"]);
+
     $selectedLog = null;
     $selectedContent = null;
 
@@ -72,7 +78,7 @@ function obtenerDatosLogsSistema(): array
         "error" => $error,
         "success" => $success,
         "logs" => $logs,
-        "filteredLogs" => $filteredLogs,
+        "filteredLogs" => $paginatedLogs,
         "totalLogs" => $totalLogs,
         "totalFiltered" => $totalFiltered,
         "totalPendingDelete" => $totalPendingDelete,
@@ -89,6 +95,7 @@ function obtenerDatosLogsSistema(): array
         "selectedSource" => $selectedSource,
         "selectedFile" => $selectedFile,
         "allowedSources" => $allowedSources,
+        "paginacion" => $paginacion,
     ];
 }
 

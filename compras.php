@@ -22,6 +22,8 @@ $fechaHasta         = $viewData["fechaHasta"];
 $proveedores        = $viewData["proveedores"];
 $usuarios           = $viewData["usuarios"];
 $compras            = $viewData["compras"];
+$paginacion         = $viewData["paginacion"];
+$filtrosGET         = $viewData["filtrosGET"];
 
 ?>
 

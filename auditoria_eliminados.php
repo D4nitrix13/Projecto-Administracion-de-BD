@@ -17,6 +17,9 @@ $fechaDesde = $datos["fechaDesde"];
 $fechaHasta = $datos["fechaHasta"];
 $flashSuccess = $datos["flashSuccess"];
 $flashError = $datos["flashError"];
+$paginacion = $datos["paginacion"];
+
+$filtrosGET = ["q" => $busqueda, "tabla" => $tablaFiltro, "desde" => $fechaDesde, "hasta" => $fechaHasta];
 ?>
 
 <!DOCTYPE html>

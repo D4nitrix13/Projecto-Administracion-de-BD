@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../repositories/UsuarioRepository.php";
 require_once __DIR__ . "/../repositories/RolRepository.php";
 require_once __DIR__ . "/../repositories/SeccionRepository.php";
+require_once __DIR__ . "/../helpers/pagination.php";
 
 function obtenerDatosUsuarios(): array
 {
@@ -25,6 +26,7 @@ function obtenerDatosUsuarios(): array
     $busqueda = trim($_GET["q"] ?? "");
     $rolFiltro = $_GET["rol"] ?? "";
     $seccionFiltro = $_GET["seccion"] ?? "";
+    $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
 
     $rolFiltroInt = ctype_digit($rolFiltro) ? (int)$rolFiltro : null;
 
@@ -43,11 +45,26 @@ function obtenerDatosUsuarios(): array
         $error = $resultado["message"];
     }
 
-    $usuarios = $usuarioRepository->obtenerUsuariosFiltrados([
+    $filtros = [
         "busqueda" => $busqueda,
         "rolFiltroInt" => $rolFiltroInt,
         "seccionFiltro" => $seccionFiltro,
-    ]);
+    ];
+
+    $totalRegistros = $usuarioRepository->contarUsuariosFiltrados($filtros);
+    $paginacion = calcularPaginacion($totalRegistros, $paginaActual, 15);
+
+    $usuarios = $usuarioRepository->obtenerUsuariosFiltrados(
+        $filtros,
+        $paginacion["paginaActual"],
+        $paginacion["porPagina"]
+    );
+
+    $filtrosGET = array_filter([
+        "q" => $busqueda ?: null,
+        "rol" => $rolFiltro ?: null,
+        "seccion" => $seccionFiltro ?: null,
+    ], fn($v) => $v !== null);
 
     return [
         "user" => $user,
@@ -60,6 +77,8 @@ function obtenerDatosUsuarios(): array
         "busqueda" => $busqueda,
         "rolFiltroInt" => $rolFiltroInt,
         "seccionFiltro" => $seccionFiltro,
+        "paginacion" => $paginacion,
+        "filtrosGET" => $filtrosGET,
     ];
 }
 

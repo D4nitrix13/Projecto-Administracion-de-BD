@@ -1,3 +1,8 @@
+<?php
+$baseUrl = "categorias.php";
+$filtrosActuales = $filtrosGET ?? [];
+?>
+
 <div class="category-section-header">
     <div>
         <h2>Listado de categorías</h2>
@@ -56,5 +61,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+
+        <?php require __DIR__ . "/../../shared/pagination.php"; ?>
     </div>
 <?php endif; ?>

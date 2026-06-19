@@ -8,17 +8,39 @@ final class ClienteRepository
 {
     public function __construct(private \PDO $connection) {}
 
-    public function obtenerClientesFiltrados(string $busqueda, ?string $tipoFiltro): array
+    public function obtenerClientesFiltrados(string $busqueda, ?string $tipoFiltro, int $pagina = 1, int $porPagina = 15): array
+    {
+        $tipoCliente = ($tipoFiltro === "Mayorista" || $tipoFiltro === "Detallista")
+            ? $tipoFiltro
+            : null;
+
+        $offset = ($pagina - 1) * $porPagina;
+
+        $statement = $this->connection->prepare("
+            SELECT
+                id_cliente, nombres, apellidos, telefono,
+                direccion, identificacion, tipo_cliente
+            FROM buscar_clientes_filtrados(:busqueda, :tipo_cliente, :limit, :offset)
+        ");
+
+        $statement->execute([
+            ":busqueda"     => $busqueda,
+            ":tipo_cliente" => $tipoCliente,
+            ":limit"        => $porPagina,
+            ":offset"       => $offset,
+        ]);
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function contarClientesFiltrados(string $busqueda, ?string $tipoFiltro): int
     {
         $tipoCliente = ($tipoFiltro === "Mayorista" || $tipoFiltro === "Detallista")
             ? $tipoFiltro
             : null;
 
         $statement = $this->connection->prepare("
-            SELECT
-                id_cliente, nombres, apellidos, telefono,
-                direccion, identificacion, tipo_cliente
-            FROM buscar_clientes_filtrados(:busqueda, :tipo_cliente)
+            SELECT COUNT(*) FROM buscar_clientes_filtrados(:busqueda, :tipo_cliente)
         ");
 
         $statement->execute([
@@ -26,7 +48,7 @@ final class ClienteRepository
             ":tipo_cliente" => $tipoCliente,
         ]);
 
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return (int) $statement->fetchColumn();
     }
 
     public function obtenerClientePorId(int $idCliente): ?array

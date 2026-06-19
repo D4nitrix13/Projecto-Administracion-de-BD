@@ -28,6 +28,22 @@ $ventasDetalladas        = $viewData["ventasDetalladas"];
 $productosReporte        = $viewData["productosReporte"];
 $clientesReporte         = $viewData["clientesReporte"];
 
+$paginacionVentas        = $viewData["paginacionVentas"];
+$paginacionProductos     = $viewData["paginacionProductos"];
+$paginacionClientes      = $viewData["paginacionClientes"];
+
+$rankingMasVendidosMes     = $viewData["rankingMasVendidosMes"];
+$rankingMasVendidosSemana  = $viewData["rankingMasVendidosSemana"];
+$rankingMasVendidosAnio    = $viewData["rankingMasVendidosAnio"];
+$rankingMenosVendidosMes   = $viewData["rankingMenosVendidosMes"];
+$rankingMenosVendidosSemana= $viewData["rankingMenosVendidosSemana"];
+$rankingMenosVendidosAnio  = $viewData["rankingMenosVendidosAnio"];
+$rankingCategoriasDebiles  = $viewData["rankingCategoriasDebiles"];
+
+$filtrosGETVentas    = ["tipo" => $tipoReporte, "desde" => $fechaDesde, "hasta" => $fechaHasta];
+$filtrosGETProductos = ["tipo" => $tipoReporte, "desde" => $fechaDesde, "hasta" => $fechaHasta];
+$filtrosGETClientes  = ["tipo" => $tipoReporte, "desde" => $fechaDesde, "hasta" => $fechaHasta];
+
 ?>
 
 <!DOCTYPE html>
@@ -69,6 +85,8 @@ $clientesReporte         = $viewData["clientesReporte"];
             <?php require __DIR__ . "/partials/analisis/reportes/filters.php"; ?>
 
             <?php require __DIR__ . "/partials/analisis/reportes/charts.php"; ?>
+
+            <?php require __DIR__ . "/partials/analisis/reportes/productos-ranking.php"; ?>
 
             <?php require __DIR__ . "/partials/analisis/reportes/ventas-table.php"; ?>
 

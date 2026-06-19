@@ -26,7 +26,7 @@ class FacturaEstadoHistorialRepository
         return $this->obtenerHistorialGeneralFiltrado([]);
     }
 
-    public function obtenerHistorialGeneralFiltrado(array $filtros): array
+    public function obtenerHistorialGeneralFiltrado(array $filtros, int $limit = 15, int $offset = 0): array
     {
         [$where, $params] = $this->construirFiltros($filtros);
 
@@ -36,12 +36,31 @@ class FacturaEstadoHistorialRepository
             INNER JOIN factura f ON f.id_factura = h.id_factura
             $where
             ORDER BY h.fecha_evento DESC, h.id_historial DESC
-            LIMIT 300
+            LIMIT :limit OFFSET :offset
         ");
+
+        $params[":limit"] = $limit;
+        $params[":offset"] = $offset;
 
         $statement->execute($params);
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function contarHistorialGeneralFiltrado(array $filtros): int
+    {
+        [$where, $params] = $this->construirFiltros($filtros);
+
+        $statement = $this->connection->prepare("
+            SELECT COUNT(*)
+            FROM factura_estado_historial h
+            INNER JOIN factura f ON f.id_factura = h.id_factura
+            $where
+        ");
+
+        $statement->execute($params);
+
+        return (int) $statement->fetchColumn();
     }
 
     public function obtenerTiposEvento(): array
