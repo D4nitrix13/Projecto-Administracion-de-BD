@@ -68,8 +68,25 @@
     <div style="display: grid; gap: 24px;">
 
         <div class="reports-chart-card">
-            <h3>Más vendidos</h3>
-            <p>Top 10 productos con más unidades vendidas.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
+                <div>
+                    <h3>Más vendidos</h3>
+                    <p>Top productos con más unidades vendidas.</p>
+                </div>
+                <form method="GET" action="reportes.php" style="display: flex; align-items: center; gap: 6px;">
+                    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipoReporte) ?>">
+                    <?php if ($fechaDesde): ?><input type="hidden" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>"><?php endif; ?>
+                    <?php if ($fechaHasta): ?><input type="hidden" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>"><?php endif; ?>
+                    <input type="hidden" name="limit_menos" value="<?= $limitMenosVendidos ?>">
+                    <input type="hidden" name="limit_categorias" value="<?= $limitCategorias ?>">
+                    <input type="hidden" name="limit_clientes_top" value="<?= $limitClientesTop ?>">
+                    <input type="hidden" name="limit_clientes_bajo" value="<?= $limitClientesBajo ?>">
+                    <label style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Mostrar:</label>
+                    <input type="number" name="limit_mas" value="<?= $limitMasVendidos ?>" min="1" max="100"
+                        style="width: 60px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; text-align: center;">
+                    <button type="submit" class="btn-primary-inline" style="padding: 4px 10px; font-size: 0.8rem;">Aplicar</button>
+                </form>
+            </div>
 
             <div class="ranking-tabs" data-group="mas">
                 <button class="ranking-tab active" onclick="switchRankingTab('mas', 'mes')">Mes</button>
@@ -172,8 +189,25 @@
         </div>
 
         <div class="reports-chart-card">
-            <h3>Menos vendidos</h3>
-            <p>Top 5 productos con menos movimiento que tienen stock disponible.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
+                <div>
+                    <h3>Menos vendidos</h3>
+                    <p>Productos con menos movimiento que tienen stock disponible.</p>
+                </div>
+                <form method="GET" action="reportes.php" style="display: flex; align-items: center; gap: 6px;">
+                    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipoReporte) ?>">
+                    <?php if ($fechaDesde): ?><input type="hidden" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>"><?php endif; ?>
+                    <?php if ($fechaHasta): ?><input type="hidden" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>"><?php endif; ?>
+                    <input type="hidden" name="limit_mas" value="<?= $limitMasVendidos ?>">
+                    <input type="hidden" name="limit_categorias" value="<?= $limitCategorias ?>">
+                    <input type="hidden" name="limit_clientes_top" value="<?= $limitClientesTop ?>">
+                    <input type="hidden" name="limit_clientes_bajo" value="<?= $limitClientesBajo ?>">
+                    <label style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Mostrar:</label>
+                    <input type="number" name="limit_menos" value="<?= $limitMenosVendidos ?>" min="1" max="100"
+                        style="width: 60px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; text-align: center;">
+                    <button type="submit" class="btn-primary-inline" style="padding: 4px 10px; font-size: 0.8rem;">Aplicar</button>
+                </form>
+            </div>
 
             <div class="ranking-tabs" data-group="menos">
                 <button class="ranking-tab active" onclick="switchRankingTab('menos', 'mes')">Mes</button>
@@ -294,8 +328,25 @@
         </div>
 
         <div class="reports-chart-card">
-            <h3>Categorías débiles</h3>
-            <p>Categorías con menos productos y stock total.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
+                <div>
+                    <h3>Categorías débiles</h3>
+                    <p>Categorías con menos productos y stock total.</p>
+                </div>
+                <form method="GET" action="reportes.php" style="display: flex; align-items: center; gap: 6px;">
+                    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipoReporte) ?>">
+                    <?php if ($fechaDesde): ?><input type="hidden" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>"><?php endif; ?>
+                    <?php if ($fechaHasta): ?><input type="hidden" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>"><?php endif; ?>
+                    <input type="hidden" name="limit_mas" value="<?= $limitMasVendidos ?>">
+                    <input type="hidden" name="limit_menos" value="<?= $limitMenosVendidos ?>">
+                    <input type="hidden" name="limit_clientes_top" value="<?= $limitClientesTop ?>">
+                    <input type="hidden" name="limit_clientes_bajo" value="<?= $limitClientesBajo ?>">
+                    <label style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Mostrar:</label>
+                    <input type="number" name="limit_categorias" value="<?= $limitCategorias ?>" min="1" max="100"
+                        style="width: 60px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; text-align: center;">
+                    <button type="submit" class="btn-primary-inline" style="padding: 4px 10px; font-size: 0.8rem;">Aplicar</button>
+                </form>
+            </div>
 
             <?php if (empty($rankingCategoriasDebiles)): ?>
                 <p class="empty-message">No hay categorías registradas.</p>

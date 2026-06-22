@@ -109,11 +109,11 @@
                 </article>
             <?php endforeach; ?>
         </div>
-
-        <?php
-        $baseUrl = "archivos_wal.php";
-        $filtrosActuales = $filtrosGET ?? [];
-        require __DIR__ . "/../../shared/pagination.php";
-        ?>
     <?php endif; ?>
 </section>
+
+<?php
+$baseUrl = "archivos_wal.php";
+$filtrosActuales = $filtrosGET ?? [];
+require __DIR__ . "/../../shared/pagination.php";
+?>

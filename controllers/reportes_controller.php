@@ -27,6 +27,13 @@ function obtenerDatosReportes(): array
 
     $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
 
+    // Límites configurables por el usuario (rango 1-100, default 10)
+    $limitMasVendidos = max(1, min(100, (int) ($_GET["limit_mas"] ?? 10)));
+    $limitMenosVendidos = max(1, min(100, (int) ($_GET["limit_menos"] ?? 5)));
+    $limitCategorias = max(1, min(100, (int) ($_GET["limit_categorias"] ?? 10)));
+    $limitClientesTop = max(1, min(100, (int) ($_GET["limit_clientes_top"] ?? 10)));
+    $limitClientesBajo = max(1, min(100, (int) ($_GET["limit_clientes_bajo"] ?? 10)));
+
     $totalVentasRegistros = $repo->contarVentasDetalladas($fechaDesdeSql, $fechaHastaSql);
     $totalProductosRegistros = $repo->contarProductosReporte($fechaDesdeSql, $fechaHastaSql);
     $totalClientesRegistros = $repo->contarClientesReporte($fechaDesdeSql, $fechaHastaSql);
@@ -71,13 +78,27 @@ function obtenerDatosReportes(): array
         "paginacionProductos" => $paginacionProductos,
         "paginacionClientes" => $paginacionClientes,
 
-        "rankingMasVendidosMes" => $repo->obtenerProductosMasVendidosMes(),
-        "rankingMasVendidosSemana" => $repo->obtenerProductosMasVendidosSemana(),
-        "rankingMasVendidosAnio" => $repo->obtenerProductosMasVendidosAnio(),
-        "rankingMenosVendidosMes" => $repo->obtenerProductosMenosVendidosMes(),
-        "rankingMenosVendidosSemana" => $repo->obtenerProductosMenosVendidosSemana(),
-        "rankingMenosVendidosAnio" => $repo->obtenerProductosMenosVendidosAnio(),
-        "rankingCategoriasDebiles" => $repo->obtenerCategoriasMenosProductos(),
+        "rankingMasVendidosMes" => $repo->obtenerProductosMasVendidosMes($limitMasVendidos),
+        "rankingMasVendidosSemana" => $repo->obtenerProductosMasVendidosSemana($limitMasVendidos),
+        "rankingMasVendidosAnio" => $repo->obtenerProductosMasVendidosAnio($limitMasVendidos),
+        "rankingMenosVendidosMes" => $repo->obtenerProductosMenosVendidosMes($limitMenosVendidos),
+        "rankingMenosVendidosSemana" => $repo->obtenerProductosMenosVendidosSemana($limitMenosVendidos),
+        "rankingMenosVendidosAnio" => $repo->obtenerProductosMenosVendidosAnio($limitMenosVendidos),
+        "rankingCategoriasDebiles" => $repo->obtenerCategoriasMenosProductos($limitCategorias),
+
+        "rankingClientesTopSemanal" => $repo->obtenerClientesTopComprasSemanal($limitClientesTop),
+        "rankingClientesTopMensual" => $repo->obtenerClientesTopComprasMensual($limitClientesTop),
+        "rankingClientesTopAnual" => $repo->obtenerClientesTopComprasAnual($limitClientesTop),
+        "rankingClientesBajoSemanal" => $repo->obtenerClientesMenosComprasSemanal($limitClientesBajo),
+        "rankingClientesBajoMensual" => $repo->obtenerClientesMenosComprasMensual($limitClientesBajo),
+        "rankingClientesBajoAnual" => $repo->obtenerClientesMenosComprasAnual($limitClientesBajo),
+
+        // Límites para prellenar los inputs del formulario
+        "limitMasVendidos" => $limitMasVendidos,
+        "limitMenosVendidos" => $limitMenosVendidos,
+        "limitCategorias" => $limitCategorias,
+        "limitClientesTop" => $limitClientesTop,
+        "limitClientesBajo" => $limitClientesBajo,
     ];
 }
 

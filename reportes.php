@@ -40,6 +40,19 @@ $rankingMenosVendidosSemana= $viewData["rankingMenosVendidosSemana"];
 $rankingMenosVendidosAnio  = $viewData["rankingMenosVendidosAnio"];
 $rankingCategoriasDebiles  = $viewData["rankingCategoriasDebiles"];
 
+$rankingClientesTopSemanal  = $viewData["rankingClientesTopSemanal"];
+$rankingClientesTopMensual  = $viewData["rankingClientesTopMensual"];
+$rankingClientesTopAnual    = $viewData["rankingClientesTopAnual"];
+$rankingClientesBajoSemanal = $viewData["rankingClientesBajoSemanal"];
+$rankingClientesBajoMensual = $viewData["rankingClientesBajoMensual"];
+$rankingClientesBajoAnual   = $viewData["rankingClientesBajoAnual"];
+
+$limitMasVendidos    = $viewData["limitMasVendidos"];
+$limitMenosVendidos  = $viewData["limitMenosVendidos"];
+$limitCategorias     = $viewData["limitCategorias"];
+$limitClientesTop    = $viewData["limitClientesTop"];
+$limitClientesBajo   = $viewData["limitClientesBajo"];
+
 $filtrosGETVentas    = ["tipo" => $tipoReporte, "desde" => $fechaDesde, "hasta" => $fechaHasta];
 $filtrosGETProductos = ["tipo" => $tipoReporte, "desde" => $fechaDesde, "hasta" => $fechaHasta];
 $filtrosGETClientes  = ["tipo" => $tipoReporte, "desde" => $fechaDesde, "hasta" => $fechaHasta];
@@ -87,6 +100,8 @@ $filtrosGETClientes  = ["tipo" => $tipoReporte, "desde" => $fechaDesde, "hasta" 
             <?php require __DIR__ . "/partials/analisis/reportes/charts.php"; ?>
 
             <?php require __DIR__ . "/partials/analisis/reportes/productos-ranking.php"; ?>
+
+            <?php require __DIR__ . "/partials/analisis/reportes/clientes-ranking.php"; ?>
 
             <?php require __DIR__ . "/partials/analisis/reportes/ventas-table.php"; ?>
 

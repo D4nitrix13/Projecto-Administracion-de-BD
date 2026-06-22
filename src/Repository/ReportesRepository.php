@@ -180,73 +180,133 @@ class ReportesRepository
         return (int) $statement->fetchColumn();
     }
 
-    public function obtenerProductosMasVendidosMes(): array
+    public function obtenerProductosMasVendidosMes(int $limit = 10): array
     {
-        $statement = $this->connection->query("
+        $statement = $this->connection->prepare("
             SELECT id_producto, producto, codigo, cantidad_vendida, total_vendido
-            FROM obtener_productos_mas_vendidos_mes()
+            FROM obtener_productos_mas_vendidos_mes(:p_limit)
         ");
-
+        $statement->execute([":p_limit" => $limit]);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function obtenerProductosMenosVendidosMes(): array
+    public function obtenerProductosMenosVendidosMes(int $limit = 5): array
     {
-        $statement = $this->connection->query("
+        $statement = $this->connection->prepare("
             SELECT id_producto, producto, codigo, cantidad_vendida, stock_actual
-            FROM obtener_productos_menos_vendidos_mes()
+            FROM obtener_productos_menos_vendidos_mes(:p_limit)
         ");
-
+        $statement->execute([":p_limit" => $limit]);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function obtenerProductosMasVendidosSemana(): array
+    public function obtenerProductosMasVendidosSemana(int $limit = 10): array
     {
-        $statement = $this->connection->query("
+        $statement = $this->connection->prepare("
             SELECT id_producto, producto, codigo, cantidad_vendida, total_vendido
-            FROM obtener_productos_mas_vendidos_semana()
+            FROM obtener_productos_mas_vendidos_semana(:p_limit)
         ");
-
+        $statement->execute([":p_limit" => $limit]);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function obtenerProductosMenosVendidosSemana(): array
+    public function obtenerProductosMenosVendidosSemana(int $limit = 5): array
     {
-        $statement = $this->connection->query("
+        $statement = $this->connection->prepare("
             SELECT id_producto, producto, codigo, cantidad_vendida, stock_actual
-            FROM obtener_productos_menos_vendidos_semana()
+            FROM obtener_productos_menos_vendidos_semana(:p_limit)
         ");
-
+        $statement->execute([":p_limit" => $limit]);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function obtenerProductosMasVendidosAnio(): array
+    public function obtenerProductosMasVendidosAnio(int $limit = 10): array
     {
-        $statement = $this->connection->query("
+        $statement = $this->connection->prepare("
             SELECT id_producto, producto, codigo, cantidad_vendida, total_vendido
-            FROM obtener_productos_mas_vendidos_anio()
+            FROM obtener_productos_mas_vendidos_anio(:p_limit)
         ");
-
+        $statement->execute([":p_limit" => $limit]);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function obtenerProductosMenosVendidosAnio(): array
+    public function obtenerProductosMenosVendidosAnio(int $limit = 5): array
     {
-        $statement = $this->connection->query("
+        $statement = $this->connection->prepare("
             SELECT id_producto, producto, codigo, cantidad_vendida, stock_actual
-            FROM obtener_productos_menos_vendidos_anio()
+            FROM obtener_productos_menos_vendidos_anio(:p_limit)
         ");
-
+        $statement->execute([":p_limit" => $limit]);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function obtenerCategoriasMenosProductos(): array
+    public function obtenerCategoriasMenosProductos(int $limit = 10): array
     {
-        $statement = $this->connection->query("
+        $statement = $this->connection->prepare("
             SELECT id_categoria, categoria, cantidad_productos, stock_total
-            FROM obtener_categorias_menos_productos()
+            FROM obtener_categorias_menos_productos(:p_limit)
         ");
+        $statement->execute([":p_limit" => $limit]);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
 
+    public function obtenerClientesTopComprasSemanal(int $limit = 10): array
+    {
+        $statement = $this->connection->prepare("
+            SELECT id_cliente, cliente, telefono, tipo_cliente, cantidad_facturas, total_comprado
+            FROM obtener_clientes_top_compras_semanal(:p_limit)
+        ");
+        $statement->execute([":p_limit" => $limit]);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerClientesTopComprasMensual(int $limit = 10): array
+    {
+        $statement = $this->connection->prepare("
+            SELECT id_cliente, cliente, telefono, tipo_cliente, cantidad_facturas, total_comprado
+            FROM obtener_clientes_top_compras_mensual(:p_limit)
+        ");
+        $statement->execute([":p_limit" => $limit]);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerClientesTopComprasAnual(int $limit = 10): array
+    {
+        $statement = $this->connection->prepare("
+            SELECT id_cliente, cliente, telefono, tipo_cliente, cantidad_facturas, total_comprado
+            FROM obtener_clientes_top_compras_anual(:p_limit)
+        ");
+        $statement->execute([":p_limit" => $limit]);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerClientesMenosComprasSemanal(int $limit = 10): array
+    {
+        $statement = $this->connection->prepare("
+            SELECT id_cliente, cliente, telefono, tipo_cliente, cantidad_facturas, total_comprado
+            FROM obtener_clientes_menos_compras_semanal(:p_limit)
+        ");
+        $statement->execute([":p_limit" => $limit]);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerClientesMenosComprasMensual(int $limit = 10): array
+    {
+        $statement = $this->connection->prepare("
+            SELECT id_cliente, cliente, telefono, tipo_cliente, cantidad_facturas, total_comprado
+            FROM obtener_clientes_menos_compras_mensual(:p_limit)
+        ");
+        $statement->execute([":p_limit" => $limit]);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerClientesMenosComprasAnual(int $limit = 10): array
+    {
+        $statement = $this->connection->prepare("
+            SELECT id_cliente, cliente, telefono, tipo_cliente, cantidad_facturas, total_comprado
+            FROM obtener_clientes_menos_compras_anual(:p_limit)
+        ");
+        $statement->execute([":p_limit" => $limit]);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 }

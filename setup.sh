@@ -99,8 +99,8 @@ chmod +x scripts/backup_diff.sh
 chmod +x scripts/backup_logs.sh
 chmod +x scripts/mantenimiento_bd.sh
 
-# Notification cron for inventory alerts
-(crontab -l 2>/dev/null; echo "*/30 * * * * cd /var/www/html && php scripts/notificaciones_inventario.php >> storage/system/logs/notificaciones_cron.log 2>&1") | crontab -
+# Notification cron for inventory alerts (inside Docker container)
+docker exec pandas_app sh -c 'command -v crontab >/dev/null 2>&1 && (crontab -l 2>/dev/null; echo "*/30 * * * * cd /var/www/html && php scripts/notificaciones_inventario.php >> storage/system/logs/notificaciones_cron.log 2>&1") | crontab - || echo "  [WARN] crontab not available in container — skipping cron setup"' 2>/dev/null || echo "  [WARN] Could not configure cron in container"
 
 # =============================================
 # 8) Levantar Docker

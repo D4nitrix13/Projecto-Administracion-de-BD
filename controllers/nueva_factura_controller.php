@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../repositories/ClienteRepository.php";
 require_once __DIR__ . "/../repositories/ProductoRepository.php";
 require_once __DIR__ . "/../repositories/SeccionRepository.php";
+require_once __DIR__ . "/../repositories/PlazoRepository.php";
 require_once __DIR__ . "/../services/FacturaService.php";
 require_once __DIR__ . "/../services/PlazoService.php";
 
@@ -62,7 +63,7 @@ function obtenerDatosNuevaFactura(): array
                     if ($saldoPendiente > 0.01) {
                         $fechaLimite = end($plazosParsed)["fecha_pago"] ?? "";
                         if (!empty($fechaLimite)) {
-                            $plazoService = new PlazoService();
+                            $plazoService = new PlazoService(new PlazoRepository($connection));
                             $plazoService->crearPlan(
                                 $idFacturaCreada,
                                 $totalFactura,

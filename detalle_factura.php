@@ -44,6 +44,8 @@ $resumenHistorial = $datos["resumenHistorial"] ?? [];
 
             <?php require __DIR__ . "/partials/facturacion/facturas/detalle/timeline.php"; ?>
 
+            <?php require __DIR__ . "/partials/facturacion/facturas/detalle/production-actions.php"; ?>
+
             <?php require __DIR__ . "/partials/facturacion/facturas/detalle/actions.php"; ?>
         </section>
     </main>

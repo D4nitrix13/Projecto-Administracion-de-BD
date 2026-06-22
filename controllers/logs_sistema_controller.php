@@ -75,6 +75,7 @@ function obtenerDatosLogsSistema(): array
     }
 
     return [
+        "user" => $user,
         "error" => $error,
         "success" => $success,
         "logs" => $logs,

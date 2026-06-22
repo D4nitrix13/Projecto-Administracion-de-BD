@@ -974,11 +974,18 @@ BEGIN
     WHERE df.id_producto = p.id_producto
       AND df.id_factura = p_id_factura;
 
-    -- 2) Eliminar detalles de la factura
+    -- 2) Eliminar plazos y cuotas (cascade)
+    DELETE FROM plazo WHERE id_factura = p_id_factura;
+
+    -- 3) Eliminar historial de estados
+    DELETE FROM factura_estado_historial
+    WHERE id_factura = p_id_factura;
+
+    -- 4) Eliminar detalles de la factura
     DELETE FROM DetalleFactura
     WHERE id_factura = p_id_factura;
 
-    -- 3) Eliminar factura principal
+    -- 5) Eliminar factura principal
     DELETE FROM Factura
     WHERE id_factura = p_id_factura;
 

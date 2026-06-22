@@ -154,6 +154,12 @@ class FacturaValidationService
             return "El monto no puede exceder el total.";
         }
 
+        $minimoRequerido = round($total * 0.50, 2);
+
+        if ($montoPagado < $minimoRequerido) {
+            return "El pago inicial debe ser al menos el 50% del total (mínimo C$ " . number_format($minimoRequerido, 2) . ").";
+        }
+
         return null;
     }
 

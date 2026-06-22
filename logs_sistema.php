@@ -33,6 +33,7 @@ $selectedSource = $viewData["selectedSource"];
 $selectedFile = $viewData["selectedFile"];
 $allowedSources = $viewData["allowedSources"];
 $paginacion = $viewData["paginacion"];
+$user = $viewData["user"];
 
 $filtrosGET = ["source" => $sourceFilter, "type" => $typeFilter, "search" => $searchFilter, "date" => $dateFilter, "delete_status" => $deleteFilter];
 

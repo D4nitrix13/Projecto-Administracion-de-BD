@@ -56,7 +56,7 @@ $filtrosActuales = $filtrosGET ?? [];
                 <?php endforeach; ?>
             </tbody>
         </table>
-
-        <?php require __DIR__ . "/../../shared/pagination.php"; ?>
     </div>
 <?php endif; ?>
+
+<?php require __DIR__ . "/../../shared/pagination.php"; ?>

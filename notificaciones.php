@@ -18,10 +18,44 @@ $service = new NotificacionService();
 $allNotificaciones = $service->obtenerParaUsuario($idUsuario);
 $sinLeer = $service->contarSinLeer($idUsuario);
 
-$totalNotificaciones = count($allNotificaciones);
+$q = trim($_GET["q"] ?? "");
+$tipoFiltro = trim($_GET["tipo"] ?? "");
+$leidoFiltro = trim($_GET["leido"] ?? "");
+
+$filtradas = array_filter($allNotificaciones, function (array $n) use ($q, $tipoFiltro, $leidoFiltro): bool {
+    if ($tipoFiltro !== "" && $n["tipo"] !== $tipoFiltro) {
+        return false;
+    }
+
+    if ($leidoFiltro === "leidas" && empty($n["leida"])) {
+        return false;
+    }
+
+    if ($leidoFiltro === "no_leidas" && !empty($n["leida"])) {
+        return false;
+    }
+
+    if ($q !== "") {
+        $busqueda = strtolower($q);
+        $titulo = strtolower($n["titulo"] ?? "");
+        $mensaje = strtolower($n["mensaje"] ?? "");
+
+        if (strpos($titulo, $busqueda) === false && strpos($mensaje, $busqueda) === false) {
+            return false;
+        }
+    }
+
+    return true;
+});
+
+$filtradas = array_values($filtradas);
+$totalNotificaciones = count($filtradas);
 $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
 $paginacion = calcularPaginacion($totalNotificaciones, $paginaActual);
-$notificaciones = array_slice($allNotificaciones, $paginacion["offset"], $paginacion["porPagina"]);
+$notificaciones = array_slice($filtradas, $paginacion["offset"], $paginacion["porPagina"]);
+
+$tiposNotificacion = array_values(array_unique(array_map(fn(array $n) => $n["tipo"], $allNotificaciones)));
+sort($tiposNotificacion);
 
 $flashSuccess = $_SESSION["flash_success"] ?? null;
 $flashError = $_SESSION["flash_error"] ?? null;
@@ -78,6 +112,21 @@ unset($_SESSION["flash_success"], $_SESSION["flash_error"]);
     .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .toast-success { background: #16a34a; }
     .toast-error { background: #dc2626; }
+    .notif-filters {
+        display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+        padding: 16px 18px; background: var(--card-bg); border: 1px solid var(--border);
+        border-radius: 14px; margin-bottom: 16px;
+    }
+    .notif-filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .notif-filter-group label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .notif-filter-group input,
+    .notif-filter-group select {
+        padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px;
+        font-size: 0.88rem; background: #fff; color: var(--text-main); min-width: 180px;
+    }
+    .notif-filter-group input:focus,
+    .notif-filter-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+    .notif-filter-actions { display: flex; gap: 8px; align-items: center; }
 </style>
 
 <body class="dashboard-body">
@@ -127,6 +176,41 @@ unset($_SESSION["flash_success"], $_SESSION["flash_error"]);
                 <?= htmlspecialchars($flashError) ?>
             </div>
         <?php endif; ?>
+
+        <form method="GET" action="notificaciones.php" class="notif-filters">
+            <div class="notif-filter-group">
+                <label for="q">Buscar</label>
+                <input type="text" id="q" name="q" placeholder="Título o mensaje..." value="<?= htmlspecialchars($q) ?>" />
+            </div>
+
+            <div class="notif-filter-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo">
+                    <option value="">Todos</option>
+                    <?php foreach ($tiposNotificacion as $tipo): ?>
+                        <option value="<?= htmlspecialchars($tipo) ?>" <?= $tipoFiltro === $tipo ? "selected" : "" ?>>
+                            <?= htmlspecialchars($service->tipoLabel($tipo)) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="notif-filter-group">
+                <label for="leido">Estado</label>
+                <select id="leido" name="leido">
+                    <option value="">Todas</option>
+                    <option value="no_leidas" <?= $leidoFiltro === "no_leidas" ? "selected" : "" ?>>Sin leer</option>
+                    <option value="leidas" <?= $leidoFiltro === "leidas" ? "selected" : "" ?>>Leídas</option>
+                </select>
+            </div>
+
+            <div class="notif-filter-actions">
+                <button type="submit" class="btn-sm btn-sm-primary">Filtrar</button>
+                <?php if ($q !== "" || $tipoFiltro !== "" || $leidoFiltro !== ""): ?>
+                    <a href="notificaciones.php" class="btn-sm">Limpiar</a>
+                <?php endif; ?>
+            </div>
+        </form>
 
         <div class="notif-list" id="notifList">
             <?php if (empty($notificaciones)): ?>
@@ -180,7 +264,11 @@ unset($_SESSION["flash_success"], $_SESSION["flash_error"]);
 
         <?php
         $baseUrl = "notificaciones.php";
-        $filtrosActuales = [];
+        $filtrosActuales = array_filter([
+            "q"     => $q ?: null,
+            "tipo"  => $tipoFiltro ?: null,
+            "leido" => $leidoFiltro ?: null,
+        ], fn($v) => $v !== null);
         require __DIR__ . "/partials/shared/pagination.php";
         ?>
 

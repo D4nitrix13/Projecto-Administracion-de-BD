@@ -120,11 +120,11 @@
                 </article>
             <?php endforeach; ?>
         </div>
-
-        <?php
-        $baseUrl = "logs_sistema.php";
-        $filtrosActuales = $filtrosGET ?? [];
-        require __DIR__ . "/../../shared/pagination.php";
-        ?>
     <?php endif; ?>
 </section>
+
+<?php
+$baseUrl = "logs_sistema.php";
+$filtrosActuales = $filtrosGET ?? [];
+require __DIR__ . "/../../shared/pagination.php";
+?>

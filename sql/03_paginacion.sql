@@ -1,6 +1,18 @@
 -- Migración: Agregar paginación (p_limit, p_offset) a funciones de listado
 -- Fecha: 2026-06-18
 
+-- Limpiar versiones viejas de funciones (sin p_limit/p_offset) para evitar ambigüedad
+DROP FUNCTION IF EXISTS public.buscar_facturas_filtradas(integer, text, integer, integer, timestamp without time zone, timestamp without time zone);
+DROP FUNCTION IF EXISTS public.buscar_clientes_filtrados(text, character varying);
+DROP FUNCTION IF EXISTS public.buscar_compras_filtradas(text, integer, integer, timestamp without time zone, timestamp without time zone);
+DROP FUNCTION IF EXISTS public.buscar_proveedores_filtrados(text);
+DROP FUNCTION IF EXISTS public.buscar_usuarios_filtrados(text, integer, text);
+DROP FUNCTION IF EXISTS public.buscar_categorias(text);
+DROP FUNCTION IF EXISTS public.buscar_productos_inventario(text, integer, integer, integer, boolean);
+DROP FUNCTION IF EXISTS public.obtener_ventas_detalladas_reportes(timestamp without time zone, timestamp without time zone);
+DROP FUNCTION IF EXISTS public.obtener_productos_reporte(timestamp without time zone, timestamp without time zone);
+DROP FUNCTION IF EXISTS public.obtener_clientes_reporte(timestamp without time zone, timestamp without time zone);
+
 -- =============================================
 -- 1. buscar_facturas_filtradas
 -- =============================================

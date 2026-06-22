@@ -60,7 +60,7 @@ class FacturaCalculationService
             "monto_pagado"          => round($montoPagado, 2),
             "saldo_pendiente"       => $saldoPendiente,
             "porcentaje_pagado"     => $porcentajePagado,
-            "estado_pago"           => $saldoPendiente <= 0.01 ? "Pagado" : "Parcial",
+            "estado_pago"           => $this->calcularEstadoPago($montoPagado, $saldoPendiente),
             "estado_produccion"     => "En producción",
             "fecha_entrega_estimada" => date("Y-m-d", strtotime($fechaEntregaEstimada)),
         ];
@@ -108,5 +108,18 @@ class FacturaCalculationService
         $valores = array_filter(array_map("intval", $valores), fn(int $v): bool => $v > 0);
 
         return "{" . implode(",", $valores) . "}";
+    }
+
+    private function calcularEstadoPago(float $montoPagado, float $saldoPendiente): string
+    {
+        if ($saldoPendiente <= 0.01) {
+            return "Pagado";
+        }
+
+        if ($montoPagado > 0) {
+            return "Parcial";
+        }
+
+        return "Pendiente";
     }
 }
