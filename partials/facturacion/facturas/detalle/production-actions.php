@@ -7,7 +7,7 @@ $idFactura = (int)($factura["id_factura"] ?? 0);
 $idRol = (int)($user["id_rol"] ?? 0);
 
 $transicionesPermitidas = [
-    "Pendiente"           => ["En producción"],
+    "Pendiente"           => ["En producción", "Cancelada"],
     "En producción"       => ["Lista para entregar", "Cancelada"],
     "Lista para entregar" => ["Entregada", "Cancelada"],
     "Entregada"           => [],

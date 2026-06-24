@@ -9,7 +9,10 @@ requireAdmin();
 
 require_once __DIR__ . "/bootstrap.php";
 require_once __DIR__ . "/config/constants.php";
+require_once __DIR__ . "/repositories/ClienteRepository.php";
 require_once __DIR__ . "/repositories/ProductoRepository.php";
+require_once __DIR__ . "/repositories/SeccionRepository.php";
+require_once __DIR__ . "/repositories/UsuarioRepository.php";
 require_once __DIR__ . "/services/FacturaService.php";
 
 date_default_timezone_set("America/Managua");
@@ -23,6 +26,11 @@ $facturaService = new FacturaService(
     new FacturaValidationService($connection),
     new FacturaCalculationService($connection, new ProductoRepository($connection)),
 );
+
+$clienteRepository = new ClienteRepository($connection);
+$productoRepository = new ProductoRepository($connection);
+$seccionRepository = new SeccionRepository($connection);
+$usuarioRepository = new UsuarioRepository($connection);
 
 $error = null;
 $success = null;
@@ -83,21 +91,13 @@ try {
         }
     }
 
-    $clientes = $connection
-        ->query("SELECT * FROM listar_clientes_habituales()")
-        ->fetchAll(PDO::FETCH_ASSOC);
+    $clientes = $clienteRepository->obtenerClientesHabituales();
 
-    $productos = $connection
-        ->query("SELECT * FROM listar_productos_para_factura()")
-        ->fetchAll(PDO::FETCH_ASSOC);
+    $productos = $productoRepository->obtenerProductosParaFactura();
 
-    $secciones = $connection
-        ->query("SELECT * FROM listar_secciones_ordenadas()")
-        ->fetchAll(PDO::FETCH_ASSOC);
+    $secciones = $seccionRepository->obtenerTodasLasSecciones();
 
-    $usuarios = $connection
-        ->query("SELECT * FROM listar_usuarios_ordenados()")
-        ->fetchAll(PDO::FETCH_ASSOC);
+    $usuarios = $usuarioRepository->obtenerUsuariosOrdenados();
 } catch (Throwable $exception) {
     $error = $exception->getMessage();
 }
@@ -129,6 +129,7 @@ try {
     </main>
 
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/shared/toast.php"; ?>
 
 </body>
 

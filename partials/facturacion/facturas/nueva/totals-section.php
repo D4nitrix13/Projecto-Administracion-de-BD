@@ -31,32 +31,32 @@
 
         <div class="invoice-plazos-header">
             <span>Plan de pagos</span>
-            <h3>Configure el pago y plazos</h3>
+            <h3>Configure los plazos</h3>
+        </div>
+
+        <div class="invoice-plazos-info">
+            <p>La factura se creará sin pago inicial. El primer abono se registra desde el detalle de la factura, y producción se iniciará automáticamente al alcanzar el 50%.</p>
+
+            <div class="plazos-info-cards">
+                <div class="plazos-info-card">
+                    <div class="plazos-info-card-icon plazos-info-icon-help">?</div>
+                    <div class="plazos-info-card-content">
+                        <strong>¿Cómo funciona?</strong>
+                        <p>Configure en cuántos pagos fraccionados desea dividir el saldo pendiente. Las fechas se distribuyen automáticamente cada 15 días.</p>
+                    </div>
+                </div>
+
+                <div class="plazos-info-card">
+                    <div class="plazos-info-card-icon plazos-info-icon-produccion">P</div>
+                    <div class="plazos-info-card-content">
+                        <strong>Inicio de producción</strong>
+                        <p>La producción comienza cuando el cliente paga al menos el 50% del total de la factura.</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="invoice-plazos-fields">
-            <div class="form-group">
-                <label class="label">Monto pagado inicial C$</label>
-                <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    name="monto_pagado"
-                    id="monto_pagado"
-                    class="input"
-                    value="<?= htmlspecialchars($montoPagado ?? "0") ?>">
-            </div>
-
-            <div class="form-group">
-                <label class="label">Fecha entrega estimada</label>
-                <input
-                    type="date"
-                    name="fecha_entrega_estimada"
-                    id="fecha_entrega_estimada"
-                    class="input"
-                    value="<?= htmlspecialchars($fechaEntregaEstimada ?? "") ?>">
-            </div>
-
             <div class="form-group">
                 <label class="label">¿En cuántos pagos?</label>
                 <input
@@ -68,25 +68,9 @@
                     max="24"
                     value="1"
                     step="1">
-            </div>
-        </div>
-
-        <div class="invoice-plazos-summary">
-            <div class="invoice-plazos-mini-card">
-                <span>Porcentaje pagado</span>
-                <strong id="minimo-requerido-view">0%</strong>
-            </div>
-
-            <div class="invoice-plazos-mini-card">
-                <span>Saldo pendiente</span>
-                <strong id="saldo-pendiente-view">C$ 0.00</strong>
-            </div>
-
-            <div class="invoice-plazos-mini-card">
-                <span>Estado</span>
-                <strong id="estado-pago-view" class="invoice-payment-status pending">
-                    Pendiente
-                </strong>
+                <small class="plazos-help-text">
+                    Puede configurar entre 1 y 24 cuotas. Las fechas se distribuyen cada 15 días calendario.
+                </small>
             </div>
         </div>
 
@@ -96,8 +80,8 @@
             style="display:none;">
             <div class="invoice-payment-warning-icon">!</div>
             <div>
-                <strong>Pago parcial</strong>
-                <p>Se configurará un plan de plazos para el saldo pendiente.</p>
+                <strong>Plan de plazos</strong>
+                <p>Se configurará un plan de pagos para el total de la factura.</p>
             </div>
         </div>
 
@@ -122,3 +106,72 @@
     </div>
 
 </section>
+
+<style>
+    .plazos-info-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .plazos-info-card {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+    }
+
+    .plazos-info-card-icon {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 900;
+    }
+
+    .plazos-info-icon-help {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .plazos-info-icon-produccion {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .plazos-info-card-content strong {
+        display: block;
+        color: #111827;
+        font-size: 0.85rem;
+        font-weight: 800;
+        margin-bottom: 2px;
+    }
+
+    .plazos-info-card-content p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .plazos-help-text {
+        display: block;
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    @media (max-width: 640px) {
+        .plazos-info-cards {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

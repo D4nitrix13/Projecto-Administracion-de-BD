@@ -11,6 +11,7 @@ if (mb_strlen($descripcion) > 135) {
 
 $stock = (int)$prod["stock"];
 $stockClass = $stock <= 5 ? "stock-bajo" : "stock-normal";
+$totalVendido = (float)($prod["total_vendido"] ?? 0);
 
 $imagen = trim($prod["imagen"] ?? "");
 $rutaImagen = $imagen !== "" ? "uploads/productos/" . $imagen : "assets/img/no-product.png";
@@ -52,6 +53,12 @@ $rutaImagen = $imagen !== "" ? "uploads/productos/" . $imagen : "assets/img/no-p
         <span class="producto-stock-badge <?= $stockClass ?>">
             Stock: <?= $stock ?>
         </span>
+
+        <?php if ($filtroOrden !== 'nombre' && $totalVendido > 0): ?>
+            <span class="producto-ventas-badge">
+                Vendido: C$ <?= number_format($totalVendido, 2) ?>
+            </span>
+        <?php endif; ?>
 
         <div class="producto-card-actions">
             <?php if ($idRol === 3): ?>

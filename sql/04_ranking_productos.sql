@@ -1,5 +1,5 @@
--- Productos más vendidos del mes actual (top 10)
-CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_mes()
+-- Productos más vendidos del mes actual (top N)
+CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_mes(p_limit integer DEFAULT 10)
 RETURNS TABLE(id_producto INTEGER, producto VARCHAR, codigo VARCHAR, cantidad_vendida BIGINT, total_vendido NUMERIC) AS $$
 BEGIN
     RETURN QUERY
@@ -13,12 +13,12 @@ BEGIN
         AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
     GROUP BY p.id_producto, p.nombre, p.codigo
     ORDER BY cantidad_vendida DESC
-    LIMIT 10;
+    LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
 
--- Productos menos vendidos del mes actual (top 5, stock > 0)
-CREATE OR REPLACE FUNCTION obtener_productos_menos_vendidos_mes()
+-- Productos menos vendidos del mes actual (top N, stock > 0)
+CREATE OR REPLACE FUNCTION obtener_productos_menos_vendidos_mes(p_limit integer DEFAULT 5)
 RETURNS TABLE(id_producto INTEGER, producto VARCHAR, codigo VARCHAR, cantidad_vendida BIGINT, stock_actual INTEGER) AS $$
 BEGIN
     RETURN QUERY
@@ -33,12 +33,12 @@ BEGIN
     WHERE p.stock > 0
     GROUP BY p.id_producto, p.nombre, p.codigo, p.stock
     ORDER BY cantidad_vendida ASC
-    LIMIT 5;
+    LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
 
--- Productos más vendidos de la semana actual (top 10)
-CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_semana()
+-- Productos más vendidos de la semana actual (top N)
+CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_semana(p_limit integer DEFAULT 10)
 RETURNS TABLE(id_producto INTEGER, producto VARCHAR, codigo VARCHAR, cantidad_vendida BIGINT, total_vendido NUMERIC) AS $$
 BEGIN
     RETURN QUERY
@@ -52,12 +52,12 @@ BEGIN
         AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week'
     GROUP BY p.id_producto, p.nombre, p.codigo
     ORDER BY cantidad_vendida DESC
-    LIMIT 10;
+    LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
 
--- Productos menos vendidos de la semana actual (top 5, stock > 0)
-CREATE OR REPLACE FUNCTION obtener_productos_menos_vendidos_semana()
+-- Productos menos vendidos de la semana actual (top N, stock > 0)
+CREATE OR REPLACE FUNCTION obtener_productos_menos_vendidos_semana(p_limit integer DEFAULT 5)
 RETURNS TABLE(id_producto INTEGER, producto VARCHAR, codigo VARCHAR, cantidad_vendida BIGINT, stock_actual INTEGER) AS $$
 BEGIN
     RETURN QUERY
@@ -72,12 +72,12 @@ BEGIN
     WHERE p.stock > 0
     GROUP BY p.id_producto, p.nombre, p.codigo, p.stock
     ORDER BY cantidad_vendida ASC
-    LIMIT 5;
+    LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
 
--- Productos más vendidos del año actual (top 10)
-CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_anio()
+-- Productos más vendidos del año actual (top N)
+CREATE OR REPLACE FUNCTION obtener_productos_mas_vendidos_anio(p_limit integer DEFAULT 10)
 RETURNS TABLE(id_producto INTEGER, producto VARCHAR, codigo VARCHAR, cantidad_vendida BIGINT, total_vendido NUMERIC) AS $$
 BEGIN
     RETURN QUERY
@@ -91,12 +91,12 @@ BEGIN
         AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year'
     GROUP BY p.id_producto, p.nombre, p.codigo
     ORDER BY cantidad_vendida DESC
-    LIMIT 10;
+    LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
 
--- Productos menos vendidos del año actual (top 5, stock > 0)
-CREATE OR REPLACE FUNCTION obtener_productos_menos_vendidos_anio()
+-- Productos menos vendidos del año actual (top N, stock > 0)
+CREATE OR REPLACE FUNCTION obtener_productos_menos_vendidos_anio(p_limit integer DEFAULT 5)
 RETURNS TABLE(id_producto INTEGER, producto VARCHAR, codigo VARCHAR, cantidad_vendida BIGINT, stock_actual INTEGER) AS $$
 BEGIN
     RETURN QUERY
@@ -111,7 +111,7 @@ BEGIN
     WHERE p.stock > 0
     GROUP BY p.id_producto, p.nombre, p.codigo, p.stock
     ORDER BY cantidad_vendida ASC
-    LIMIT 5;
+    LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
 

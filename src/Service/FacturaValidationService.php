@@ -39,6 +39,7 @@ class FacturaValidationService
         $cantidades = $post["cantidad"] ?? [];
         $descuentosLinea = $post["descuento_linea"] ?? [];
         $items = [];
+        $itemsPorProducto = [];
 
         for ($i = 0; $i < count($idsProductos); $i++) {
             $idProducto = (int) ($idsProductos[$i] ?? 0);
@@ -51,14 +52,19 @@ class FacturaValidationService
             $descuentoRaw = trim((string) ($descuentosLinea[$i] ?? "0"));
             $descuento = is_numeric($descuentoRaw) ? (float) $descuentoRaw : 0.0;
 
-            $items[] = [
-                "id_producto"     => $idProducto,
-                "cantidad"        => $cantidad,
-                "descuento_linea" => max(0.0, $descuento),
-            ];
+            if (isset($itemsPorProducto[$idProducto])) {
+                $itemsPorProducto[$idProducto]["cantidad"] += $cantidad;
+                $itemsPorProducto[$idProducto]["descuento_linea"] += max(0.0, $descuento);
+            } else {
+                $itemsPorProducto[$idProducto] = [
+                    "id_producto"     => $idProducto,
+                    "cantidad"        => $cantidad,
+                    "descuento_linea" => max(0.0, $descuento),
+                ];
+            }
         }
 
-        return $items;
+        return array_values($itemsPorProducto);
     }
 
     public function validarDatosFactura(
@@ -125,25 +131,10 @@ class FacturaValidationService
 
     public function validarPagoProduccion(
         float $montoPagado,
-        float $total,
-        string $fechaEntregaEstimada
+        float $total
     ): ?string {
         if ($total <= 0) {
             return "El total debe ser mayor que cero.";
-        }
-
-        if ($fechaEntregaEstimada === "") {
-            return "Debe seleccionar una fecha de entrega.";
-        }
-
-        $timestamp = strtotime($fechaEntregaEstimada);
-
-        if ($timestamp === false) {
-            return "La fecha de entrega no es válida.";
-        }
-
-        if ($timestamp < strtotime(date("Y-m-d"))) {
-            return "La fecha de entrega no puede ser anterior a hoy.";
         }
 
         if ($montoPagado < 0) {
@@ -152,12 +143,6 @@ class FacturaValidationService
 
         if ($montoPagado > $total) {
             return "El monto no puede exceder el total.";
-        }
-
-        $minimoRequerido = round($total * 0.50, 2);
-
-        if ($montoPagado < $minimoRequerido) {
-            return "El pago inicial debe ser al menos el 50% del total (mínimo C$ " . number_format($minimoRequerido, 2) . ").";
         }
 
         return null;

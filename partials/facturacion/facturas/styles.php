@@ -627,4 +627,20 @@
             gap: 6px;
         }
     }
+
+    .filtro-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        margin-left: 6px;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #2563eb;
+        font-size: 0.75rem;
+        font-weight: 900;
+        line-height: 1;
+    }
 </style>

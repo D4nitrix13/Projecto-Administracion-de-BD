@@ -22,7 +22,6 @@ $idSeccion            = $viewData["idSeccion"];
 $descuentoGlobal      = $viewData["descuentoGlobal"];
 $tipoClienteVenta     = $viewData["tipoClienteVenta"];
 $nombreClienteFugaz   = $viewData["nombreClienteFugaz"];
-$montoPagado          = $viewData["montoPagado"];
 $fechaEntregaEstimada = $viewData["fechaEntregaEstimada"];
 $textoSubtitulo       = $viewData["textoSubtitulo"];
 
@@ -52,6 +51,7 @@ $textoSubtitulo       = $viewData["textoSubtitulo"];
 
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
     <?php require __DIR__ . "/partials/facturacion/facturas/nueva/scripts.php"; ?>
+    <?php require __DIR__ . "/partials/shared/toast.php"; ?>
 
 </body>
 

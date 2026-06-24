@@ -17,6 +17,7 @@ $connection = require __DIR__ . "/sql/db.php";
 
 $busqueda = trim($_GET["q"] ?? "");
 $paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+$filtroOrdenCat = $_GET["orden"] ?? "nombre";
 
 require __DIR__ . "/partials/inventario/categorias/queries.php";
 

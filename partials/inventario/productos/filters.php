@@ -53,6 +53,23 @@
         </select>
     </div>
 
+    <div class="filtro-item">
+        <label for="orden" class="label">Ordenar por</label>
+        <select id="orden" name="orden" class="input">
+            <option value="nombre" <?= $filtroOrden === 'nombre' ? 'selected' : '' ?>>Nombre (A-Z)</option>
+            <option value="mas_vendidos_mes" <?= $filtroOrden === 'mas_vendidos_mes' ? 'selected' : '' ?>>Más vendidos (mes)</option>
+            <option value="menos_vendidos_mes" <?= $filtroOrden === 'menos_vendidos_mes' ? 'selected' : '' ?>>Menos vendidos (mes)</option>
+            <option value="mas_vendidos_semana" <?= $filtroOrden === 'mas_vendidos_semana' ? 'selected' : '' ?>>Más vendidos (semana)</option>
+            <option value="menos_vendidos_semana" <?= $filtroOrden === 'menos_vendidos_semana' ? 'selected' : '' ?>>Menos vendidos (semana)</option>
+            <option value="mas_vendidos_anio" <?= $filtroOrden === 'mas_vendidos_anio' ? 'selected' : '' ?>>Más vendidos (año)</option>
+            <option value="menos_vendidos_anio" <?= $filtroOrden === 'menos_vendidos_anio' ? 'selected' : '' ?>>Menos vendidos (año)</option>
+            <option value="total_ventas" <?= $filtroOrden === 'total_ventas' ? 'selected' : '' ?>>Total ventas (todo)</option>
+            <option value="stock_bajo" <?= $filtroOrden === 'stock_bajo' ? 'selected' : '' ?>>Stock bajo primero</option>
+            <option value="precio_mayor" <?= $filtroOrden === 'precio_mayor' ? 'selected' : '' ?>>Precio mayor</option>
+            <option value="precio_menor" <?= $filtroOrden === 'precio_menor' ? 'selected' : '' ?>>Precio menor</option>
+        </select>
+    </div>
+
     <div class="filtro-actions">
         <button type="submit" class="btn-primary-inline">
             Aplicar filtros

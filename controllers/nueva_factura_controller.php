@@ -43,7 +43,6 @@ function obtenerDatosNuevaFactura(): array
     $descuentoGlobal = "0.00";
     $tipoClienteVenta = TIPO_CLIENTE_HABITUAL;
     $nombreClienteFugaz = "";
-    $montoPagado = "0.00";
     $fechaEntregaEstimada = "";
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -57,8 +56,7 @@ function obtenerDatosNuevaFactura(): array
                 $plazosParsed = json_decode($plazosData, true);
                 if (is_array($plazosParsed) && count($plazosParsed) > 0) {
                     $totalFactura = (float)($_POST["total_calculado"] ?? 0);
-                    $montoPagadoVal = (float)($_POST["monto_pagado"] ?? 0);
-                    $saldoPendiente = max(0, $totalFactura - $montoPagadoVal);
+                    $saldoPendiente = $totalFactura;
 
                     if ($saldoPendiente > 0.01) {
                         $fechaLimite = end($plazosParsed)["fecha_pago"] ?? "";
@@ -75,7 +73,7 @@ function obtenerDatosNuevaFactura(): array
                 }
             }
 
-            $_SESSION["flash_success"] = "Factura registrada correctamente.";
+            $_SESSION["flash_success"] = "Factura registrada correctamente. Registre el primer abono para iniciar producción.";
             header("Location: detalle_factura.php?id=" . $idFacturaCreada);
             exit();
         }
@@ -87,7 +85,6 @@ function obtenerDatosNuevaFactura(): array
         $descuentoGlobal = $_POST["descuento_global"] ?? "0.00";
         $tipoClienteVenta = $_POST["tipo_cliente_venta"] ?? TIPO_CLIENTE_HABITUAL;
         $nombreClienteFugaz = $_POST["nombre_cliente_fugaz"] ?? "";
-        $montoPagado = $_POST["monto_pagado"] ?? "0.00";
         $fechaEntregaEstimada = $_POST["fecha_entrega_estimada"] ?? "";
     }
 
@@ -105,7 +102,6 @@ function obtenerDatosNuevaFactura(): array
         "descuentoGlobal" => $descuentoGlobal,
         "tipoClienteVenta" => $tipoClienteVenta,
         "nombreClienteFugaz" => $nombreClienteFugaz,
-        "montoPagado" => $montoPagado,
         "fechaEntregaEstimada" => $fechaEntregaEstimada,
         "textoSubtitulo" => $textoSubtitulo,
     ];

@@ -8,6 +8,7 @@ DROP FUNCTION IF EXISTS public.buscar_compras_filtradas(text, integer, integer, 
 DROP FUNCTION IF EXISTS public.buscar_proveedores_filtrados(text);
 DROP FUNCTION IF EXISTS public.buscar_usuarios_filtrados(text, integer, text);
 DROP FUNCTION IF EXISTS public.buscar_categorias(text);
+DROP FUNCTION IF EXISTS public.buscar_productos_inventario(text, integer, integer, integer, boolean, integer, integer);
 DROP FUNCTION IF EXISTS public.buscar_productos_inventario(text, integer, integer, integer, boolean);
 DROP FUNCTION IF EXISTS public.obtener_ventas_detalladas_reportes(timestamp without time zone, timestamp without time zone);
 DROP FUNCTION IF EXISTS public.obtener_productos_reporte(timestamp without time zone, timestamp without time zone);
@@ -264,10 +265,11 @@ CREATE OR REPLACE FUNCTION public.buscar_productos_inventario(
     p_id_proveedor integer DEFAULT NULL::integer,
     p_id_producto integer DEFAULT NULL::integer,
     p_stock_bajo boolean DEFAULT false,
+    p_orden text DEFAULT 'nombre',
     p_limit integer DEFAULT 15,
     p_offset integer DEFAULT 0
 )
-RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, descripcion text, imagen character varying, categoria character varying, proveedor character varying, precio_compra numeric, precio_venta numeric, stock integer)
+RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, descripcion text, imagen character varying, categoria character varying, proveedor character varying, precio_compra numeric, precio_venta numeric, stock integer, total_vendido numeric)
 LANGUAGE plpgsql
 AS $function$
 BEGIN
@@ -282,10 +284,33 @@ BEGIN
         prov.nombre AS proveedor,
         prod.precio_compra,
         prod.precio_venta,
-        prod.stock
+        prod.stock,
+        COALESCE(ventas.total_vendido, 0) AS total_vendido
     FROM Producto prod
     LEFT JOIN Categoria cat ON prod.id_categoria = cat.id_categoria
     LEFT JOIN Proveedor prov ON prod.id_proveedor = prov.id_proveedor
+    LEFT JOIN LATERAL (
+        SELECT SUM(df.total_linea) AS total_vendido
+        FROM DetalleFactura df
+        INNER JOIN Factura f ON f.id_factura = df.id_factura
+        WHERE df.id_producto = prod.id_producto
+          AND f.estado_produccion != 'Cancelada'
+          AND (
+              (p_orden IN ('mas_vendidos_mes', 'menos_vendidos_mes')
+               AND f.fecha >= date_trunc('month', CURRENT_DATE)
+               AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month')
+              OR
+              (p_orden IN ('mas_vendidos_semana', 'menos_vendidos_semana')
+               AND f.fecha >= date_trunc('week', CURRENT_DATE)
+               AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week')
+              OR
+              (p_orden IN ('mas_vendidos_anio', 'menos_vendidos_anio')
+               AND f.fecha >= date_trunc('year', CURRENT_DATE)
+               AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year')
+              OR
+              (p_orden = 'total_ventas')
+          )
+    ) ventas ON TRUE
     WHERE
         (
             p_id_producto IS NULL
@@ -308,7 +333,18 @@ BEGIN
             p_stock_bajo = FALSE
             OR prod.stock <= 5
         )
-    ORDER BY prod.nombre ASC
+    ORDER BY
+        CASE WHEN p_orden = 'mas_vendidos_mes' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_mes' THEN COALESCE(ventas.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_semana' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_semana' THEN COALESCE(ventas.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_anio' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_anio' THEN COALESCE(ventas.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'total_ventas' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'stock_bajo' THEN prod.stock END ASC,
+        CASE WHEN p_orden = 'precio_mayor' THEN prod.precio_venta END DESC,
+        CASE WHEN p_orden = 'precio_menor' THEN prod.precio_venta END ASC,
+        prod.nombre ASC
     LIMIT p_limit OFFSET p_offset;
 END;
 $function$;
@@ -410,24 +446,65 @@ $function$;
 -- =============================================
 -- 7. buscar_categorias
 -- =============================================
+DROP FUNCTION IF EXISTS public.buscar_categorias(text, integer, integer);
 CREATE OR REPLACE FUNCTION public.buscar_categorias(
     p_busqueda text DEFAULT ''::text,
     p_limit integer DEFAULT 15,
-    p_offset integer DEFAULT 0
+    p_offset integer DEFAULT 0,
+    p_orden text DEFAULT 'nombre'
 )
-RETURNS TABLE(id_categoria integer, nombre character varying)
+RETURNS TABLE(id_categoria integer, nombre character varying, cantidad_productos bigint, stock_total bigint, total_vendido numeric)
 LANGUAGE plpgsql
 AS $function$
 BEGIN
     RETURN QUERY
     SELECT
         c.id_categoria,
-        c.nombre
+        c.nombre,
+        COUNT(p.id_producto) AS cantidad_productos,
+        COALESCE(SUM(p.stock), 0) AS stock_total,
+        COALESCE(vc.total_vendido, 0) AS total_vendido
     FROM Categoria c
+    LEFT JOIN Producto p ON p.id_categoria = c.id_categoria
+    LEFT JOIN LATERAL (
+        SELECT SUM(df.total_linea) AS total_vendido
+        FROM DetalleFactura df
+        INNER JOIN Factura f ON f.id_factura = df.id_factura
+        INNER JOIN Producto p2 ON p2.id_producto = df.id_producto
+        WHERE p2.id_categoria = c.id_categoria
+          AND f.estado_produccion != 'Cancelada'
+          AND (
+              (p_orden IN ('mas_vendidos_mes', 'menos_vendidos_mes')
+               AND f.fecha >= date_trunc('month', CURRENT_DATE)
+               AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month')
+              OR
+              (p_orden IN ('mas_vendidos_semana', 'menos_vendidos_semana')
+               AND f.fecha >= date_trunc('week', CURRENT_DATE)
+               AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week')
+              OR
+              (p_orden IN ('mas_vendidos_anio', 'menos_vendidos_anio')
+               AND f.fecha >= date_trunc('year', CURRENT_DATE)
+               AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year')
+              OR
+              (p_orden = 'total_ventas')
+          )
+    ) vc ON TRUE
     WHERE
         COALESCE(TRIM(p_busqueda), '') = ''
         OR c.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
-    ORDER BY c.nombre ASC
+    GROUP BY c.id_categoria, c.nombre, vc.total_vendido
+    ORDER BY
+        CASE WHEN p_orden = 'mas_vendidos_mes' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_mes' THEN COALESCE(vc.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_semana' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_semana' THEN COALESCE(vc.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_anio' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_anio' THEN COALESCE(vc.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'total_ventas' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'mas_productos' THEN COUNT(p.id_producto) END DESC,
+        CASE WHEN p_orden = 'menos_productos' THEN COUNT(p.id_producto) END ASC,
+        CASE WHEN p_orden = 'stock_total' THEN COALESCE(SUM(p.stock), 0) END DESC,
+        c.nombre ASC
     LIMIT p_limit OFFSET p_offset;
 END;
 $function$;

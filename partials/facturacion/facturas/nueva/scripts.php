@@ -46,6 +46,7 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
         const tbody = document.getElementById("items-body");
         const form = document.getElementById("form-factura");
         const inputProducto = document.getElementById("producto-picker-input");
+        const productoDropdown = document.getElementById("producto-picker-dropdown");
         const btnAddSelected = document.getElementById("btn-add-selected-product");
         const emptyMessage = document.getElementById("empty-products-message");
 
@@ -130,61 +131,165 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
             return div.innerHTML;
         }
 
-        function obtenerTextoCliente(cliente) {
-            const nombreCompleto = `${cliente.nombres || ""} ${cliente.apellidos || ""}`.trim();
+        let productoSeleccionado = null;
+        let indiceActivoDropdown = -1;
 
-            let texto = nombreCompleto;
+        function filtrarProductos(query) {
+            const queryNormalizado = normalizarTexto(query);
 
-            if (cliente.telefono) {
-                texto += ` - ${cliente.telefono}`;
+            if (queryNormalizado.length === 0) {
+                return [];
             }
 
-            if (cliente.identificacion) {
-                texto += ` - ${cliente.identificacion}`;
-            }
+            return productos.filter(producto => {
+                const nombre = producto.nombre || "";
+                const codigo = producto.codigo || "";
+                const nombreNormalizado = normalizarTexto(nombre);
+                const codigoNormalizado = normalizarTexto(codigo);
 
-            return texto;
+                return nombreNormalizado.includes(queryNormalizado) ||
+                    codigoNormalizado.includes(queryNormalizado);
+            }).slice(0, 10);
         }
 
-        function obtenerClienteDesdeInput() {
-            if (!clientePickerInput) {
-                return null;
-            }
+        function renderDropdown(resultados) {
+            productoDropdown.innerHTML = "";
+            indiceActivoDropdown = -1;
 
-            const valor = normalizarTexto(clientePickerInput.value);
-
-            return clientes.find(cliente => {
-                const textoCompleto = obtenerTextoCliente(cliente);
-                const nombreCompleto = `${cliente.nombres || ""} ${cliente.apellidos || ""}`;
-                const telefono = cliente.telefono || "";
-                const identificacion = cliente.identificacion || "";
-
-                return normalizarTexto(textoCompleto) === valor ||
-                    normalizarTexto(nombreCompleto) === valor ||
-                    normalizarTexto(telefono) === valor ||
-                    normalizarTexto(identificacion) === valor;
-            }) || null;
-        }
-
-        function actualizarClienteSeleccionado() {
-            if (!clientePickerInput || !clienteHiddenInput) {
+            if (resultados.length === 0) {
+                productoDropdown.innerHTML = `<div class="producto-picker-empty">No se encontraron productos.</div>`;
+                productoDropdown.style.display = "block";
                 return;
             }
 
-            const cliente = obtenerClienteDesdeInput();
+            resultados.forEach((producto, index) => {
+                const stock = parseInt(producto.stock || "0", 10);
+                const precio = parseFloat(producto.precio_venta || "0");
 
-            if (cliente) {
-                clienteHiddenInput.value = String(cliente.id_cliente);
-            } else {
-                clienteHiddenInput.value = "";
+                let stockClass = "producto-picker-option-stock-ok";
+                let stockText = `Stock: ${stock}`;
+
+                if (stock <= 0) {
+                    stockClass = "producto-picker-option-stock-empty";
+                    stockText = "Sin stock";
+                } else if (stock <= 5) {
+                    stockClass = "producto-picker-option-stock-low";
+                    stockText = `Stock bajo: ${stock}`;
+                }
+
+                const option = document.createElement("div");
+                option.className = "producto-picker-option";
+                option.dataset.index = index;
+
+                option.innerHTML = `
+                    <div class="producto-picker-option-info">
+                        <span class="producto-picker-option-name">${escapeHtml(producto.nombre)}</span>
+                        <span class="producto-picker-option-code">${escapeHtml(producto.codigo)}</span>
+                    </div>
+                    <div class="producto-picker-option-meta">
+                        <span>C$ ${precio.toFixed(2)}</span>
+                        <span class="${stockClass}">${stockText}</span>
+                    </div>
+                `;
+
+                option.addEventListener("click", () => {
+                    seleccionarProducto(producto);
+                });
+
+                option.addEventListener("mouseenter", () => {
+                    indiceActivoDropdown = index;
+                    actualizarIndiceActivo();
+                });
+
+                productoDropdown.appendChild(option);
+            });
+
+            productoDropdown.style.display = "block";
+        }
+
+        function actualizarIndiceActivo() {
+            const opciones = productoDropdown.querySelectorAll(".producto-picker-option");
+            opciones.forEach((option, index) => {
+                option.classList.toggle("active", index === indiceActivoDropdown);
+            });
+        }
+
+        function seleccionarProducto(producto) {
+            productoSeleccionado = producto;
+            inputProducto.value = `${producto.nombre} (${producto.codigo})`;
+            productoDropdown.style.display = "none";
+            productoDropdown.innerHTML = "";
+        }
+
+        function obtenerProductoSeleccionado() {
+            if (productoSeleccionado) {
+                const textoInput = normalizarTexto(inputProducto.value);
+                const textoProducto = normalizarTexto(`${productoSeleccionado.nombre} (${productoSeleccionado.codigo})`);
+
+                if (textoInput === textoProducto) {
+                    return productoSeleccionado;
+                }
             }
+
+            const valor = normalizarTexto(inputProducto.value);
+
+            return productos.find(producto => {
+                const nombre = producto.nombre || "";
+                const codigo = producto.codigo || "";
+                const opcion = `${nombre} (${codigo})`;
+
+                return normalizarTexto(opcion) === valor ||
+                    normalizarTexto(nombre) === valor ||
+                    normalizarTexto(codigo) === valor;
+            }) || null;
         }
 
-        if (clientePickerInput) {
-            clientePickerInput.addEventListener("input", actualizarClienteSeleccionado);
-            clientePickerInput.addEventListener("change", actualizarClienteSeleccionado);
-            clientePickerInput.addEventListener("blur", actualizarClienteSeleccionado);
-        }
+        inputProducto.addEventListener("input", () => {
+            const query = inputProducto.value;
+            const resultados = filtrarProductos(query);
+            renderDropdown(resultados);
+            productoSeleccionado = null;
+        });
+
+        inputProducto.addEventListener("keydown", (event) => {
+            const opciones = productoDropdown.querySelectorAll(".producto-picker-option");
+            const totalOpciones = opciones.length;
+
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                indiceActivoDropdown = (indiceActivoDropdown + 1) % totalOpciones;
+                actualizarIndiceActivo();
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                indiceActivoDropdown = (indiceActivoDropdown - 1 + totalOpciones) % totalOpciones;
+                actualizarIndiceActivo();
+            } else if (event.key === "Enter") {
+                event.preventDefault();
+
+                if (indiceActivoDropdown >= 0 && indiceActivoDropdown < totalOpciones) {
+                    const resultados = filtrarProductos(inputProducto.value);
+                    if (resultados[indiceActivoDropdown]) {
+                        seleccionarProducto(resultados[indiceActivoDropdown]);
+                    }
+                } else {
+                    agregarProductoSeleccionado();
+                }
+            } else if (event.key === "Escape") {
+                productoDropdown.style.display = "none";
+            }
+        });
+
+        inputProducto.addEventListener("blur", () => {
+            setTimeout(() => {
+                productoDropdown.style.display = "none";
+            }, 200);
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!event.target.closest(".product-picker-search")) {
+                productoDropdown.style.display = "none";
+            }
+        });
 
         if (selectTipoCliente) {
             const toggleClienteGroups = () => {
@@ -242,28 +347,30 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
         }
 
         function agregarProductoSeleccionado() {
-            const producto = obtenerProductoDesdeInput();
+            const producto = obtenerProductoSeleccionado();
 
             if (!producto) {
-                alert("Seleccione un producto válido de la lista.");
+                showToast("Seleccione un producto válido de la lista.", "error");
                 return;
             }
 
             const idProducto = parseInt(producto.id_producto, 10);
 
             if (productoYaAgregado(idProducto)) {
-                alert("Este producto ya fue agregado. Puede modificar la cantidad en la tabla.");
+                showToast("Este producto ya fue agregado. Puede modificar la cantidad en la tabla.", "warning");
                 inputProducto.value = "";
+                productoSeleccionado = null;
                 return;
             }
 
             if (parseInt(producto.stock || "0", 10) <= 0) {
-                alert("Este producto no tiene stock disponible.");
+                showToast("Este producto no tiene stock disponible.", "error");
                 return;
             }
 
             crearFilaProducto(producto);
             inputProducto.value = "";
+            productoSeleccionado = null;
         }
 
         function crearFilaProducto(producto) {
@@ -667,7 +774,7 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
 
                 if (filas.length === 0) {
                     event.preventDefault();
-                    alert("Debe agregar al menos un producto a la factura.");
+                    showToast("Debe agregar al menos un producto a la factura.", "error");
                     return;
                 }
 
@@ -679,7 +786,7 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
 
                     if (!clienteHiddenInput || clienteHiddenInput.value.trim() === "") {
                         event.preventDefault();
-                        alert("Debe seleccionar un cliente habitual válido de la lista.");
+                        showToast("Debe seleccionar un cliente habitual válido de la lista.", "error");
                         return;
                     }
                 }
@@ -691,37 +798,35 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
 
                 if (Number.isNaN(montoPagado) || montoPagado < 0) {
                     event.preventDefault();
-                    alert("El monto pagado no puede ser negativo.");
+                    showToast("El monto pagado no puede ser negativo.", "error");
                     return;
                 }
 
                 if (montoPagado > totalFactura) {
                     event.preventDefault();
-                    alert("El monto pagado no puede ser mayor al total de la factura.");
+                    showToast("El monto pagado no puede ser mayor al total de la factura.", "error");
                     return;
                 }
 
                 if (totalFactura > 0 && montoPagado < minimoRequerido) {
-                    const saldoPendiente = totalFactura - montoPagado;
-                    const confirmar = confirm(
+                    event.preventDefault();
+
+                    confirmAction(
                         "El pago inicial es menor al 50% del total.\n\n" +
                         "Total: " + formatMoney(totalFactura) + "\n" +
                         "Pago inicial: " + formatMoney(montoPagado) + "\n" +
-                        "Saldo pendiente: " + formatMoney(saldoPendiente) + "\n\n" +
-                        "¿Desea continuar y configurar un plan de pagos para el saldo pendiente?"
+                        "Saldo pendiente: " + formatMoney(totalFactura - montoPagado) + "\n\n" +
+                        "¿Desea continuar y configurar un plan de pagos para el saldo pendiente?",
+                        () => {
+                            form.submit();
+                        }
                     );
-
-                    if (!confirmar) {
-                        event.preventDefault();
-                        return;
-                    }
+                    return;
                 }
 
                 if (fechaEntregaEstimadaInput && fechaEntregaEstimadaInput.value.trim() === "") {
                     event.preventDefault();
-
-                    alert("Debe seleccionar una fecha estimada de entrega.");
-
+                    showToast("Debe seleccionar una fecha estimada de entrega.", "error");
                     return;
                 }
 
@@ -731,13 +836,12 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                     totalFactura > LIMITE_CLIENTE_FUGAZ
                 ) {
                     event.preventDefault();
-
-                    alert(
+                    showToast(
                         "Un cliente fugaz no puede realizar una compra mayor a C$ " +
                         LIMITE_CLIENTE_FUGAZ.toFixed(2) +
-                        ".\n\nPara continuar con esta venta, registre al cliente como cliente habitual."
+                        ". Para continuar con esta venta, registre al cliente como cliente habitual.",
+                        "error"
                     );
-
                     return;
                 }
 
@@ -751,12 +855,12 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
 
                     if (cantidad && !cantidad.checkValidity()) {
                         invalidFound = true;
-                        cantidad.reportValidity();
+                        showToast("Revise las cantidades de los productos.", "error");
                     }
 
                     if (descuentoLinea && !descuentoLinea.checkValidity()) {
                         invalidFound = true;
-                        descuentoLinea.reportValidity();
+                        showToast("Revise los descuentos de los productos.", "error");
                     }
                 });
 
@@ -781,10 +885,6 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
         const plazosDataInput = document.getElementById("plazos-data-input");
 
         let plazosData = [];
-
-        function formatMoney(value) {
-            return `C$ ${value.toFixed(2)}`;
-        }
 
         function getTodayStr() {
             const d = new Date();

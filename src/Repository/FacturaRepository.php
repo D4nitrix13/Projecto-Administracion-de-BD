@@ -33,10 +33,16 @@ class FacturaRepository
 
         $statement = $this->connection->prepare("
             SELECT * FROM buscar_facturas_filtradas(
-                :id_rol, :busqueda, :id_seccion, :id_usuario,
-                :fecha_desde, :fecha_hasta,
-                :estado_pago, :estado_produccion,
-                :limit, :offset
+                CAST(:id_rol AS integer),
+                CAST(:busqueda AS text),
+                CAST(:id_seccion AS integer),
+                CAST(:id_usuario AS integer),
+                CAST(:fecha_desde AS timestamp),
+                CAST(:fecha_hasta AS timestamp),
+                CAST(:estado_pago AS text),
+                CAST(:estado_produccion AS text),
+                CAST(:limit AS integer),
+                CAST(:offset AS integer)
             )
         ");
 
@@ -63,9 +69,16 @@ class FacturaRepository
 
         $statement = $this->connection->prepare("
             SELECT COUNT(*) FROM buscar_facturas_filtradas(
-                :id_rol, :busqueda, :id_seccion, :id_usuario,
-                :fecha_desde, :fecha_hasta,
-                :estado_pago, :estado_produccion
+                CAST(:id_rol AS integer),
+                CAST(:busqueda AS text),
+                CAST(:id_seccion AS integer),
+                CAST(:id_usuario AS integer),
+                CAST(:fecha_desde AS timestamp),
+                CAST(:fecha_hasta AS timestamp),
+                CAST(:estado_pago AS text),
+                CAST(:estado_produccion AS text),
+                999999,
+                0
             )
         ");
 

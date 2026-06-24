@@ -61,6 +61,23 @@ $filtrosGET = $datos["filtrosGET"];
     </main>
 
     <?php require __DIR__ . "/partials/inicio-publico/dashboard/sidebar-script.php"; ?>
+    <?php require __DIR__ . "/partials/shared/toast.php"; ?>
+
+    <script>
+        document.querySelectorAll(".delete-factura-form").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const formRef = this;
+
+                confirmAction(
+                    "¿Seguro que desea eliminar esta factura? Esta acción no se puede deshacer.",
+                    function () {
+                        formRef.submit();
+                    }
+                );
+            });
+        });
+    </script>
 </body>
 
 </html>

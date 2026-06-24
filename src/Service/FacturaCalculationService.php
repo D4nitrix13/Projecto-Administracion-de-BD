@@ -51,18 +51,24 @@ class FacturaCalculationService
     public function calcularDatosPagoProduccion(
         float $montoPagado,
         float $total,
-        string $fechaEntregaEstimada
+        ?string $fechaEntregaEstimada = null
     ): array {
         $saldoPendiente = round(max(0.0, $total - $montoPagado), 2);
         $porcentajePagado = $total > 0 ? round(($montoPagado / $total) * 100, 2) : 0.0;
+
+        $estadoProduccion = $porcentajePagado >= 50.0
+            ? "En producción"
+            : "Pendiente";
 
         return [
             "monto_pagado"          => round($montoPagado, 2),
             "saldo_pendiente"       => $saldoPendiente,
             "porcentaje_pagado"     => $porcentajePagado,
             "estado_pago"           => $this->calcularEstadoPago($montoPagado, $saldoPendiente),
-            "estado_produccion"     => "En producción",
-            "fecha_entrega_estimada" => date("Y-m-d", strtotime($fechaEntregaEstimada)),
+            "estado_produccion"     => $estadoProduccion,
+            "fecha_entrega_estimada" => !empty($fechaEntregaEstimada)
+                ? date("Y-m-d", strtotime($fechaEntregaEstimada))
+                : null,
         ];
     }
 
@@ -110,7 +116,7 @@ class FacturaCalculationService
         return "{" . implode(",", $valores) . "}";
     }
 
-    private function calcularEstadoPago(float $montoPagado, float $saldoPendiente): string
+    public function calcularEstadoPago(float $montoPagado, float $saldoPendiente): string
     {
         if ($saldoPendiente <= 0.01) {
             return "Pagado";

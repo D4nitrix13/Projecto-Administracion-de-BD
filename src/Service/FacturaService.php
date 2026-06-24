@@ -43,16 +43,7 @@ class FacturaService
                 return ["success" => false, "message" => $errorFugaz, "id_factura" => null];
             }
 
-            $montoPagado = $this->calculation->normalizarMontoPagado($post["monto_pagado"] ?? "0");
-            $fechaEntrega = trim((string) ($post["fecha_entrega_estimada"] ?? ""));
-
-            $errorPago = $this->validation->validarPagoProduccion($montoPagado, $totales["total"], $fechaEntrega);
-
-            if ($errorPago !== null) {
-                return ["success" => false, "message" => $errorPago, "id_factura" => null];
-            }
-
-            $datosPago = $this->calculation->calcularDatosPagoProduccion($montoPagado, $totales["total"], $fechaEntrega);
+            $datosPago = $this->calculation->calcularDatosPagoProduccion(0.0, $totales["total"]);
 
             $this->connection->beginTransaction();
 
@@ -146,17 +137,6 @@ class FacturaService
                 return ["success" => false, "message" => $errorFugaz];
             }
 
-            $montoPagado = $this->calculation->normalizarMontoPagado($post["monto_pagado"] ?? "0");
-            $fechaEntrega = trim((string) ($post["fecha_entrega_estimada"] ?? ""));
-
-            $errorPago = $this->validation->validarPagoProduccion($montoPagado, $totales["total"], $fechaEntrega);
-
-            if ($errorPago !== null) {
-                return ["success" => false, "message" => $errorPago];
-            }
-
-            $datosPago = $this->calculation->calcularDatosPagoProduccion($montoPagado, $totales["total"], $fechaEntrega);
-
             $this->connection->beginTransaction();
 
             $this->connection->prepare("
@@ -178,7 +158,7 @@ class FacturaService
                 ":items"                => json_encode($items, JSON_THROW_ON_ERROR),
             ]);
 
-            $this->actualizarPagoProduccion($idFactura, $datosPago);
+            $this->actualizarTotalesFactura($idFactura, $totales);
             $this->connection->commit();
 
             return ["success" => true, "message" => "Factura actualizada."];
@@ -269,6 +249,197 @@ class FacturaService
         $this->actualizarPagoProduccion($idFactura, $datosPago);
 
         return $idFactura;
+    }
+
+    private function actualizarTotalesFactura(int $idFactura, array $totales): void
+    {
+        $this->connection->prepare("
+            UPDATE factura
+            SET subtotal = :subtotal,
+                descuento = :descuento,
+                impuesto = :impuesto,
+                total = :total,
+                saldo_pendiente = GREATEST(:total - monto_pagado, 0),
+                porcentaje_pagado = CASE
+                    WHEN :total > 0 THEN ROUND((monto_pagado / :total) * 100, 2)
+                    ELSE 0
+                END
+            WHERE id_factura = :id_factura
+        ")->execute([
+            ":id_factura" => $idFactura,
+            ":subtotal"   => $totales["subtotal"],
+            ":descuento"  => $totales["descuento"],
+            ":impuesto"   => $totales["impuesto"],
+            ":total"      => $totales["total"],
+        ]);
+    }
+
+    public function registrarAbono(int $idFactura, float $montoAbono, string $comentario, array $user): array
+    {
+        try {
+            if ($idFactura <= 0) {
+                return ["success" => false, "message" => "Factura inválida."];
+            }
+
+            if ($montoAbono <= 0) {
+                return ["success" => false, "message" => "El monto del abono debe ser mayor a cero."];
+            }
+
+            $stmt = $this->connection->prepare("
+                SELECT id_factura, total, monto_pagado, saldo_pendiente, porcentaje_pagado,
+                       estado_pago, estado_produccion
+                FROM Factura
+                WHERE id_factura = :id
+                FOR UPDATE
+            ");
+            $stmt->execute([":id" => $idFactura]);
+            $factura = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$factura) {
+                return ["success" => false, "message" => "Factura no encontrada."];
+            }
+
+            $total = (float) $factura["total"];
+            $montoPagadoActual = (float) $factura["monto_pagado"];
+            $saldoPendiente = (float) $factura["saldo_pendiente"];
+
+            if ($montoAbono > $saldoPendiente + 0.01) {
+                return ["success" => false, "message" => "El abono excede el saldo pendiente de C$ " . number_format($saldoPendiente, 2) . "."];
+            }
+
+            $nuevoMontoPagado = round($montoPagadoActual + $montoAbono, 2);
+            $nuevoSaldo = round(max(0.0, $total - $nuevoMontoPagado), 2);
+            $nuevoPorcentaje = $total > 0 ? round(($nuevoMontoPagado / $total) * 100, 2) : 0.0;
+
+            $nuevoEstadoPago = $this->calculation->calcularEstadoPago($nuevoMontoPagado, $nuevoSaldo);
+
+            $estadoProduccionActual = $factura["estado_produccion"];
+            $nuevoEstadoProduccion = $estadoProduccionActual;
+
+            if ($estadoProduccionActual === "Pendiente" && $nuevoPorcentaje >= 50.0) {
+                $nuevoEstadoProduccion = "En producción";
+            }
+
+            $this->connection->beginTransaction();
+
+            $this->connection->prepare("
+                UPDATE factura
+                SET monto_pagado = :monto_pagado,
+                    saldo_pendiente = :saldo_pendiente,
+                    porcentaje_pagado = :porcentaje_pagado,
+                    estado_pago = :estado_pago,
+                    estado_produccion = :estado_produccion
+                WHERE id_factura = :id_factura
+            ")->execute([
+                ":id_factura"        => $idFactura,
+                ":monto_pagado"      => $nuevoMontoPagado,
+                ":saldo_pendiente"   => $nuevoSaldo,
+                ":porcentaje_pagado" => $nuevoPorcentaje,
+                ":estado_pago"       => $nuevoEstadoPago,
+                ":estado_produccion" => $nuevoEstadoProduccion,
+            ]);
+
+            $this->marcarCuotaPagadaSiAplica($idFactura, $montoAbono);
+
+            $this->connection->commit();
+
+            $mensajeAbono = "Abono de C$ " . number_format($montoAbono, 2) . " en factura #{$idFactura}";
+
+            if ($nuevoEstadoPago === "Pagado") {
+                \notificar("factura_pagada", "Factura pagada", "La factura #{$idFactura} ha sido pagada completamente.", [
+                    "id_usuario_origen" => (int) $user["id_usuario"],
+                    "metadata" => ["factura_id" => $idFactura, "monto" => $nuevoMontoPagado],
+                ]);
+            } else {
+                \notificar("pago_recibido", "Pago recibido", $mensajeAbono, [
+                    "id_usuario_origen" => (int) $user["id_usuario"],
+                    "metadata" => ["factura_id" => $idFactura, "monto" => $montoAbono],
+                ]);
+            }
+
+            $mensajeExito = "Abono registrado. Nuevo saldo: C$ " . number_format($nuevoSaldo, 2);
+
+            if ($nuevoEstadoProduccion !== $estadoProduccionActual) {
+                $mensajeExito .= " — Producción iniciada.";
+            }
+
+            return [
+                "success" => true,
+                "message" => $mensajeExito,
+                "nuevo_estado_pago" => $nuevoEstadoPago,
+                "nuevo_estado_produccion" => $nuevoEstadoProduccion,
+            ];
+        } catch (\Throwable $e) {
+            $this->rollback();
+            return ["success" => false, "message" => "Error: " . $e->getMessage()];
+        }
+    }
+
+    private function marcarCuotaPagadaSiAplica(int $idFactura, float $montoAbono): void
+    {
+        $stmt = $this->connection->prepare("
+            SELECT id_plazo FROM plazo WHERE id_factura = :id AND estado = 'Activo' LIMIT 1
+        ");
+        $stmt->execute([":id" => $idFactura]);
+        $plazo = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$plazo) {
+            return;
+        }
+
+        $idPlazo = (int) $plazo["id_plazo"];
+        $montoRestante = $montoAbono;
+
+        $stmtCuotas = $this->connection->prepare("
+            SELECT id_cuota, monto, monto_pagado
+            FROM plazo_cuota
+            WHERE id_plazo = :id_plazo AND estado = 'Pendiente'
+            ORDER BY numero ASC
+        ");
+        $stmtCuotas->execute([":id_plazo" => $idPlazo]);
+
+        while ($montoRestante > 0.01) {
+            $cuota = $stmtCuotas->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$cuota) {
+                break;
+            }
+
+            $montoCuota = (float) $cuota["monto"];
+            $montoPagadoCuota = (float) $cuota["monto_pagado"];
+            $restanteCuota = $montoCuota - $montoPagadoCuota;
+            $montoParaCuota = min($montoRestante, $restanteCuota);
+            $nuevoPagadoCuota = round($montoPagadoCuota + $montoParaCuota, 2);
+            $nuevoEstadoCuota = $nuevoPagadoCuota >= $montoCuota - 0.01 ? "Pagado" : "Pendiente";
+
+            $this->connection->prepare("
+                UPDATE plazo_cuota
+                SET monto_pagado = :monto_pagado,
+                    estado = :estado,
+                    fecha_pago_real = CASE WHEN :estado = 'Pagado' THEN CURRENT_TIMESTAMP ELSE fecha_pago_real END
+                WHERE id_cuota = :id_cuota
+            ")->execute([
+                ":monto_pagado" => $nuevoPagadoCuota,
+                ":estado"       => $nuevoEstadoCuota,
+                ":id_cuota"     => (int) $cuota["id_cuota"],
+            ]);
+
+            $montoRestante = round($montoRestante - $montoParaCuota, 2);
+        }
+
+        $stmtAll = $this->connection->prepare("
+            SELECT COUNT(*) FILTER (WHERE estado = 'Pendiente') AS pendientes
+            FROM plazo_cuota
+            WHERE id_plazo = :id_plazo
+        ");
+        $stmtAll->execute([":id_plazo" => $idPlazo]);
+        $counts = $stmtAll->fetch(\PDO::FETCH_ASSOC);
+
+        if ((int) $counts["pendientes"] === 0) {
+            $this->connection->prepare("
+                UPDATE plazo SET estado = 'Completado' WHERE id_plazo = :id_plazo
+            ")->execute([":id_plazo" => $idPlazo]);
+        }
     }
 
     private function actualizarPagoProduccion(int $idFactura, array $datos): void

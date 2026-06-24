@@ -788,7 +788,7 @@ $fechaEntregaEstimadaActual = $factura["fecha_entrega_estimada"] ?? "";
 
         if (filas.length === 0) {
             event.preventDefault();
-            alert("Debe agregar al menos un producto.");
+            showToast("Debe agregar al menos un producto.", "error");
             return;
         }
 
@@ -799,31 +799,31 @@ $fechaEntregaEstimadaActual = $factura["fecha_entrega_estimada"] ?? "";
 
         if (tipo === "<?= TIPO_CLIENTE_HABITUAL ?>" && !document.getElementById("facturaEditClienteId").value) {
             event.preventDefault();
-            alert("Debe seleccionar un cliente habitual válido.");
+            showToast("Debe seleccionar un cliente habitual válido.", "error");
             return;
         }
 
         if (tipo === "<?= TIPO_CLIENTE_FUGAZ ?>" && total > limiteClienteFugaz) {
             event.preventDefault();
-            alert("Un cliente fugaz no puede realizar una compra mayor a " + money(limiteClienteFugaz) + ".");
+            showToast("Un cliente fugaz no puede realizar una compra mayor a " + money(limiteClienteFugaz) + ".", "error");
             return;
         }
 
         if (Number.isNaN(montoPagado) || montoPagado < minimo) {
             event.preventDefault();
-            alert("El cliente debe pagar al menos el 50% del total.\n\nMínimo requerido: " + money(minimo));
+            showToast("El cliente debe pagar al menos el 50% del total. Mínimo requerido: " + money(minimo), "error");
             return;
         }
 
         if (montoPagado > total) {
             event.preventDefault();
-            alert("El monto pagado no puede ser mayor al total de la factura.");
+            showToast("El monto pagado no puede ser mayor al total de la factura.", "error");
             return;
         }
 
         if (!fechaEntregaInput.value.trim()) {
             event.preventDefault();
-            alert("Debe seleccionar una fecha estimada de entrega.");
+            showToast("Debe seleccionar una fecha estimada de entrega.", "error");
             return;
         }
 
@@ -840,7 +840,7 @@ $fechaEntregaEstimadaActual = $factura["fecha_entrega_estimada"] ?? "";
 
         if (error) {
             event.preventDefault();
-            alert("Revise los productos, cantidades y stock disponible.");
+            showToast("Revise los productos, cantidades y stock disponible.", "error");
         }
     });
 </script>

@@ -48,6 +48,11 @@ function obtenerDatosFacturas(): array
         $estadoProduccionFiltro = "";
     }
 
+    if ($fechaDesde !== "" && $fechaHasta !== "" && $fechaDesde > $fechaHasta) {
+        $fechaDesde = "";
+        $fechaHasta = "";
+    }
+
     $seccionFiltroInt = ctype_digit($seccionFiltro) ? (int)$seccionFiltro : null;
     $usuarioFiltroInt = ctype_digit($usuarioFiltro) ? (int)$usuarioFiltro : null;
 

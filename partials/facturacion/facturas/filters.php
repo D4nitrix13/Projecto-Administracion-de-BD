@@ -1,6 +1,18 @@
 <?php
 $estadoPagoFiltro = $estadoPagoFiltro ?? "";
 $estadoProduccionFiltro = $estadoProduccionFiltro ?? "";
+
+$filtrosActivos = array_filter([
+    $busqueda !== "",
+    $seccionFiltroInt !== null,
+    $usuarioFiltroInt !== null,
+    $estadoPagoFiltro !== "",
+    $estadoProduccionFiltro !== "",
+    $fechaDesde !== "",
+    $fechaHasta !== "",
+], fn($v) => $v);
+
+$contadorFiltros = count($filtrosActivos);
 ?>
 <form method="get" class="proveedores-filtros-bar facturas-filtros-bar">
     <div class="filtro-item-full">
@@ -96,10 +108,19 @@ $estadoProduccionFiltro = $estadoProduccionFiltro ?? "";
     <div class="filtro-actions">
         <button type="submit" class="btn-primary-inline">
             Aplicar filtros
+            <?php if ($contadorFiltros > 0): ?>
+                <span class="filtro-badge"><?= $contadorFiltros ?></span>
+            <?php endif; ?>
         </button>
 
-        <a href="facturas.php" class="btn-secondary-inline">
-            Limpiar
-        </a>
+        <?php if ($contadorFiltros > 0): ?>
+            <a href="facturas.php" class="btn-secondary-inline">
+                Limpiar (<?= $contadorFiltros ?> filtro<?= $contadorFiltros > 1 ? "s" : "" ?> activo<?= $contadorFiltros > 1 ? "s" : "" ?>)
+            </a>
+        <?php else: ?>
+            <a href="facturas.php" class="btn-secondary-inline" style="opacity: 0.5; pointer-events: none;">
+                Limpiar
+            </a>
+        <?php endif; ?>
     </div>
 </form>

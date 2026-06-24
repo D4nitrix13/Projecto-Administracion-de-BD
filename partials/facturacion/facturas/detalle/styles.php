@@ -898,4 +898,84 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .invoice-abono-panel {
+        margin-top: 20px;
+        padding: 24px;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid #86efac;
+        border-radius: 14px;
+    }
+
+    .invoice-abono-panel .invoice-section-header h3 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #166534;
+    }
+
+    .invoice-abono-panel .invoice-section-header p {
+        margin: 0;
+        color: #166534;
+        font-size: 0.88rem;
+    }
+
+    .abono-form {
+        margin-top: 16px;
+    }
+
+    .abono-fields {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .abono-fields .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .abono-fields .label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 4px;
+    }
+
+    .abono-fields .input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        background: #fff;
+    }
+
+    .abono-fields .input:focus {
+        outline: none;
+        border-color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+    }
+
+    .abono-info {
+        margin-bottom: 12px;
+    }
+
+    .abono-hint {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #92400e;
+        padding: 8px 12px;
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+    }
+
+    .abono-hint-success {
+        color: #166534;
+        background: #dcfce7;
+        border-color: #86efac;
+    }
 </style>

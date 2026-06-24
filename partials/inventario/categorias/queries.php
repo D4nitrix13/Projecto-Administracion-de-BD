@@ -44,8 +44,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
+$ordenesPermitidosCat = [
+    'nombre', 'mas_vendidos_mes', 'menos_vendidos_mes',
+    'mas_vendidos_semana', 'menos_vendidos_semana',
+    'mas_vendidos_anio', 'menos_vendidos_anio',
+    'total_ventas', 'mas_productos', 'menos_productos', 'stock_total'
+];
+$filtroOrdenCat = in_array($filtroOrdenCat, $ordenesPermitidosCat) ? $filtroOrdenCat : 'nombre';
+
 $stmtCount = $connection->prepare("
-    SELECT COUNT(*) FROM buscar_categorias(:busqueda)
+    SELECT COUNT(*) FROM Categoria c
+    WHERE COALESCE(TRIM(:busqueda), '') = ''
+       OR c.nombre ILIKE '%' || TRIM(:busqueda) || '%'
 ");
 
 $stmtCount->execute([":busqueda" => $busqueda]);
@@ -59,18 +69,23 @@ $limit = $paginacion["porPagina"];
 $stmtCat = $connection->prepare("
     SELECT
         id_categoria,
-        nombre
-    FROM buscar_categorias(:busqueda, :limit, :offset)
+        nombre,
+        cantidad_productos,
+        stock_total,
+        total_vendido
+    FROM buscar_categorias(:busqueda, :limit, :offset, :orden)
 ");
 
 $stmtCat->execute([
     ":busqueda" => $busqueda,
     ":limit"    => $limit,
     ":offset"   => $offset,
+    ":orden"    => $filtroOrdenCat,
 ]);
 
 $categorias = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
 
 $filtrosGET = array_filter([
     "q" => $busqueda ?: null,
+    "orden" => $filtroOrdenCat !== 'nombre' ? $filtroOrdenCat : null,
 ], fn($v) => $v !== null);

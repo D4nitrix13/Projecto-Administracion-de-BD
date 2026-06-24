@@ -68,7 +68,7 @@ require __DIR__ . "/partials/inventario/productos/queries.php";
                 <?php
                 $paginacion = $paginacionProductosList;
                 $baseUrl = "productos.php";
-                $filtrosActuales = ["q" => $busquedaTexto, "categoria" => $filtroCategoriaRaw, "proveedor" => $filtroProveedorRaw, "id" => $filtroIdRaw, "stock" => $filtroStock];
+                $filtrosActuales = ["q" => $busquedaTexto, "categoria" => $filtroCategoriaRaw, "proveedor" => $filtroProveedorRaw, "id" => $filtroIdRaw, "stock" => $filtroStock, "orden" => $filtroOrden];
                 require __DIR__ . "/partials/shared/pagination.php";
                 ?>
             <?php endif; ?>
