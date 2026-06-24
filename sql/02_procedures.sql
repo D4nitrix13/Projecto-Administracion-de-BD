@@ -1372,6 +1372,7 @@ BEGIN
         c.id_categoria,
         c.nombre
     FROM Categoria c
+    WHERE c.nombre <> 'Categoria Temporal'
     ORDER BY c.nombre;
 END;
 $$;
@@ -1384,7 +1385,9 @@ $$;
 CREATE OR REPLACE FUNCTION buscar_productos_catalogo(
     p_busqueda TEXT DEFAULT NULL,
     p_id_categoria INT DEFAULT NULL,
-    p_disponibilidad VARCHAR DEFAULT NULL
+    p_disponibilidad VARCHAR DEFAULT NULL,
+    p_limite INT DEFAULT 20,
+    p_offset INT DEFAULT 0
 )
 RETURNS TABLE (
     id_producto INT,
@@ -1394,10 +1397,13 @@ RETURNS TABLE (
     imagen VARCHAR,
     categoria VARCHAR,
     precio_venta NUMERIC,
-    stock INT
+    stock INT,
+    total_registros BIGINT
 )
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    v_total BIGINT;
 BEGIN
     IF p_id_categoria IS NOT NULL AND p_id_categoria <= 0 THEN
         RAISE EXCEPTION 'ID de categoría no válido';
@@ -1409,6 +1415,41 @@ BEGIN
         RAISE EXCEPTION 'Filtro de disponibilidad no válido';
     END IF;
 
+    SELECT COUNT(*)
+    INTO v_total
+    FROM Producto p
+    LEFT JOIN Categoria c ON p.id_categoria = c.id_categoria
+    WHERE c.nombre <> 'Categoria Temporal'
+      AND (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR p.codigo ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.descripcion ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR c.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+      AND (
+            p_id_categoria IS NULL
+            OR p.id_categoria = p_id_categoria
+        )
+      AND (
+            p_disponibilidad IS NULL
+            OR p_disponibilidad = ''
+            OR (
+                p_disponibilidad = 'disponible'
+                AND p.stock > 5
+            )
+            OR (
+                p_disponibilidad = 'stock_bajo'
+                AND p.stock > 0
+                AND p.stock <= 5
+            )
+            OR (
+                p_disponibilidad = 'agotado'
+                AND p.stock <= 0
+            )
+        );
+
     RETURN QUERY
     SELECT
         p.id_producto,
@@ -1418,10 +1459,12 @@ BEGIN
         p.imagen,
         c.nombre AS categoria,
         p.precio_venta,
-        p.stock
+        p.stock,
+        v_total AS total_registros
     FROM Producto p
     LEFT JOIN Categoria c ON p.id_categoria = c.id_categoria
-    WHERE (
+    WHERE c.nombre <> 'Categoria Temporal'
+      AND (
             p_busqueda IS NULL
             OR TRIM(p_busqueda) = ''
             OR p.codigo ILIKE '%' || TRIM(p_busqueda) || '%'
@@ -1456,7 +1499,48 @@ BEGIN
             WHEN p.stock <= 5 THEN 1
             ELSE 0
         END,
-        p.nombre ASC;
+        p.nombre ASC
+    LIMIT p_limite
+    OFFSET p_offset;
+END;
+$$;
+
+-- ============================================================
+-- CATÁLOGO: Productos más vendidos (vista pública)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION productos_mas_vendidos_catalogo(p_limite INT DEFAULT 12)
+RETURNS TABLE (
+    id_producto INT,
+    codigo VARCHAR,
+    nombre VARCHAR,
+    imagen VARCHAR,
+    precio_venta NUMERIC,
+    stock INT,
+    total_vendido BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.codigo,
+        p.nombre,
+        p.imagen,
+        p.precio_venta,
+        p.stock,
+        COALESCE(SUM(df.cantidad), 0)::BIGINT AS total_vendido
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('month', CURRENT_DATE)
+        AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+    JOIN Categoria c ON p.id_categoria = c.id_categoria
+    WHERE c.nombre <> 'Categoria Temporal'
+    GROUP BY p.id_producto, p.codigo, p.nombre, p.imagen, p.precio_venta, p.stock
+    ORDER BY total_vendido DESC, p.nombre ASC
+    LIMIT p_limite;
 END;
 $$;
 

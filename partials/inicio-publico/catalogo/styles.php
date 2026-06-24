@@ -232,15 +232,15 @@
     .catalog-filter-form,
     .filters-panel,
     .catalog-panel>form {
-        display: grid;
-        grid-template-columns: minmax(260px, 1.25fr) minmax(180px, 0.7fr) minmax(180px, 0.7fr) auto auto;
+        display: flex;
+        flex-wrap: wrap;
         gap: 12px;
         align-items: end;
         padding: 16px;
         margin-bottom: 22px;
         border: 1px solid #e5e7eb;
-        border-radius: 18px;
-        background: #f8fafc;
+        border-radius: 12px;
+        background: #ffffff;
     }
 
     .filter-field,
@@ -249,8 +249,8 @@
     .catalog-panel>form label {
         display: grid;
         gap: 7px;
-        min-width: 0;
-        width: 100%;
+        min-width: 200px;
+        flex: 1;
         color: #111827;
         font-size: 0.88rem;
         font-weight: 800;
@@ -468,7 +468,7 @@
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 12px;
+        gap: 10px;
     }
 
     .catalog-card-title {
@@ -492,18 +492,18 @@
         align-items: center;
         justify-content: center;
         min-height: 26px;
-        max-width: 110px;
+        max-width: 140px;
         padding: 5px 10px;
         border-radius: 999px;
         background: #f1f5f9;
         color: #475569;
         border: 1px solid #e2e8f0;
-        font-size: 0.75rem;
-        font-weight: 900;
+        font-size: 0.72rem;
+        font-weight: 800;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        flex: 0 0 auto;
+        flex-shrink: 0;
     }
 
     .catalog-card-description {
@@ -634,6 +634,544 @@
     }
 
     /* =========================
+       SECTION HEADERS
+       ========================= */
+
+    .catalog-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .catalog-section-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.25rem;
+        font-weight: 900;
+    }
+
+    .catalog-section-link {
+        color: #007185;
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .catalog-section-link:hover {
+        color: #c7511f;
+        text-decoration: underline;
+    }
+
+    /* =========================
+       MOST SOLD
+       ========================= */
+
+    .catalog-most-sold {
+        margin-bottom: 36px;
+    }
+
+    .catalog-most-sold-scroll {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+    }
+
+    .catalog-most-sold-scroll::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .catalog-most-sold-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .catalog-most-sold-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .catalog-most-sold-item {
+        display: flex;
+        flex-direction: column;
+        min-width: 170px;
+        max-width: 170px;
+        scroll-snap-align: start;
+        text-decoration: none;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        transition:
+            box-shadow 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    .catalog-most-sold-item:hover {
+        border-color: #bfdbfe;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
+    }
+
+    .catalog-most-sold-image {
+        width: 100%;
+        height: 140px;
+        background: #f8fafc;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        position: relative;
+    }
+
+    .catalog-most-sold-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 8px;
+    }
+
+    .catalog-most-sold-placeholder {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .catalog-most-sold-badge {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: #f97316;
+        color: #ffffff;
+        font-size: 0.68rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .catalog-most-sold-name {
+        padding: 10px 10px 2px;
+        color: #111827;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .catalog-most-sold-price {
+        padding: 2px 10px 10px;
+        color: #b12704;
+        font-size: 0.9rem;
+        font-weight: 900;
+    }
+
+    /* =========================
+       CATEGORY EXPLORER
+       ========================= */
+
+    .catalog-explorer {
+        margin-bottom: 36px;
+    }
+
+    .catalog-explorer-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .catalog-explorer-card {
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        text-decoration: none;
+        transition:
+            box-shadow 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    .catalog-explorer-card:hover {
+        border-color: #bfdbfe;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
+    }
+
+    .catalog-explorer-image {
+        width: 100%;
+        height: 120px;
+        background: #f8fafc;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+    }
+
+    .catalog-explorer-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 8px;
+    }
+
+    .catalog-explorer-placeholder {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 1rem;
+        font-weight: 900;
+        display: grid;
+        place-items: center;
+    }
+
+    .catalog-explorer-info {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .catalog-explorer-name {
+        color: #111827;
+        font-size: 0.9rem;
+        font-weight: 800;
+        line-height: 1.3;
+    }
+
+    .catalog-explorer-count {
+        color: #6b7280;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    /* =========================
+       CATEGORY CARDS (Amazon style)
+       ========================= */
+
+    .catalog-categories {
+        margin-bottom: 32px;
+    }
+
+    .catalog-categories-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .catalog-category-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+        display: flex;
+        flex-direction: column;
+        transition:
+            box-shadow 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    .catalog-category-card:hover {
+        border-color: #bfdbfe;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
+    }
+
+    .catalog-category-title {
+        margin: 0 0 14px;
+        color: #0f172a;
+        font-size: 1.1rem;
+        font-weight: 900;
+        line-height: 1.3;
+    }
+
+    .catalog-category-main-image {
+        width: 100%;
+        height: 160px;
+        background: #f8fafc;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    .catalog-category-main-image a {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .catalog-category-main-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 8px;
+    }
+
+    .catalog-category-grid-2x2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .catalog-category-subitem {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f8fafc;
+        transition: background 0.15s ease;
+    }
+
+    .catalog-category-subitem:hover {
+        background: #f1f5f9;
+    }
+
+    .catalog-category-subitem img {
+        width: 100%;
+        height: 80px;
+        object-fit: contain;
+        padding: 4px;
+    }
+
+    .catalog-category-subitem-placeholder {
+        width: 100%;
+        height: 80px;
+        display: grid;
+        place-items: center;
+        color: #94a3b8;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .catalog-category-subitem-name {
+        padding: 4px 6px;
+        color: #334155;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+    }
+
+    .catalog-category-explore {
+        margin-top: auto;
+        padding-top: 10px;
+        color: #007185;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .catalog-category-explore:hover {
+        color: #c7511f;
+        text-decoration: underline;
+    }
+
+    /* =========================
+       PRODUCT ROWS (Amazon style)
+       ========================= */
+
+    .catalog-product-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .catalog-product-row {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    }
+
+    .catalog-product-row-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .catalog-product-row-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.2rem;
+        font-weight: 900;
+    }
+
+    .catalog-product-row-see-all {
+        color: #007185;
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .catalog-product-row-see-all:hover {
+        color: #c7511f;
+        text-decoration: underline;
+    }
+
+    .catalog-product-row-scroll {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+    }
+
+    .catalog-product-row-scroll::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .catalog-product-row-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .catalog-product-row-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .catalog-product-row-item {
+        display: flex;
+        flex-direction: column;
+        min-width: 160px;
+        max-width: 160px;
+        scroll-snap-align: start;
+        text-decoration: none;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: box-shadow 0.15s ease;
+    }
+
+    .catalog-product-row-item:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.10);
+    }
+
+    .catalog-product-row-image {
+        width: 100%;
+        height: 140px;
+        background: #f8fafc;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+    }
+
+    .catalog-product-row-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 8px;
+    }
+
+    .catalog-product-row-placeholder {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .catalog-product-row-name {
+        padding: 8px 8px 2px;
+        color: #111827;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .catalog-product-row-price {
+        padding: 2px 8px 8px;
+        color: #b12704;
+        font-size: 0.88rem;
+        font-weight: 900;
+    }
+
+    /* =========================
+       PAGINATION
+       ========================= */
+
+    .catalog-pagination {
+        margin-top: 28px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .catalog-pagination-list {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .catalog-pagination-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        color: #374151;
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition:
+            background 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .catalog-pagination-btn:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #111827;
+    }
+
+    .catalog-pagination-active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+        cursor: default;
+    }
+
+    .catalog-pagination-ellipsis {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        color: #9ca3af;
+        font-size: 0.9rem;
+    }
+
+    /* =========================
        RESPONSIVE
        ========================= */
 
@@ -642,27 +1180,47 @@
             grid-template-columns: 1fr;
         }
 
-        .catalog-filters,
-        .catalog-filter-form,
-        .filters-panel,
-        .catalog-panel>form {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .filter-actions,
-        .catalog-filter-actions {
-            grid-column: 1 / -1;
-            justify-content: flex-end;
-        }
-
         .catalog-grid {
             grid-template-columns: repeat(3, 1fr);
+        }
+
+        .catalog-categories-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .catalog-explorer-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 760px) {
+        .catalog-categories-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .catalog-explorer-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .catalog-section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .catalog-most-sold-item {
+            min-width: 140px;
+            max-width: 140px;
         }
     }
 
     @media (max-width: 520px) {
         .catalog-grid {
             grid-template-columns: repeat(2, 1fr);
+        }
+
+        .catalog-explorer-grid {
+            grid-template-columns: 1fr;
         }
     }
 
@@ -711,8 +1269,14 @@
         .catalog-filter-form,
         .filters-panel,
         .catalog-panel>form {
-            grid-template-columns: 1fr;
             padding: 16px;
+        }
+
+        .filter-field,
+        .catalog-filter-field,
+        .form-group,
+        .catalog-panel>form label {
+            min-width: 100%;
         }
 
         .filter-actions,

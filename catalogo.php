@@ -15,8 +15,14 @@ $numeroWhatsApp       = $viewData["numeroWhatsApp"];
 $busquedaTexto        = $viewData["busquedaTexto"];
 $filtroCategoria      = $viewData["filtroCategoria"];
 $filtroDisponibilidad = $viewData["filtroDisponibilidad"];
+$hayFiltros           = $viewData["hayFiltros"];
+$productosPorCategoria = $viewData["productosPorCategoria"];
+$masVendidos           = $viewData["masVendidos"];
+$pagina               = $viewData["pagina"];
+$totalPaginas         = $viewData["totalPaginas"];
+$totalRegistros       = $viewData["totalRegistros"];
 
-$totalProductos = count($productos);
+$totalProductos = $totalRegistros;
 
 ?>
 
@@ -72,19 +78,31 @@ $totalProductos = count($productos);
 
             <?php require __DIR__ . "/partials/inicio-publico/catalogo/filters.php"; ?>
 
-            <div class="catalog-results-header">
-                <div>
-                    <p class="catalog-section-eyebrow">Resultados</p>
-                    <h2>Catálogo</h2>
-                    <p>Productos disponibles según los filtros seleccionados.</p>
+            <?php if ($hayFiltros): ?>
+
+                <div class="catalog-results-header">
+                    <div>
+                        <p class="catalog-section-eyebrow">Resultados</p>
+                        <h2>Catálogo</h2>
+                        <p>Productos disponibles según los filtros seleccionados.</p>
+                    </div>
+
+                    <span class="catalog-count">
+                        <?= $totalRegistros ?> producto(s)
+                    </span>
                 </div>
 
-                <span class="catalog-count">
-                    <?= $totalProductos ?> producto(s)
-                </span>
-            </div>
+                <?php require __DIR__ . "/partials/inicio-publico/catalogo/grid.php"; ?>
 
-            <?php require __DIR__ . "/partials/inicio-publico/catalogo/grid.php"; ?>
+                <?php require __DIR__ . "/partials/inicio-publico/catalogo/pagination.php"; ?>
+
+            <?php else: ?>
+
+                <?php require __DIR__ . "/partials/inicio-publico/catalogo/most-sold.php"; ?>
+
+                <?php require __DIR__ . "/partials/inicio-publico/catalogo/category-explorer.php"; ?>
+
+            <?php endif; ?>
 
         </section>
 

@@ -23,7 +23,7 @@
                 <div class="catalog-image-wrap">
                     <?php if ($tieneImagen): ?>
                         <a
-                            href="ver_imagen_producto.php?id=<?= (int)$producto["id_producto"] ?>"
+                            href="ver_detalle_producto.php?id=<?= (int)$producto["id_producto"] ?>"
                             title="Ver imagen en grande">
                             <img
                                 src="uploads/productos/<?= htmlspecialchars($producto["imagen"]) ?>"

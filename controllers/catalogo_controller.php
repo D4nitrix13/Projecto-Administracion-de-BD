@@ -7,6 +7,8 @@ require_once __DIR__ . "/../src/Repository/CatalogoRepository.php";
 
 use App\Repository\CatalogoRepository;
 
+const PRODUCTOS_POR_PAGINA = 20;
+
 function obtenerDatosCatalogo(): array
 {
     $connection = createConnection();
@@ -18,10 +20,13 @@ function obtenerDatosCatalogo(): array
     $busquedaTexto = trim($_GET["q"] ?? "");
     $filtroCategoriaRaw = $_GET["categoria"] ?? "";
     $filtroDisponibilidad = $_GET["disponibilidad"] ?? "";
+    $paginaRaw = $_GET["pagina"] ?? "1";
 
     $filtroCategoria = ctype_digit($filtroCategoriaRaw)
         ? (int) $filtroCategoriaRaw
         : null;
+
+    $pagina = ctype_digit($paginaRaw) ? max(1, (int) $paginaRaw) : 1;
 
     $disponibilidadesPermitidas = ["disponible", "stock_bajo", "agotado"];
 
@@ -29,18 +34,50 @@ function obtenerDatosCatalogo(): array
         $filtroDisponibilidad = "";
     }
 
+    $hayFiltros = $busquedaTexto !== ""
+        || $filtroCategoria !== null
+        || $filtroDisponibilidad !== "";
+
+    $productosPorCategoria = $hayFiltros
+        ? []
+        : $catalogoRepo->obtenerCategoriasConImagen(8);
+
+    $masVendidos = $hayFiltros
+        ? []
+        : $catalogoRepo->obtenerMasVendidos(12);
+
+    $offset = ($pagina - 1) * PRODUCTOS_POR_PAGINA;
+
+    $productos = $catalogoRepo->buscarProductos(
+        $busquedaTexto,
+        $filtroCategoria,
+        $filtroDisponibilidad,
+        PRODUCTOS_POR_PAGINA,
+        $offset
+    );
+
+    $totalRegistros = 0;
+
+    if (!empty($productos)) {
+        $totalRegistros = (int) $productos[0]["total_registros"];
+    }
+
+    $totalPaginas = max(1, (int) ceil($totalRegistros / PRODUCTOS_POR_PAGINA));
+
     return [
-        "usuario"             => $usuario,
-        "numeroWhatsApp"      => $numeroWhatsApp,
-        "busquedaTexto"       => $busquedaTexto,
-        "filtroCategoria"     => $filtroCategoria,
+        "usuario"              => $usuario,
+        "numeroWhatsApp"       => $numeroWhatsApp,
+        "busquedaTexto"        => $busquedaTexto,
+        "filtroCategoria"      => $filtroCategoria,
         "filtroDisponibilidad" => $filtroDisponibilidad,
-        "categorias"          => $catalogoRepo->obtenerCategorias(),
-        "productos"           => $catalogoRepo->buscarProductos(
-            $busquedaTexto,
-            $filtroCategoria,
-            $filtroDisponibilidad
-        ),
+        "hayFiltros"           => $hayFiltros,
+        "categorias"           => $catalogoRepo->obtenerCategorias(),
+        "productos"            => $productos,
+        "productosPorCategoria" => $productosPorCategoria,
+        "masVendidos"           => $masVendidos,
+        "pagina"               => $pagina,
+        "totalPaginas"         => $totalPaginas,
+        "totalRegistros"       => $totalRegistros,
     ];
 }
 

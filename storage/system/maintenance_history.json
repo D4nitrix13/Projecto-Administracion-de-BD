@@ -2,8 +2,8 @@
     {
         "type": "full",
         "success": true,
-        "executed_at": "2026-06-24 14:03:37",
-        "next_run_at": "2026-07-01 14:03:37",
+        "executed_at": "2026-06-24 14:54:37",
+        "next_run_at": "2026-07-01 14:54:37",
         "results": [
             {
                 "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
