@@ -246,5 +246,217 @@
         "id_seccion": null,
         "rol_origen": "Administrador",
         "metadata": []
+    },
+    {
+        "id": "b2ded24e9437278a0a06d40789722fe5",
+        "tipo": "backup_manual",
+        "titulo": "Backup manual",
+        "mensaje": "Respaldo generado: backup_manual_quinto_backup_2026-06-25_08-05-04.sql",
+        "leida": false,
+        "fecha": "2026-06-25T08:05:04",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "50208486b606b797a05ac2d9c4275c9c",
+        "tipo": "pago_recibido",
+        "titulo": "Pago recibido",
+        "mensaje": "Abono de C$ 149.07 en factura #24",
+        "leida": false,
+        "fecha": "2026-06-25T09:21:27",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "",
+        "metadata": {
+            "factura_id": 24,
+            "monto": 149.07
+        }
+    },
+    {
+        "id": "285b3311ce28c2b702a5966d8d2411be",
+        "tipo": "stock_bajo",
+        "titulo": "Stock bajo",
+        "mensaje": "El producto Llavero Acrílico Anime tiene solo 2 unidades en stock",
+        "leida": false,
+        "fecha": "2026-06-25T09:48:18",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "producto_id": 15,
+            "nombre": "Llavero Acrílico Anime",
+            "stock": 2
+        }
+    },
+    {
+        "id": "81444d3ae2f2d4f646ac74a735162fb4",
+        "tipo": "stock_bajo",
+        "titulo": "Stock bajo",
+        "mensaje": "El producto Camiseta Blanca Personalizada tiene solo 1 unidades en stock",
+        "leida": false,
+        "fecha": "2026-06-25T09:50:11",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "producto_id": 10,
+            "nombre": "Camiseta Blanca Personalizada",
+            "stock": 1
+        }
+    },
+    {
+        "id": "9836d1b1bca66ce5f6a621cafa48416b",
+        "tipo": "stock_bajo",
+        "titulo": "Stock bajo",
+        "mensaje": "El producto Sticker Holográfico Kitsune tiene solo 4 unidades en stock",
+        "leida": false,
+        "fecha": "2026-06-25T09:52:00",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "producto_id": 12,
+            "nombre": "Sticker Holográfico Kitsune",
+            "stock": 4
+        }
+    },
+    {
+        "id": "61905751bfe0f538c507b7c9b848e1f3",
+        "tipo": "backup_manual",
+        "titulo": "Backup manual",
+        "mensaje": "Respaldo generado: backup_manual_sexto_backup_2026-06-25_09-52-55.sql",
+        "leida": false,
+        "fecha": "2026-06-25T09:52:55",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "90e841ee44aa3a13de99d54b9efaf9dc",
+        "tipo": "factura_creada",
+        "titulo": "Factura creada",
+        "mensaje": "Nueva factura #25 — $245.50",
+        "leida": false,
+        "fecha": "2026-06-25T09:53:43",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": 1,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "factura_id": 25,
+            "total": 245.5
+        }
+    },
+    {
+        "id": "bdd8ebf09c4ded4a1fd6ec307ca73b06",
+        "tipo": "pago_recibido",
+        "titulo": "Pago recibido",
+        "mensaje": "Abono de C$ 122.75 en factura #25",
+        "leida": false,
+        "fecha": "2026-06-25T09:53:54",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "",
+        "metadata": {
+            "factura_id": 25,
+            "monto": 122.75
+        }
+    },
+    {
+        "id": "92dea837e831c4082103e31c4549cad1",
+        "tipo": "factura_pagada",
+        "titulo": "Factura pagada",
+        "mensaje": "La factura #25 ha sido pagada completamente.",
+        "leida": false,
+        "fecha": "2026-06-25T09:54:12",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "",
+        "metadata": {
+            "factura_id": 25,
+            "monto": 245.5
+        }
+    },
+    {
+        "id": "7fe91bffe2b124f1905656ec5422fe29",
+        "tipo": "producto_eliminado",
+        "titulo": "Producto eliminado",
+        "mensaje": "Se eliminó el producto ID #13",
+        "leida": false,
+        "fecha": "2026-06-25T09:54:47",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "c461a5f16fee28825e4a2ca626bc321d",
+        "tipo": "factura_creada",
+        "titulo": "Factura creada",
+        "mensaje": "Nueva factura #25 — $2,419.78",
+        "leida": false,
+        "fecha": "2026-06-25T11:02:01",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": 1,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "factura_id": 25,
+            "total": 2419.78
+        }
+    },
+    {
+        "id": "75034eb0602c40979cb3b983bfbf7ecb",
+        "tipo": "pago_recibido",
+        "titulo": "Pago recibido",
+        "mensaje": "Abono de C$ 1,209.89 en factura #25",
+        "leida": false,
+        "fecha": "2026-06-25T11:03:07",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "",
+        "metadata": {
+            "factura_id": 25,
+            "monto": 1209.89
+        }
+    },
+    {
+        "id": "0f3737af841b079003bc98856578a484",
+        "tipo": "producto_eliminado",
+        "titulo": "Producto eliminado",
+        "mensaje": "Se eliminó el producto ID #17",
+        "leida": false,
+        "fecha": "2026-06-25T11:05:55",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
     }
 ]

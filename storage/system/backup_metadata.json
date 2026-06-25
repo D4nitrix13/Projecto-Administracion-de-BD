@@ -30,5 +30,21 @@
         "archivo": "backup_manual_cuarto_backup_2026-06-24_23-54-12.sql",
         "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_cuarto_backup_2026-06-24_23-54-12.sql",
         "created_at": "2026-06-24 23:54:12"
+    },
+    "backup_manual_quinto_backup_2026-06-25_08-05-04.sql": {
+        "descripcion": "",
+        "usuario_id": 1,
+        "tipo": "Manual",
+        "archivo": "backup_manual_quinto_backup_2026-06-25_08-05-04.sql",
+        "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_quinto_backup_2026-06-25_08-05-04.sql",
+        "created_at": "2026-06-25 08:05:04"
+    },
+    "backup_manual_sexto_backup_2026-06-25_09-52-55.sql": {
+        "descripcion": "",
+        "usuario_id": 1,
+        "tipo": "Manual",
+        "archivo": "backup_manual_sexto_backup_2026-06-25_09-52-55.sql",
+        "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_sexto_backup_2026-06-25_09-52-55.sql",
+        "created_at": "2026-06-25 09:52:55"
     }
 }

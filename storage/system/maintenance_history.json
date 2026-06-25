@@ -2,6 +2,1056 @@
     {
         "type": "full",
         "success": true,
+        "executed_at": "2026-06-25 12:25:37",
+        "next_run_at": "2026-06-25 12:26:37",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:24:36",
+        "next_run_at": "2026-06-25 12:25:36",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:23:36",
+        "next_run_at": "2026-06-25 12:24:36",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:22:36",
+        "next_run_at": "2026-06-25 12:23:36",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:21:36",
+        "next_run_at": "2026-06-25 12:22:36",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:20:35",
+        "next_run_at": "2026-06-25 12:21:35",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:19:35",
+        "next_run_at": "2026-06-25 12:20:35",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:18:35",
+        "next_run_at": "2026-06-25 12:19:35",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:17:35",
+        "next_run_at": "2026-06-25 12:18:35",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:16:34",
+        "next_run_at": "2026-06-25 12:17:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:15:34",
+        "next_run_at": "2026-06-25 12:16:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:14:34",
+        "next_run_at": "2026-06-25 12:15:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:13:34",
+        "next_run_at": "2026-06-25 12:14:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:12:33",
+        "next_run_at": "2026-06-25 12:13:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:11:33",
+        "next_run_at": "2026-06-25 12:12:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:10:33",
+        "next_run_at": "2026-06-25 12:11:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:09:33",
+        "next_run_at": "2026-06-25 12:10:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:08:33",
+        "next_run_at": "2026-06-25 12:09:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:07:32",
+        "next_run_at": "2026-06-25 12:08:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:06:32",
+        "next_run_at": "2026-06-25 12:07:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:05:32",
+        "next_run_at": "2026-06-25 12:06:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:04:32",
+        "next_run_at": "2026-06-25 12:05:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:03:31",
+        "next_run_at": "2026-06-25 12:04:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:02:31",
+        "next_run_at": "2026-06-25 12:03:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:01:31",
+        "next_run_at": "2026-06-25 12:02:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 12:00:31",
+        "next_run_at": "2026-06-25 12:01:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:59:30",
+        "next_run_at": "2026-06-25 12:00:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:58:30",
+        "next_run_at": "2026-06-25 11:59:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:57:30",
+        "next_run_at": "2026-06-25 11:58:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": false,
+        "executed_at": "2026-06-25 11:56:40",
+        "next_run_at": "2026-06-25 11:50:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": false,
+                "exit_code": 1,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:49:34",
+        "next_run_at": "2026-06-25 11:50:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:48:34",
+        "next_run_at": "2026-06-25 11:49:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:47:34",
+        "next_run_at": "2026-06-25 11:48:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:46:34",
+        "next_run_at": "2026-06-25 11:47:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:45:34",
+        "next_run_at": "2026-06-25 11:46:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:44:34",
+        "next_run_at": "2026-06-25 11:45:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:43:34",
+        "next_run_at": "2026-06-25 11:44:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:42:34",
+        "next_run_at": "2026-06-25 11:43:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:41:34",
+        "next_run_at": "2026-06-25 11:42:34",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:40:33",
+        "next_run_at": "2026-06-25 11:41:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:39:33",
+        "next_run_at": "2026-06-25 11:40:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:38:33",
+        "next_run_at": "2026-06-25 11:39:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:37:33",
+        "next_run_at": "2026-06-25 11:38:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:36:33",
+        "next_run_at": "2026-06-25 11:37:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:35:33",
+        "next_run_at": "2026-06-25 11:36:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:34:33",
+        "next_run_at": "2026-06-25 11:35:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:33:33",
+        "next_run_at": "2026-06-25 11:34:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:32:33",
+        "next_run_at": "2026-06-25 11:33:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:31:33",
+        "next_run_at": "2026-06-25 11:32:33",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:30:32",
+        "next_run_at": "2026-06-25 11:31:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:29:32",
+        "next_run_at": "2026-06-25 11:30:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:28:32",
+        "next_run_at": "2026-06-25 11:29:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:27:32",
+        "next_run_at": "2026-06-25 11:28:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:26:32",
+        "next_run_at": "2026-06-25 11:27:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:25:32",
+        "next_run_at": "2026-06-25 11:26:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:24:32",
+        "next_run_at": "2026-06-25 11:25:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:23:32",
+        "next_run_at": "2026-06-25 11:24:32",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:22:31",
+        "next_run_at": "2026-06-25 11:23:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:21:31",
+        "next_run_at": "2026-06-25 11:22:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:20:31",
+        "next_run_at": "2026-06-25 11:21:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:19:31",
+        "next_run_at": "2026-06-25 11:20:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:18:31",
+        "next_run_at": "2026-06-25 11:19:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:17:31",
+        "next_run_at": "2026-06-25 11:18:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:16:31",
+        "next_run_at": "2026-06-25 11:17:31",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:15:30",
+        "next_run_at": "2026-06-25 11:16:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:14:30",
+        "next_run_at": "2026-06-25 11:15:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:13:30",
+        "next_run_at": "2026-06-25 11:14:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:12:30",
+        "next_run_at": "2026-06-25 11:13:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:11:30",
+        "next_run_at": "2026-06-25 11:12:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
+        "executed_at": "2026-06-25 11:10:30",
+        "next_run_at": "2026-06-25 11:11:30",
+        "results": [
+            {
+                "command": "bash '\/var\/www\/html\/scripts\/backup_full.sh'",
+                "success": true,
+                "exit_code": 0,
+                "output": "",
+                "error": ""
+            }
+        ]
+    },
+    {
+        "type": "full",
+        "success": true,
         "executed_at": "2026-06-24 22:51:43",
         "next_run_at": "2026-07-01 22:51:43",
         "results": [

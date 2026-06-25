@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 4MyP5M4dZ76JvBV7aaHRNvS5vunwvr46mbxb04HLq0QrP7y85YeHI4KqsdSSZUz
+\restrict SlObMVWThufjPVMbHtg8s9L8f4qXAMJVmCloAcdMVbmqFxreI6BsNaN6okX9WvI
 
 -- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
 -- Dumped by pg_dump version 18.4 (Debian 18.4-1.pgdg12+1)
@@ -241,12 +241,20 @@ DROP FUNCTION IF EXISTS public.actualizar_producto_edicion(p_id_producto integer
 DROP FUNCTION IF EXISTS public.actualizar_password_usuario_login(p_id_usuario integer, p_password_hash text);
 DROP FUNCTION IF EXISTS public.actualizar_cliente_sistema(p_id_cliente integer, p_nombres character varying, p_apellidos character varying, p_telefono character varying, p_direccion character varying, p_identificacion character varying, p_tipo_cliente character varying);
 DROP FUNCTION IF EXISTS public.actualizar_categoria(p_id_categoria integer, p_nombre character varying);
+-- *not* dropping schema, since initdb creates it
 DROP SCHEMA IF EXISTS backup_limpieza_demo;
 --
 -- Name: backup_limpieza_demo; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA backup_limpieza_demo;
+
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+-- *not* creating schema, since initdb creates it
 
 
 --
@@ -4612,7 +4620,7 @@ CREATE TABLE public.plazo (
     fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
     fecha_limite date NOT NULL,
     estado character varying(20) DEFAULT 'Activo'::character varying NOT NULL,
-    CONSTRAINT chk_plazo_estado CHECK (((estado)::text = ANY ((ARRAY['Activo'::character varying, 'Completado'::character varying, 'Cancelado'::character varying])::text[])))
+    CONSTRAINT chk_plazo_estado CHECK (((estado)::text = ANY (ARRAY[('Activo'::character varying)::text, ('Completado'::character varying)::text, ('Cancelado'::character varying)::text])))
 );
 
 
@@ -4631,7 +4639,7 @@ CREATE TABLE public.plazo_cuota (
     fecha_pago_real timestamp without time zone,
     monto_pagado numeric(10,2) DEFAULT 0,
     observaciones text DEFAULT ''::text,
-    CONSTRAINT chk_cuota_estado CHECK (((estado)::text = ANY ((ARRAY['Pendiente'::character varying, 'Pagado'::character varying, 'Vencido'::character varying])::text[])))
+    CONSTRAINT chk_cuota_estado CHECK (((estado)::text = ANY (ARRAY[('Pendiente'::character varying)::text, ('Pagado'::character varying)::text, ('Vencido'::character varying)::text])))
 );
 
 
@@ -5362,9 +5370,9 @@ COPY public.detallefactura (id_detalle, id_factura, id_producto, cantidad, preci
 --
 
 COPY public.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subtotal, descuento, impuesto, total, tipo_cliente_venta, nombre_cliente_fugaz, monto_pagado, saldo_pendiente, porcentaje_pagado, estado_pago, estado_produccion, fecha_orden_produccion, fecha_entrega_estimada, fecha_entrega_real) FROM stdin;
-23	2026-06-24 23:40:19.781929	2	1	1	282.25	120.00	24.34	186.59	Habitual	\N	186.59	0.00	100.00	Pagado	Entregada	2026-06-24 23:40:19.781929	\N	2026-06-24
-22	2026-06-24 23:23:46.989663	16	1	1	282.25	10.00	40.84	313.09	Habitual	\N	156.55	156.54	50.00	Parcial	Cancelada	2026-06-24 23:23:46.989663	\N	\N
-24	2026-06-24 23:42:24.165215	17	1	1	282.25	23.00	38.89	298.14	Habitual	\N	0.00	298.14	0.00	Pendiente	Pendiente	2026-06-24 23:42:24.165215	\N	\N
+22	2026-06-23 00:00:00	16	1	1	282.25	10.00	40.84	313.09	Habitual	\N	156.55	156.54	50.00	Parcial	Cancelada	2026-06-24 23:23:46.989663	\N	\N
+23	2026-06-24 00:00:00	2	1	1	282.25	120.00	24.34	186.59	Habitual	\N	186.59	0.00	100.00	Pagado	Entregada	2026-06-24 23:40:19.781929	\N	2026-06-24
+24	2026-06-25 00:00:00	17	1	1	282.25	23.00	38.89	298.14	Habitual	\N	0.00	298.14	0.00	Pendiente	Pendiente	2026-06-24 23:42:24.165215	\N	\N
 \.
 
 
@@ -5415,15 +5423,15 @@ COPY public.plazo_cuota (id_cuota, id_plazo, numero, porcentaje, monto, fecha_pa
 --
 
 COPY public.producto (id_producto, codigo, nombre, descripcion, imagen, id_categoria, id_proveedor, precio_compra, precio_venta, stock) FROM stdin;
-9	CAM-001	Camiseta Oversize Negra	Camiseta personalizada de algodón para estampado.	prod_bd9ae845c714f7f64699fb75.jpg	1	1	158.75	240.25	41
-10	CAM-002	Camiseta Blanca Personalizada	Camiseta blanca lista para sublimación o serigrafía.	prod_692eb95bbb2083.00268187.gif	1	1	162.50	245.50	1
-11	HOD-001	Hoodie Oversize Negro	Hoodie oversize para estampados personalizados.	prod_69f56fe7efb784.38860716.jpg	2	2	166.25	250.75	43
-12	STK-001	Sticker Holográfico Kitsune	Sticker decorativo holográfico con diseño Kitsune.	prod_d67e3785273607d89e61a401.png	3	3	170.00	256.00	4
-13	TAZ-001	Taza Sublimada Panda	Taza personalizada para sublimación.	prod_69ab914e50de9c2ab70f17e2.jpg	4	4	173.75	261.25	45
-14	GOR-001	Gorra Bordada Negra	Gorra negra personalizable con bordado.	prod_69f570ce0de300.86936150.jpg	5	5	177.50	266.50	46
-15	LLA-001	Llavero Acrílico Anime	Llavero acrílico personalizado con diseño anime.	prod_e155b0fa66e83067205236e4.jpg	6	6	181.25	271.75	2
-16	POS-001	Poster Ilustrado A3	Poster ilustrado en formato A3.	prod_69f56f68b99380.15585436.jpg	7	7	185.00	277.00	48
-17	BOL-001	Bolso Tote Personalizado	Bolso tote personalizado para estampado.	prod_69f57104731e04.45231154.jpg	8	9	188.75	282.25	46
+13	TAZ-001	Taza Sublimada Panda	Taza personalizada para sublimación.	prod_6a3d4811e9a759.48141281.jpg	4	4	173.75	261.25	45
+17	BOL-001	Bolso Tote Personalizado	Bolso tote personalizado para estampado.	prod_6a3d4d9e2f86b2.26887369.jpg	8	9	188.75	282.25	46
+15	LLA-001	Llavero Acrílico Anime	Llavero acrílico personalizado con diseño anime.	prod_6a3d4dc2d6f636.31364712.jpeg	6	6	181.25	271.75	2
+14	GOR-001	Gorra Bordada Negra	Gorra negra personalizable con bordado.	prod_6a3d4deaaad005.84851391.jpg	5	5	177.50	266.50	46
+11	HOD-001	Hoodie Oversize Negro	Hoodie oversize para estampados personalizados.	prod_6a3d4e08d92399.06272938.jpg	2	2	166.25	250.75	43
+10	CAM-002	Camiseta Blanca Personalizada	Camiseta blanca lista para sublimación o serigrafía.	prod_6a3d4e33213c67.44571429.png	1	1	162.50	245.50	1
+9	CAM-001	Camiseta Oversize Negra	Camiseta personalizada de algodón para estampado.	prod_6a3d4e56769ea2.54236464.jpg	1	1	158.75	240.25	41
+12	STK-001	Sticker Holográfico Kitsune	Sticker decorativo holográfico con diseño Kitsune.	prod_6a3d4ea01510a8.17903417.png	3	3	170.00	256.00	4
+16	POS-001	Poster Ilustrado A3	Poster ilustrado en formato A3.	prod_6a3d4ec622ba74.30506706.webp	7	7	185.00	277.00	48
 \.
 
 
@@ -5971,5 +5979,5 @@ ALTER TABLE ONLY public.plazo_cuota
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 4MyP5M4dZ76JvBV7aaHRNvS5vunwvr46mbxb04HLq0QrP7y85YeHI4KqsdSSZUz
+\unrestrict SlObMVWThufjPVMbHtg8s9L8f4qXAMJVmCloAcdMVbmqFxreI6BsNaN6okX9WvI
 
