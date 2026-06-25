@@ -2,8 +2,8 @@
 
     <div class="invoice-summary-card">
         <div class="invoice-summary-header">
-            <span>Resumen financiero</span>
-            <h3>Total de la factura</h3>
+            <span>Resumen</span>
+            <h3>Totales</h3>
         </div>
 
         <div class="invoice-total-row">
@@ -31,26 +31,26 @@
 
         <div class="invoice-plazos-header">
             <span>Plan de pagos</span>
-            <h3>Configure los plazos</h3>
+            <h3>Plazos</h3>
         </div>
 
         <div class="invoice-plazos-info">
-            <p>La factura se creará sin pago inicial. El primer abono se registra desde el detalle de la factura, y producción se iniciará automáticamente al alcanzar el 50%.</p>
+            <p>Sin pago inicial. El primer abono se registra desde el detalle de la factura.</p>
 
             <div class="plazos-info-cards">
                 <div class="plazos-info-card">
                     <div class="plazos-info-card-icon plazos-info-icon-help">?</div>
                     <div class="plazos-info-card-content">
                         <strong>¿Cómo funciona?</strong>
-                        <p>Configure en cuántos pagos fraccionados desea dividir el saldo pendiente. Las fechas se distribuyen automáticamente cada 15 días.</p>
+                        <p>Divida el saldo en cuotas. Las fechas se distribuyen cada 15 días.</p>
                     </div>
                 </div>
 
                 <div class="plazos-info-card">
                     <div class="plazos-info-card-icon plazos-info-icon-produccion">P</div>
                     <div class="plazos-info-card-content">
-                        <strong>Inicio de producción</strong>
-                        <p>La producción comienza cuando el cliente paga al menos el 50% del total de la factura.</p>
+                        <strong>Producción</strong>
+                        <p>Comienza al pagar al menos el 50% del total.</p>
                     </div>
                 </div>
             </div>
@@ -69,7 +69,7 @@
                     value="1"
                     step="1">
                 <small class="plazos-help-text">
-                    Puede configurar entre 1 y 24 cuotas. Las fechas se distribuyen cada 15 días calendario.
+                    Entre 1 y 24 cuotas. Fechas cada 15 días.
                 </small>
             </div>
         </div>
@@ -109,30 +109,31 @@
 
 <style>
     .plazos-info-cards {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
     }
 
     .plazos-info-card {
         display: flex;
-        gap: 10px;
-        padding: 12px;
+        gap: 8px;
+        padding: 8px 10px;
         background: #f8fafc;
         border: 1px solid #e5e7eb;
-        border-radius: 10px;
+        border-radius: 8px;
+        flex: 1;
+        min-width: 0;
     }
 
     .plazos-info-card-icon {
         flex-shrink: 0;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 8px;
-        font-size: 0.8rem;
+        border-radius: 6px;
+        font-size: 0.72rem;
         font-weight: 900;
     }
 
@@ -149,29 +150,29 @@
     .plazos-info-card-content strong {
         display: block;
         color: #111827;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         font-weight: 800;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
     }
 
     .plazos-info-card-content p {
         margin: 0;
         color: #6b7280;
-        font-size: 0.8rem;
-        line-height: 1.4;
+        font-size: 0.74rem;
+        line-height: 1.3;
     }
 
     .plazos-help-text {
         display: block;
-        margin-top: 6px;
+        margin-top: 4px;
         color: #6b7280;
-        font-size: 0.8rem;
-        line-height: 1.4;
+        font-size: 0.78rem;
+        line-height: 1.3;
     }
 
     @media (max-width: 640px) {
         .plazos-info-cards {
-            grid-template-columns: 1fr;
+            flex-direction: column;
         }
     }
 </style>

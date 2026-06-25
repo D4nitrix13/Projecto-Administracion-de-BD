@@ -97,8 +97,8 @@
     .filters-panel,
     .report-filters,
     .filter-form {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) 180px 180px auto auto;
+        display: flex;
+        flex-wrap: wrap;
         gap: 12px;
         align-items: end;
         border: 1px solid #e5e7eb;
@@ -111,7 +111,8 @@
     .form-group {
         display: grid;
         gap: 7px;
-        min-width: 0;
+        min-width: 180px;
+        flex: 1;
     }
 
     .label,
@@ -196,8 +197,9 @@
 
     .reports-charts-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+        grid-template-columns: 1.4fr 1fr;
         gap: 22px;
+        overflow: hidden;
     }
 
     .reports-chart-card {
@@ -205,6 +207,8 @@
         border-radius: 18px;
         background: #ffffff;
         padding: 22px;
+        overflow: hidden;
+        min-width: 0;
     }
 
     .reports-chart-card h2,
@@ -486,19 +490,6 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .reports-filter-bar,
-        .filters-panel,
-        .report-filters,
-        .filter-form {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .reports-filter-actions,
-        .filter-actions {
-            grid-column: 1 / -1;
-            justify-content: flex-end;
-        }
-
         .reports-charts-grid {
             grid-template-columns: 1fr;
         }
@@ -527,12 +518,9 @@
             grid-template-columns: 1fr;
         }
 
-        .reports-filter-bar,
-        .filters-panel,
-        .report-filters,
-        .filter-form {
-            grid-template-columns: 1fr;
-            padding: 16px;
+        .filter-field,
+        .form-group {
+            min-width: 100%;
         }
 
         .reports-filter-actions,

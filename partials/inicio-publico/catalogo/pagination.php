@@ -12,7 +12,7 @@
             <?php if ($pagina > 1): ?>
                 <li>
                     <a
-                        href="index.php?<?= $baseUrl ?>pagina=<?= $pagina - 1 ?>"
+                        href="catalogo.php?<?= $baseUrl ?>pagina=<?= $pagina - 1 ?>"
                         class="catalog-pagination-btn"
                         aria-label="Página anterior">
                         &laquo; Anterior
@@ -26,7 +26,7 @@
 
             if ($inicio > 1): ?>
                 <li>
-                    <a href="index.php?<?= $baseUrl ?>pagina=1" class="catalog-pagination-btn">1</a>
+                    <a href="catalogo.php?<?= $baseUrl ?>pagina=1" class="catalog-pagination-btn">1</a>
                 </li>
                 <?php if ($inicio > 2): ?>
                     <li><span class="catalog-pagination-ellipsis">&hellip;</span></li>
@@ -40,7 +40,7 @@
                             <?= $i ?>
                         </span>
                     <?php else: ?>
-                        <a href="index.php?<?= $baseUrl ?>pagina=<?= $i ?>" class="catalog-pagination-btn">
+                        <a href="catalogo.php?<?= $baseUrl ?>pagina=<?= $i ?>" class="catalog-pagination-btn">
                             <?= $i ?>
                         </a>
                     <?php endif; ?>
@@ -52,7 +52,7 @@
                     <li><span class="catalog-pagination-ellipsis">&hellip;</span></li>
                 <?php endif; ?>
                 <li>
-                    <a href="index.php?<?= $baseUrl ?>pagina=<?= $totalPaginas ?>" class="catalog-pagination-btn">
+                    <a href="catalogo.php?<?= $baseUrl ?>pagina=<?= $totalPaginas ?>" class="catalog-pagination-btn">
                         <?= $totalPaginas ?>
                     </a>
                 </li>
@@ -61,7 +61,7 @@
             <?php if ($pagina < $totalPaginas): ?>
                 <li>
                     <a
-                        href="index.php?<?= $baseUrl ?>pagina=<?= $pagina + 1 ?>"
+                        href="catalogo.php?<?= $baseUrl ?>pagina=<?= $pagina + 1 ?>"
                         class="catalog-pagination-btn"
                         aria-label="Página siguiente">
                         Siguiente &raquo;

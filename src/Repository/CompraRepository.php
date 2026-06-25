@@ -69,7 +69,8 @@ final class CompraRepository
     ): int {
         $statement = $this->connection->prepare("
             SELECT COUNT(*) FROM buscar_compras_filtradas(
-                :busqueda, :id_proveedor, :id_usuario, :fecha_desde, :fecha_hasta
+                :busqueda, :id_proveedor, :id_usuario, :fecha_desde, :fecha_hasta,
+                999999, 0
             )
         ");
 

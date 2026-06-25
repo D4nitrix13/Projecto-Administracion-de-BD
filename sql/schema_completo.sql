@@ -1002,8 +1002,8 @@ BEGIN
         RAISE EXCEPTION 'ID de categoría no válido';
     END IF;
 
-    DELETE FROM Categoria
-    WHERE Categoria.id_categoria = p_id_categoria;
+    DELETE FROM Producto WHERE id_categoria = p_id_categoria;
+    DELETE FROM Categoria WHERE id_categoria = p_id_categoria;
 
     RETURN FOUND;
 END;
@@ -1077,8 +1077,8 @@ BEGIN
         RAISE EXCEPTION 'Producto no válido';
     END IF;
 
-    DELETE FROM Producto
-    WHERE id_producto = p_id_producto;
+    DELETE FROM Detalle_Factura WHERE id_producto = p_id_producto;
+    DELETE FROM Producto WHERE id_producto = p_id_producto;
 
     GET DIAGNOSTICS v_filas_afectadas = ROW_COUNT;
 
@@ -1096,8 +1096,9 @@ BEGIN
         RAISE EXCEPTION 'ID de proveedor no válido';
     END IF;
 
-    DELETE FROM Proveedor
-    WHERE Proveedor.id_proveedor = p_id_proveedor;
+    DELETE FROM Compra WHERE id_proveedor = p_id_proveedor;
+    DELETE FROM Producto WHERE id_proveedor = p_id_proveedor;
+    DELETE FROM Proveedor WHERE id_proveedor = p_id_proveedor;
 
     RETURN FOUND;
 END;

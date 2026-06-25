@@ -1,1 +1,30 @@
-[]
+[
+    {
+        "id": "1f6b4c3f839f178c44dac35157fc322c",
+        "tipo": "backup_manual",
+        "titulo": "Backup manual",
+        "mensaje": "Respaldo generado: backup_manual_backup_manual_2026-06-24_22-59-33.sql",
+        "leida": false,
+        "fecha": "2026-06-24T22:59:33",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "3ff797a255d9d5b56a60e6084d13de84",
+        "tipo": "backup_manual",
+        "titulo": "Backup manual",
+        "mensaje": "Respaldo generado: backup_manual_segundo_backup_manual_2026-06-24_23-13-21.sql",
+        "leida": false,
+        "fecha": "2026-06-24T23:13:21",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    }
+]

@@ -491,6 +491,14 @@
         margin-bottom: 16px;
     }
 
+    .facturas-filtros-bar .filtro-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+    }
+
     .status-badge {
         display: inline-flex;
         align-items: center;

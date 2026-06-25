@@ -55,7 +55,7 @@ require __DIR__ . "/partials/inventario/productos/queries.php";
             <?php else: ?>
                 <div class="products-result-header">
                     <p>
-                        Mostrando <strong><?= count($productos) ?></strong> producto(s)
+                        Mostrando <strong><?= count($productos) ?></strong> de <strong><?= number_format($totalProductos) ?></strong> producto(s)
                     </p>
                 </div>
 

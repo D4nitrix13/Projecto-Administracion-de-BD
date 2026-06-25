@@ -52,7 +52,7 @@ class UsuarioRepository
     {
         $statement = $this->connection->prepare("
             SELECT COUNT(*) FROM buscar_usuarios_filtrados(
-                :busqueda, :id_rol, :seccion_filtro
+                :busqueda, :id_rol, :seccion_filtro, 999999, 0
             )
         ");
 

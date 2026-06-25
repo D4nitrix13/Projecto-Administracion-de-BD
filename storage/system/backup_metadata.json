@@ -1,1 +1,18 @@
-{}
+{
+    "backup_manual_backup_manual_2026-06-24_22-59-33.sql": {
+        "descripcion": "Antes del proyecto",
+        "usuario_id": 1,
+        "tipo": "Manual",
+        "archivo": "backup_manual_backup_manual_2026-06-24_22-59-33.sql",
+        "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_backup_manual_2026-06-24_22-59-33.sql",
+        "created_at": "2026-06-24 22:59:33"
+    },
+    "backup_manual_segundo_backup_manual_2026-06-24_23-13-21.sql": {
+        "descripcion": "",
+        "usuario_id": 1,
+        "tipo": "Manual",
+        "archivo": "backup_manual_segundo_backup_manual_2026-06-24_23-13-21.sql",
+        "ruta": "\/var\/www\/html\/controllers\/..\/backups\/manual\/backup_manual_segundo_backup_manual_2026-06-24_23-13-21.sql",
+        "created_at": "2026-06-24 23:13:21"
+    }
+}

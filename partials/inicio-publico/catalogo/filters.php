@@ -52,7 +52,7 @@
             Aplicar filtros
         </button>
 
-        <a href="index.php" class="catalog-btn catalog-btn-secondary">
+        <a href="catalogo.php" class="catalog-btn catalog-btn-secondary">
             Limpiar
         </a>
     </div>

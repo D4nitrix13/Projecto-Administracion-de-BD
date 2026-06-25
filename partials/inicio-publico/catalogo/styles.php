@@ -730,8 +730,7 @@
     .catalog-most-sold-image img {
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        padding: 8px;
+        object-fit: cover;
     }
 
     .catalog-most-sold-placeholder {
@@ -742,8 +741,9 @@
 
     .catalog-most-sold-badge {
         position: absolute;
-        top: 6px;
-        left: 6px;
+        top: 8px;
+        left: 8px;
+        z-index: 2;
         padding: 3px 8px;
         border-radius: 6px;
         background: #f97316;
@@ -751,6 +751,7 @@
         font-size: 0.68rem;
         font-weight: 800;
         white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
     .catalog-most-sold-name {
@@ -816,8 +817,7 @@
     .catalog-explorer-image img {
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        padding: 8px;
+        object-fit: cover;
     }
 
     .catalog-explorer-placeholder {
@@ -910,8 +910,7 @@
     .catalog-category-main-image img {
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        padding: 8px;
+        object-fit: cover;
     }
 
     .catalog-category-grid-2x2 {
@@ -939,8 +938,7 @@
     .catalog-category-subitem img {
         width: 100%;
         height: 80px;
-        object-fit: contain;
-        padding: 4px;
+        object-fit: cover;
     }
 
     .catalog-category-subitem-placeholder {
@@ -1076,8 +1074,7 @@
     .catalog-product-row-image img {
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        padding: 8px;
+        object-fit: cover;
     }
 
     .catalog-product-row-placeholder {

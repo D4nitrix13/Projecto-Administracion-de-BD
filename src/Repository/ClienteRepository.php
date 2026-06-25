@@ -40,7 +40,7 @@ final class ClienteRepository
             : null;
 
         $statement = $this->connection->prepare("
-            SELECT COUNT(*) FROM buscar_clientes_filtrados(:busqueda, :tipo_cliente)
+            SELECT COUNT(*) FROM buscar_clientes_filtrados(:busqueda, :tipo_cliente, 999999, 0)
         ");
 
         $statement->execute([

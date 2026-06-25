@@ -321,6 +321,35 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
             toggleClienteGroups();
         }
 
+        function actualizarClienteSeleccionado() {
+            if (!clientePickerInput || !clienteHiddenInput) {
+                return;
+            }
+
+            const valor = clientePickerInput.value.trim();
+
+            if (valor === "") {
+                clienteHiddenInput.value = "";
+                return;
+            }
+
+            const valorNormalizado = normalizarTexto(valor);
+
+            const cliente = clientes.find(c => {
+                const nombre = trim(c.nombres || "") + " " + trim(c.apellidos || "");
+                let texto = nombre.trim();
+                if (c.telefono) texto += " - " + c.telefono;
+                if (c.identificacion) texto += " - " + c.identificacion;
+                return normalizarTexto(texto) === valorNormalizado;
+            });
+
+            clienteHiddenInput.value = cliente ? String(cliente.id_cliente) : "";
+        }
+
+        if (clientePickerInput) {
+            clientePickerInput.addEventListener("input", actualizarClienteSeleccionado);
+        }
+
         function obtenerProductoDesdeInput() {
             const valor = inputProducto.value.trim();
             const valorNormalizado = normalizarTexto(valor);
@@ -808,7 +837,11 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
                     return;
                 }
 
-                if (totalFactura > 0 && montoPagado < minimoRequerido) {
+                const plazosCubrenTotal = plazosData.length > 0 &&
+                    plazosData.every(c => c.porcentaje > 0) &&
+                    Math.abs(plazosData.reduce((s, c) => s + c.monto, 0) - (totalFactura - montoPagado)) < 0.02;
+
+                if (totalFactura > 0 && montoPagado < minimoRequerido && !plazosCubrenTotal) {
                     event.preventDefault();
 
                     confirmAction(
@@ -872,7 +905,6 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
 
         actualizarClienteSeleccionado();
         actualizarMensajeVacio();
-        recalcTotals();
 
         // =========================================
         // PLAZOS - Payment Plan Configuration
@@ -885,6 +917,8 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
         const plazosDataInput = document.getElementById("plazos-data-input");
 
         let plazosData = [];
+
+        recalcTotals();
 
         function getTodayStr() {
             const d = new Date();

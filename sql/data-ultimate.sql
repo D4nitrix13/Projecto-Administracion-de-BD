@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict V5NevU0EBVHxMwc8Gie6sxI6SNUjy50UZHb49fCN6zZwXSZW0RMbbgEd4tR1cgg
+\restrict RabYncbGLRo3H7WnIYhqH7Bqk7ljHLu6qztZk1DkOd6Qx3JK8kSBrpORFMkSIgU
 
--- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
--- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg12+1)
+-- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
+-- Dumped by pg_dump version 18.4 (Debian 18.4-1.pgdg12+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,6 +19,7 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE IF EXISTS ONLY public.plazo_cuota DROP CONSTRAINT IF EXISTS plazo_cuota_id_plazo_fkey;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS fk_usuario_seccion;
 ALTER TABLE IF EXISTS ONLY public.usuario DROP CONSTRAINT IF EXISTS fk_usuario_rol;
 ALTER TABLE IF EXISTS ONLY public.producto DROP CONSTRAINT IF EXISTS fk_producto_proveedor;
@@ -34,11 +35,15 @@ ALTER TABLE IF EXISTS ONLY public.compra DROP CONSTRAINT IF EXISTS fk_compra_usu
 ALTER TABLE IF EXISTS ONLY public.compra DROP CONSTRAINT IF EXISTS fk_compra_proveedor;
 ALTER TABLE IF EXISTS ONLY public.auditoria DROP CONSTRAINT IF EXISTS fk_auditoria_usuario;
 ALTER TABLE IF EXISTS ONLY public.factura_estado_historial DROP CONSTRAINT IF EXISTS factura_estado_historial_id_factura_fkey;
+DROP TRIGGER IF EXISTS trg_factura_normalizar_pago_y_entrega ON public.factura;
 DROP TRIGGER IF EXISTS trg_factura_estado_historial ON public.factura;
 DROP TRIGGER IF EXISTS trg_auditar_delete_proveedor ON public.proveedor;
 DROP TRIGGER IF EXISTS trg_auditar_delete_producto ON public.producto;
 DROP TRIGGER IF EXISTS trg_auditar_delete_cliente ON public.cliente;
 DROP TRIGGER IF EXISTS trg_auditar_delete_categoria ON public.categoria;
+DROP INDEX IF EXISTS public.idx_plazo_factura;
+DROP INDEX IF EXISTS public.idx_plazo_cuota_plazo;
+DROP INDEX IF EXISTS public.idx_plazo_cuota_estado;
 DROP INDEX IF EXISTS public.idx_factura_estado_historial_factura;
 DROP INDEX IF EXISTS public.idx_auditoria_tabla_afectada;
 DROP INDEX IF EXISTS public.idx_auditoria_registro_id;
@@ -53,6 +58,8 @@ ALTER TABLE IF EXISTS ONLY public.rol DROP CONSTRAINT IF EXISTS rol_nombre_key;
 ALTER TABLE IF EXISTS ONLY public.proveedor DROP CONSTRAINT IF EXISTS proveedor_pkey;
 ALTER TABLE IF EXISTS ONLY public.producto DROP CONSTRAINT IF EXISTS producto_pkey;
 ALTER TABLE IF EXISTS ONLY public.producto DROP CONSTRAINT IF EXISTS producto_codigo_key;
+ALTER TABLE IF EXISTS ONLY public.plazo DROP CONSTRAINT IF EXISTS plazo_pkey;
+ALTER TABLE IF EXISTS ONLY public.plazo_cuota DROP CONSTRAINT IF EXISTS plazo_cuota_pkey;
 ALTER TABLE IF EXISTS ONLY public.factura DROP CONSTRAINT IF EXISTS factura_pkey;
 ALTER TABLE IF EXISTS ONLY public.factura_estado_historial DROP CONSTRAINT IF EXISTS factura_estado_historial_pkey;
 ALTER TABLE IF EXISTS ONLY public.detallefactura DROP CONSTRAINT IF EXISTS detallefactura_pkey;
@@ -67,6 +74,8 @@ ALTER TABLE IF EXISTS public.seccion ALTER COLUMN id_seccion DROP DEFAULT;
 ALTER TABLE IF EXISTS public.rol ALTER COLUMN id_rol DROP DEFAULT;
 ALTER TABLE IF EXISTS public.proveedor ALTER COLUMN id_proveedor DROP DEFAULT;
 ALTER TABLE IF EXISTS public.producto ALTER COLUMN id_producto DROP DEFAULT;
+ALTER TABLE IF EXISTS public.plazo_cuota ALTER COLUMN id_cuota DROP DEFAULT;
+ALTER TABLE IF EXISTS public.plazo ALTER COLUMN id_plazo DROP DEFAULT;
 ALTER TABLE IF EXISTS public.factura_estado_historial ALTER COLUMN id_historial DROP DEFAULT;
 ALTER TABLE IF EXISTS public.factura ALTER COLUMN id_factura DROP DEFAULT;
 ALTER TABLE IF EXISTS public.detallefactura ALTER COLUMN id_detalle DROP DEFAULT;
@@ -85,6 +94,10 @@ DROP SEQUENCE IF EXISTS public.proveedor_id_proveedor_seq;
 DROP TABLE IF EXISTS public.proveedor;
 DROP SEQUENCE IF EXISTS public.producto_id_producto_seq;
 DROP TABLE IF EXISTS public.producto;
+DROP SEQUENCE IF EXISTS public.plazo_id_plazo_seq;
+DROP SEQUENCE IF EXISTS public.plazo_cuota_id_cuota_seq;
+DROP TABLE IF EXISTS public.plazo_cuota;
+DROP TABLE IF EXISTS public.plazo;
 DROP SEQUENCE IF EXISTS public.factura_id_factura_seq;
 DROP SEQUENCE IF EXISTS public.factura_estado_historial_id_historial_seq;
 DROP TABLE IF EXISTS public.factura_estado_historial;
@@ -110,8 +123,9 @@ DROP FUNCTION IF EXISTS public.registrar_cliente_sistema(p_nombres character var
 DROP PROCEDURE IF EXISTS public.registrar_cliente(IN p_nombres character varying, IN p_apellidos character varying, IN p_telefono character varying, IN p_direccion character varying, IN p_identificacion character varying, IN p_tipo_cliente character varying);
 DROP FUNCTION IF EXISTS public.registrar_categoria(p_nombre character varying);
 DROP PROCEDURE IF EXISTS public.registrar_auditoria(IN p_usuario character varying, IN p_accion character varying, IN p_tabla_afectada character varying, IN p_descripcion text);
+DROP FUNCTION IF EXISTS public.productos_mas_vendidos_catalogo(p_limite integer);
 DROP FUNCTION IF EXISTS public.obtener_ventas_por_dia_reportes(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone);
-DROP FUNCTION IF EXISTS public.obtener_ventas_detalladas_reportes(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone);
+DROP FUNCTION IF EXISTS public.obtener_ventas_detalladas_reportes(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone, p_limit integer, p_offset integer);
 DROP FUNCTION IF EXISTS public.obtener_ventas_dashboard(p_dias integer);
 DROP FUNCTION IF EXISTS public.obtener_usuario_login(p_email character varying);
 DROP FUNCTION IF EXISTS public.obtener_usuario_edicion_por_id(p_id_usuario integer);
@@ -126,9 +140,16 @@ DROP FUNCTION IF EXISTS public.obtener_seccion_por_nombre(p_nombre character var
 DROP FUNCTION IF EXISTS public.obtener_seccion_por_id(p_id_seccion integer);
 DROP FUNCTION IF EXISTS public.obtener_resumen_cliente(p_id_cliente integer);
 DROP FUNCTION IF EXISTS public.obtener_proveedor_por_id(p_id_proveedor integer);
-DROP FUNCTION IF EXISTS public.obtener_productos_reporte(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone);
+DROP FUNCTION IF EXISTS public.obtener_productos_stock_bajo();
+DROP FUNCTION IF EXISTS public.obtener_productos_reporte(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone, p_limit integer, p_offset integer);
+DROP FUNCTION IF EXISTS public.obtener_productos_menos_vendidos_semana(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_productos_menos_vendidos_mes(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_productos_menos_vendidos_anio(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_productos_mas_vendidos_semana(p_limit integer);
 DROP FUNCTION IF EXISTS public.obtener_productos_mas_vendidos_reportes(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone);
+DROP FUNCTION IF EXISTS public.obtener_productos_mas_vendidos_mes(p_limit integer);
 DROP FUNCTION IF EXISTS public.obtener_productos_mas_vendidos_dashboard(p_limite integer);
+DROP FUNCTION IF EXISTS public.obtener_productos_mas_vendidos_anio(p_limit integer);
 DROP FUNCTION IF EXISTS public.obtener_productos_factura_por_ids(p_ids_productos integer[]);
 DROP FUNCTION IF EXISTS public.obtener_producto_imagen(p_id_producto integer);
 DROP FUNCTION IF EXISTS public.obtener_producto_edicion_por_id(p_id_producto integer);
@@ -142,11 +163,19 @@ DROP FUNCTION IF EXISTS public.obtener_factura_detalle_por_id(p_id_factura integ
 DROP FUNCTION IF EXISTS public.obtener_detalles_factura_edicion(p_id_factura integer);
 DROP FUNCTION IF EXISTS public.obtener_detalles_compra(p_id_compra integer);
 DROP FUNCTION IF EXISTS public.obtener_compra_por_id(p_id_compra integer);
-DROP FUNCTION IF EXISTS public.obtener_clientes_reporte(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone);
+DROP FUNCTION IF EXISTS public.obtener_clientes_top_compras_semanal(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_clientes_top_compras_mensual(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_clientes_top_compras_anual(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_clientes_reporte(p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone, p_limit integer, p_offset integer);
 DROP FUNCTION IF EXISTS public.obtener_clientes_recientes_dashboard(p_limite integer);
+DROP FUNCTION IF EXISTS public.obtener_clientes_menos_compras_semanal(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_clientes_menos_compras_mensual(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_clientes_menos_compras_anual(p_limit integer);
 DROP FUNCTION IF EXISTS public.obtener_cliente_por_id(p_id_cliente integer);
 DROP FUNCTION IF EXISTS public.obtener_cliente_factura_edicion(p_id_cliente integer);
 DROP FUNCTION IF EXISTS public.obtener_cliente_edicion_por_id(p_id_cliente integer);
+DROP FUNCTION IF EXISTS public.obtener_categorias_menos_productos(p_limit integer);
+DROP FUNCTION IF EXISTS public.obtener_categorias_menos_productos();
 DROP FUNCTION IF EXISTS public.obtener_categoria_por_id(p_id_categoria integer);
 DROP FUNCTION IF EXISTS public.listar_usuarios_para_compras();
 DROP FUNCTION IF EXISTS public.listar_usuarios_ordenados();
@@ -162,6 +191,7 @@ DROP FUNCTION IF EXISTS public.listar_categorias_producto();
 DROP FUNCTION IF EXISTS public.listar_categorias_ordenadas();
 DROP FUNCTION IF EXISTS public.listar_categorias_form_producto();
 DROP FUNCTION IF EXISTS public.listar_categorias_catalogo();
+DROP FUNCTION IF EXISTS public.fn_factura_normalizar_pago_y_entrega();
 DROP FUNCTION IF EXISTS public.fn_auditar_delete_generico();
 DROP FUNCTION IF EXISTS public.eliminar_usuario_sistema(p_id_usuario integer, p_id_usuario_actual integer);
 DROP FUNCTION IF EXISTS public.eliminar_proveedor_sistema(p_id_proveedor integer);
@@ -175,15 +205,15 @@ DROP FUNCTION IF EXISTS public.crear_usuario_sistema(p_nombre character varying,
 DROP FUNCTION IF EXISTS public.crear_proveedor_sistema(p_nombre character varying, p_telefono character varying, p_email character varying, p_direccion character varying);
 DROP FUNCTION IF EXISTS public.calcular_total_compra(p_id_compra integer);
 DROP FUNCTION IF EXISTS public.calcular_subtotal_factura(p_id_factura integer);
-DROP FUNCTION IF EXISTS public.buscar_usuarios_filtrados(p_busqueda text, p_id_rol integer, p_seccion_filtro text);
-DROP FUNCTION IF EXISTS public.buscar_proveedores_filtrados(p_busqueda text);
-DROP FUNCTION IF EXISTS public.buscar_productos_inventario(p_busqueda text, p_id_categoria integer, p_id_proveedor integer, p_id_producto integer, p_stock_bajo boolean);
+DROP FUNCTION IF EXISTS public.buscar_usuarios_filtrados(p_busqueda text, p_id_rol integer, p_seccion_filtro text, p_limit integer, p_offset integer);
+DROP FUNCTION IF EXISTS public.buscar_proveedores_filtrados(p_busqueda text, p_limit integer, p_offset integer);
+DROP FUNCTION IF EXISTS public.buscar_productos_inventario(p_busqueda text, p_id_categoria integer, p_id_proveedor integer, p_id_producto integer, p_stock_bajo boolean, p_orden text, p_limit integer, p_offset integer);
+DROP FUNCTION IF EXISTS public.buscar_productos_catalogo(p_busqueda text, p_id_categoria integer, p_disponibilidad character varying, p_limite integer, p_offset integer);
 DROP FUNCTION IF EXISTS public.buscar_productos_catalogo(p_busqueda text, p_id_categoria integer, p_disponibilidad character varying);
-DROP FUNCTION IF EXISTS public.productos_mas_vendidos_catalogo(p_limite integer);
-DROP FUNCTION IF EXISTS public.buscar_facturas_filtradas(p_id_rol integer, p_busqueda text, p_id_seccion integer, p_id_usuario integer, p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone);
-DROP FUNCTION IF EXISTS public.buscar_compras_filtradas(p_busqueda text, p_id_proveedor integer, p_id_usuario integer, p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone);
-DROP FUNCTION IF EXISTS public.buscar_clientes_filtrados(p_busqueda text, p_tipo_cliente character varying);
-DROP FUNCTION IF EXISTS public.buscar_categorias(p_busqueda text);
+DROP FUNCTION IF EXISTS public.buscar_facturas_filtradas(p_id_rol integer, p_busqueda text, p_id_seccion integer, p_id_usuario integer, p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone, p_estado_pago text, p_estado_produccion text, p_limit integer, p_offset integer);
+DROP FUNCTION IF EXISTS public.buscar_compras_filtradas(p_busqueda text, p_id_proveedor integer, p_id_usuario integer, p_fecha_desde timestamp without time zone, p_fecha_hasta timestamp without time zone, p_limit integer, p_offset integer);
+DROP FUNCTION IF EXISTS public.buscar_clientes_filtrados(p_busqueda text, p_tipo_cliente character varying, p_limit integer, p_offset integer);
+DROP FUNCTION IF EXISTS public.buscar_categorias(p_busqueda text, p_limit integer, p_offset integer, p_orden text);
 DROP PROCEDURE IF EXISTS public.aumentar_stock_producto(IN p_id_producto integer, IN p_cantidad integer);
 DROP PROCEDURE IF EXISTS public.agregar_detalle_factura(IN p_id_factura integer, IN p_id_producto integer, IN p_cantidad integer, IN p_descuento_linea numeric);
 DROP PROCEDURE IF EXISTS public.agregar_detalle_compra(IN p_id_compra integer, IN p_id_producto integer, IN p_cantidad integer, IN p_costo_unitario numeric);
@@ -196,14 +226,6 @@ DROP FUNCTION IF EXISTS public.actualizar_producto_edicion(p_id_producto integer
 DROP FUNCTION IF EXISTS public.actualizar_password_usuario_login(p_id_usuario integer, p_password_hash text);
 DROP FUNCTION IF EXISTS public.actualizar_cliente_sistema(p_id_cliente integer, p_nombres character varying, p_apellidos character varying, p_telefono character varying, p_direccion character varying, p_identificacion character varying, p_tipo_cliente character varying);
 DROP FUNCTION IF EXISTS public.actualizar_categoria(p_id_categoria integer, p_nombre character varying);
--- *not* dropping schema, since initdb creates it
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
-
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
@@ -666,31 +688,71 @@ $$;
 
 
 --
--- Name: buscar_categorias(text); Type: FUNCTION; Schema: public; Owner: -
+-- Name: buscar_categorias(text, integer, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.buscar_categorias(p_busqueda text DEFAULT ''::text) RETURNS TABLE(id_categoria integer, nombre character varying)
+CREATE FUNCTION public.buscar_categorias(p_busqueda text DEFAULT ''::text, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0, p_orden text DEFAULT 'nombre'::text) RETURNS TABLE(id_categoria integer, nombre character varying, cantidad_productos bigint, stock_total bigint, total_vendido numeric)
     LANGUAGE plpgsql
     AS $$
 BEGIN
     RETURN QUERY
     SELECT
         c.id_categoria,
-        c.nombre
+        c.nombre,
+        COUNT(p.id_producto) AS cantidad_productos,
+        COALESCE(SUM(p.stock), 0) AS stock_total,
+        COALESCE(vc.total_vendido, 0) AS total_vendido
     FROM Categoria c
+    LEFT JOIN Producto p ON p.id_categoria = c.id_categoria
+    LEFT JOIN LATERAL (
+        SELECT SUM(df.total_linea) AS total_vendido
+        FROM DetalleFactura df
+        INNER JOIN Factura f ON f.id_factura = df.id_factura
+        INNER JOIN Producto p2 ON p2.id_producto = df.id_producto
+        WHERE p2.id_categoria = c.id_categoria
+          AND f.estado_produccion != 'Cancelada'
+          AND (
+              (p_orden IN ('mas_vendidos_mes', 'menos_vendidos_mes')
+               AND f.fecha >= date_trunc('month', CURRENT_DATE)
+               AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month')
+              OR
+              (p_orden IN ('mas_vendidos_semana', 'menos_vendidos_semana')
+               AND f.fecha >= date_trunc('week', CURRENT_DATE)
+               AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week')
+              OR
+              (p_orden IN ('mas_vendidos_anio', 'menos_vendidos_anio')
+               AND f.fecha >= date_trunc('year', CURRENT_DATE)
+               AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year')
+              OR
+              (p_orden = 'total_ventas')
+          )
+    ) vc ON TRUE
     WHERE
         COALESCE(TRIM(p_busqueda), '') = ''
         OR c.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
-    ORDER BY c.nombre ASC;
+    GROUP BY c.id_categoria, c.nombre, vc.total_vendido
+    ORDER BY
+        CASE WHEN p_orden = 'mas_vendidos_mes' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_mes' THEN COALESCE(vc.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_semana' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_semana' THEN COALESCE(vc.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_anio' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_anio' THEN COALESCE(vc.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'total_ventas' THEN COALESCE(vc.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'mas_productos' THEN COUNT(p.id_producto) END DESC,
+        CASE WHEN p_orden = 'menos_productos' THEN COUNT(p.id_producto) END ASC,
+        CASE WHEN p_orden = 'stock_total' THEN COALESCE(SUM(p.stock), 0) END DESC,
+        c.nombre ASC
+    LIMIT p_limit OFFSET p_offset;
 END;
 $$;
 
 
 --
--- Name: buscar_clientes_filtrados(text, character varying); Type: FUNCTION; Schema: public; Owner: -
+-- Name: buscar_clientes_filtrados(text, character varying, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.buscar_clientes_filtrados(p_busqueda text DEFAULT NULL::text, p_tipo_cliente character varying DEFAULT NULL::character varying) RETURNS TABLE(id_cliente integer, nombres character varying, apellidos character varying, telefono character varying, direccion character varying, identificacion character varying, tipo_cliente character varying)
+CREATE FUNCTION public.buscar_clientes_filtrados(p_busqueda text DEFAULT NULL::text, p_tipo_cliente character varying DEFAULT NULL::character varying, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_cliente integer, nombres character varying, apellidos character varying, telefono character varying, direccion character varying, identificacion character varying, tipo_cliente character varying)
     LANGUAGE plpgsql
     AS $_$
 DECLARE
@@ -762,16 +824,17 @@ BEGIN
             OR TRIM(p_tipo_cliente) = ''
             OR c.tipo_cliente = p_tipo_cliente
         )
-    ORDER BY c.id_cliente DESC;
+    ORDER BY c.id_cliente DESC
+    LIMIT p_limit OFFSET p_offset;
 END;
 $_$;
 
 
 --
--- Name: buscar_compras_filtradas(text, integer, integer, timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: -
+-- Name: buscar_compras_filtradas(text, integer, integer, timestamp without time zone, timestamp without time zone, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.buscar_compras_filtradas(p_busqueda text DEFAULT NULL::text, p_id_proveedor integer DEFAULT NULL::integer, p_id_usuario integer DEFAULT NULL::integer, p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(id_compra integer, fecha timestamp without time zone, total numeric, proveedor character varying, usuario character varying)
+CREATE FUNCTION public.buscar_compras_filtradas(p_busqueda text DEFAULT NULL::text, p_id_proveedor integer DEFAULT NULL::integer, p_id_usuario integer DEFAULT NULL::integer, p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_compra integer, fecha timestamp without time zone, total numeric, proveedor character varying, usuario character varying)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -816,16 +879,17 @@ BEGIN
             p_fecha_hasta IS NULL
             OR c.fecha <= p_fecha_hasta
         )
-    ORDER BY c.fecha DESC;
+    ORDER BY c.fecha DESC
+    LIMIT p_limit OFFSET p_offset;
 END;
 $$;
 
 
 --
--- Name: buscar_facturas_filtradas(integer, text, integer, integer, timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: -
+-- Name: buscar_facturas_filtradas(integer, text, integer, integer, timestamp without time zone, timestamp without time zone, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.buscar_facturas_filtradas(p_id_rol integer DEFAULT NULL::integer, p_busqueda text DEFAULT NULL::text, p_id_seccion integer DEFAULT NULL::integer, p_id_usuario integer DEFAULT NULL::integer, p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(id_factura integer, fecha timestamp without time zone, total numeric, cliente text, usuario character varying, seccion character varying)
+CREATE FUNCTION public.buscar_facturas_filtradas(p_id_rol integer DEFAULT NULL::integer, p_busqueda text DEFAULT NULL::text, p_id_seccion integer DEFAULT NULL::integer, p_id_usuario integer DEFAULT NULL::integer, p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone, p_estado_pago text DEFAULT NULL::text, p_estado_produccion text DEFAULT NULL::text, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_factura integer, fecha timestamp without time zone, total numeric, cliente text, usuario character varying, seccion character varying, estado_pago character varying, estado_produccion character varying)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -848,7 +912,9 @@ BEGIN
         f.total,
         c.nombres || ' ' || c.apellidos AS cliente,
         u.nombre AS usuario,
-        s.nombre AS seccion
+        s.nombre AS seccion,
+        f.estado_pago,
+        f.estado_produccion
     FROM Factura f
     JOIN Cliente c ON f.id_cliente = c.id_cliente
     JOIN Usuario u ON f.id_usuario = u.id_usuario
@@ -887,7 +953,18 @@ BEGIN
             p_fecha_hasta IS NULL
             OR f.fecha <= p_fecha_hasta
         )
-    ORDER BY f.fecha DESC, f.id_factura DESC;
+      AND (
+            p_estado_pago IS NULL
+            OR TRIM(p_estado_pago) = ''
+            OR f.estado_pago = p_estado_pago
+        )
+      AND (
+            p_estado_produccion IS NULL
+            OR TRIM(p_estado_produccion) = ''
+            OR f.estado_produccion = p_estado_produccion
+        )
+    ORDER BY f.fecha DESC, f.id_factura DESC
+    LIMIT p_limit OFFSET p_offset;
 END;
 $$;
 
@@ -963,10 +1040,121 @@ $$;
 
 
 --
--- Name: buscar_productos_inventario(text, integer, integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: -
+-- Name: buscar_productos_catalogo(text, integer, character varying, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.buscar_productos_inventario(p_busqueda text DEFAULT ''::text, p_id_categoria integer DEFAULT NULL::integer, p_id_proveedor integer DEFAULT NULL::integer, p_id_producto integer DEFAULT NULL::integer, p_stock_bajo boolean DEFAULT false) RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, descripcion text, imagen character varying, categoria character varying, proveedor character varying, precio_compra numeric, precio_venta numeric, stock integer)
+CREATE FUNCTION public.buscar_productos_catalogo(p_busqueda text DEFAULT NULL::text, p_id_categoria integer DEFAULT NULL::integer, p_disponibilidad character varying DEFAULT NULL::character varying, p_limite integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, descripcion text, imagen character varying, categoria character varying, precio_venta numeric, stock integer, total_registros bigint)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total BIGINT;
+BEGIN
+    IF p_id_categoria IS NOT NULL AND p_id_categoria <= 0 THEN
+        RAISE EXCEPTION 'ID de categoría no válido';
+    END IF;
+
+    IF p_disponibilidad IS NOT NULL
+       AND p_disponibilidad <> ''
+       AND p_disponibilidad NOT IN ('disponible', 'stock_bajo', 'agotado') THEN
+        RAISE EXCEPTION 'Filtro de disponibilidad no válido';
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_total
+    FROM Producto p
+    LEFT JOIN Categoria c ON p.id_categoria = c.id_categoria
+    WHERE c.nombre <> 'Categoria Temporal'
+      AND (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR p.codigo ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.descripcion ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR c.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+      AND (
+            p_id_categoria IS NULL
+            OR p.id_categoria = p_id_categoria
+        )
+      AND (
+            p_disponibilidad IS NULL
+            OR p_disponibilidad = ''
+            OR (
+                p_disponibilidad = 'disponible'
+                AND p.stock > 5
+            )
+            OR (
+                p_disponibilidad = 'stock_bajo'
+                AND p.stock > 0
+                AND p.stock <= 5
+            )
+            OR (
+                p_disponibilidad = 'agotado'
+                AND p.stock <= 0
+            )
+        );
+
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.codigo,
+        p.nombre,
+        p.descripcion,
+        p.imagen,
+        c.nombre AS categoria,
+        p.precio_venta,
+        p.stock,
+        v_total AS total_registros
+    FROM Producto p
+    LEFT JOIN Categoria c ON p.id_categoria = c.id_categoria
+    WHERE c.nombre <> 'Categoria Temporal'
+      AND (
+            p_busqueda IS NULL
+            OR TRIM(p_busqueda) = ''
+            OR p.codigo ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR p.descripcion ILIKE '%' || TRIM(p_busqueda) || '%'
+            OR c.nombre ILIKE '%' || TRIM(p_busqueda) || '%'
+        )
+      AND (
+            p_id_categoria IS NULL
+            OR p.id_categoria = p_id_categoria
+        )
+      AND (
+            p_disponibilidad IS NULL
+            OR p_disponibilidad = ''
+            OR (
+                p_disponibilidad = 'disponible'
+                AND p.stock > 5
+            )
+            OR (
+                p_disponibilidad = 'stock_bajo'
+                AND p.stock > 0
+                AND p.stock <= 5
+            )
+            OR (
+                p_disponibilidad = 'agotado'
+                AND p.stock <= 0
+            )
+        )
+    ORDER BY
+        CASE
+            WHEN p.stock <= 0 THEN 2
+            WHEN p.stock <= 5 THEN 1
+            ELSE 0
+        END,
+        p.nombre ASC
+    LIMIT p_limite
+    OFFSET p_offset;
+END;
+$$;
+
+
+--
+-- Name: buscar_productos_inventario(text, integer, integer, integer, boolean, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.buscar_productos_inventario(p_busqueda text DEFAULT ''::text, p_id_categoria integer DEFAULT NULL::integer, p_id_proveedor integer DEFAULT NULL::integer, p_id_producto integer DEFAULT NULL::integer, p_stock_bajo boolean DEFAULT false, p_orden text DEFAULT 'nombre'::text, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, descripcion text, imagen character varying, categoria character varying, proveedor character varying, precio_compra numeric, precio_venta numeric, stock integer, total_vendido numeric)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -981,10 +1169,33 @@ BEGIN
         prov.nombre AS proveedor,
         prod.precio_compra,
         prod.precio_venta,
-        prod.stock
+        prod.stock,
+        COALESCE(ventas.total_vendido, 0) AS total_vendido
     FROM Producto prod
     LEFT JOIN Categoria cat ON prod.id_categoria = cat.id_categoria
     LEFT JOIN Proveedor prov ON prod.id_proveedor = prov.id_proveedor
+    LEFT JOIN LATERAL (
+        SELECT SUM(df.total_linea) AS total_vendido
+        FROM DetalleFactura df
+        INNER JOIN Factura f ON f.id_factura = df.id_factura
+        WHERE df.id_producto = prod.id_producto
+          AND f.estado_produccion != 'Cancelada'
+          AND (
+              (p_orden IN ('mas_vendidos_mes', 'menos_vendidos_mes')
+               AND f.fecha >= date_trunc('month', CURRENT_DATE)
+               AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month')
+              OR
+              (p_orden IN ('mas_vendidos_semana', 'menos_vendidos_semana')
+               AND f.fecha >= date_trunc('week', CURRENT_DATE)
+               AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week')
+              OR
+              (p_orden IN ('mas_vendidos_anio', 'menos_vendidos_anio')
+               AND f.fecha >= date_trunc('year', CURRENT_DATE)
+               AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year')
+              OR
+              (p_orden = 'total_ventas')
+          )
+    ) ventas ON TRUE
     WHERE
         (
             p_id_producto IS NULL
@@ -1007,16 +1218,28 @@ BEGIN
             p_stock_bajo = FALSE
             OR prod.stock <= 5
         )
-    ORDER BY prod.nombre ASC;
+    ORDER BY
+        CASE WHEN p_orden = 'mas_vendidos_mes' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_mes' THEN COALESCE(ventas.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_semana' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_semana' THEN COALESCE(ventas.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'mas_vendidos_anio' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'menos_vendidos_anio' THEN COALESCE(ventas.total_vendido, 0) END ASC,
+        CASE WHEN p_orden = 'total_ventas' THEN COALESCE(ventas.total_vendido, 0) END DESC,
+        CASE WHEN p_orden = 'stock_bajo' THEN prod.stock END ASC,
+        CASE WHEN p_orden = 'precio_mayor' THEN prod.precio_venta END DESC,
+        CASE WHEN p_orden = 'precio_menor' THEN prod.precio_venta END ASC,
+        prod.nombre ASC
+    LIMIT p_limit OFFSET p_offset;
 END;
 $$;
 
 
 --
--- Name: buscar_proveedores_filtrados(text); Type: FUNCTION; Schema: public; Owner: -
+-- Name: buscar_proveedores_filtrados(text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.buscar_proveedores_filtrados(p_busqueda text DEFAULT NULL::text) RETURNS TABLE(id_proveedor integer, nombre character varying, telefono character varying, email character varying, direccion character varying)
+CREATE FUNCTION public.buscar_proveedores_filtrados(p_busqueda text DEFAULT NULL::text, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_proveedor integer, nombre character varying, telefono character varying, email character varying, direccion character varying)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -1037,16 +1260,17 @@ BEGIN
             OR p.email ILIKE '%' || TRIM(p_busqueda) || '%'
             OR p.direccion ILIKE '%' || TRIM(p_busqueda) || '%'
         )
-    ORDER BY p.nombre ASC;
+    ORDER BY p.nombre ASC
+    LIMIT p_limit OFFSET p_offset;
 END;
 $$;
 
 
 --
--- Name: buscar_usuarios_filtrados(text, integer, text); Type: FUNCTION; Schema: public; Owner: -
+-- Name: buscar_usuarios_filtrados(text, integer, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.buscar_usuarios_filtrados(p_busqueda text DEFAULT NULL::text, p_id_rol integer DEFAULT NULL::integer, p_seccion_filtro text DEFAULT NULL::text) RETURNS TABLE(id_usuario integer, nombre character varying, email character varying, id_rol integer, id_seccion integer, rol character varying, seccion character varying)
+CREATE FUNCTION public.buscar_usuarios_filtrados(p_busqueda text DEFAULT NULL::text, p_id_rol integer DEFAULT NULL::integer, p_seccion_filtro text DEFAULT NULL::text, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_usuario integer, nombre character varying, email character varying, id_rol integer, id_seccion integer, rol character varying, seccion character varying)
     LANGUAGE plpgsql
     AS $_$
 BEGIN
@@ -1091,7 +1315,8 @@ BEGIN
                 AND u.id_seccion = p_seccion_filtro::INT
             )
         )
-    ORDER BY u.nombre ASC;
+    ORDER BY u.nombre ASC
+    LIMIT p_limit OFFSET p_offset;
 END;
 $_$;
 
@@ -1364,7 +1589,7 @@ BEGIN
     DELETE FROM detallefactura WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_categoria = p_id_categoria);
     DELETE FROM detallecompra WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_categoria = p_id_categoria);
     DELETE FROM Producto WHERE id_categoria = p_id_categoria;
-    DELETE FROM Categoria WHERE Categoria.id_categoria = p_id_categoria;
+    DELETE FROM Categoria WHERE id_categoria = p_id_categoria;
 
     RETURN FOUND;
 END;
@@ -1423,11 +1648,18 @@ BEGIN
     WHERE df.id_producto = p.id_producto
       AND df.id_factura = p_id_factura;
 
-    -- 2) Eliminar detalles de la factura
+    -- 2) Eliminar plazos y cuotas (cascade)
+    DELETE FROM plazo WHERE id_factura = p_id_factura;
+
+    -- 3) Eliminar historial de estados
+    DELETE FROM factura_estado_historial
+    WHERE id_factura = p_id_factura;
+
+    -- 4) Eliminar detalles de la factura
     DELETE FROM DetalleFactura
     WHERE id_factura = p_id_factura;
 
-    -- 3) Eliminar factura principal
+    -- 5) Eliminar factura principal
     DELETE FROM Factura
     WHERE id_factura = p_id_factura;
 
@@ -1483,7 +1715,7 @@ BEGIN
     DELETE FROM detallefactura WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_proveedor = p_id_proveedor);
     DELETE FROM Compra WHERE id_proveedor = p_id_proveedor;
     DELETE FROM Producto WHERE id_proveedor = p_id_proveedor;
-    DELETE FROM Proveedor WHERE Proveedor.id_proveedor = p_id_proveedor;
+    DELETE FROM Proveedor WHERE id_proveedor = p_id_proveedor;
 
     RETURN FOUND;
 END;
@@ -1567,6 +1799,64 @@ $$;
 
 
 --
+-- Name: fn_factura_normalizar_pago_y_entrega(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fn_factura_normalizar_pago_y_entrega() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total numeric(10,2);
+    v_pagado numeric(10,2);
+    v_saldo numeric(10,2);
+BEGIN
+    v_total := ROUND(GREATEST(COALESCE(NEW.total, 0), 0), 2);
+    v_pagado := ROUND(GREATEST(COALESCE(NEW.monto_pagado, 0), 0), 2);
+
+    IF v_pagado > v_total THEN
+        v_pagado := v_total;
+    END IF;
+
+    v_saldo := ROUND(GREATEST(v_total - v_pagado, 0), 2);
+
+    NEW.total := v_total;
+    NEW.monto_pagado := v_pagado;
+    NEW.saldo_pendiente := v_saldo;
+
+    NEW.porcentaje_pagado := CASE
+        WHEN v_total <= 0 THEN 0
+        ELSE ROUND((v_pagado / v_total) * 100, 2)
+    END;
+
+    NEW.estado_pago := CASE
+        WHEN v_pagado <= 0 THEN 'Pendiente'
+        WHEN v_pagado < v_total THEN 'Parcial'
+        ELSE 'Pagado'
+    END;
+
+    IF NEW.estado_produccion = 'Entregada'
+       AND (
+            NEW.estado_pago <> 'Pagado'
+            OR NEW.saldo_pendiente > 0
+            OR NEW.monto_pagado < NEW.total
+       )
+    THEN
+        RAISE EXCEPTION
+            'No se puede marcar como Entregada una factura con saldo pendiente. El cliente debe cancelar el total antes de la entrega.';
+    END IF;
+
+    IF NEW.estado_produccion = 'Entregada'
+       AND NEW.fecha_entrega_real IS NULL
+    THEN
+        NEW.fecha_entrega_real := CURRENT_DATE;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: listar_categorias_catalogo(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1579,6 +1869,7 @@ BEGIN
         c.id_categoria,
         c.nombre
     FROM Categoria c
+    WHERE c.nombre <> 'Categoria Temporal'
     ORDER BY c.nombre;
 END;
 $$;
@@ -1847,6 +2138,47 @@ $$;
 
 
 --
+-- Name: obtener_categorias_menos_productos(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_categorias_menos_productos() RETURNS TABLE(id_categoria integer, categoria character varying, cantidad_productos bigint, stock_total bigint)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT c.id_categoria, c.nombre::VARCHAR,
+           COUNT(p.id_producto)::BIGINT AS cantidad_productos,
+           COALESCE(SUM(p.stock), 0)::BIGINT AS stock_total
+    FROM Categoria c
+    LEFT JOIN Producto p ON p.id_categoria = c.id_categoria
+    GROUP BY c.id_categoria, c.nombre
+    ORDER BY cantidad_productos ASC
+    LIMIT 5;
+END;
+$$;
+
+
+--
+-- Name: obtener_categorias_menos_productos(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_categorias_menos_productos(p_limit integer DEFAULT 10) RETURNS TABLE(id_categoria integer, categoria character varying, cantidad_productos bigint, stock_total bigint)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT
+        c.id_categoria,
+        c.nombre AS categoria,
+        COUNT(p.id_producto) AS cantidad_productos,
+        COALESCE(SUM(p.stock), 0) AS stock_total
+    FROM Categoria c
+    LEFT JOIN Producto p ON p.id_categoria = c.id_categoria
+    GROUP BY c.id_categoria, c.nombre
+    ORDER BY cantidad_productos ASC, stock_total ASC
+    LIMIT p_limit;
+$$;
+
+
+--
 -- Name: obtener_cliente_edicion_por_id(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1924,6 +2256,84 @@ $$;
 
 
 --
+-- Name: obtener_clientes_menos_compras_anual(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_clientes_menos_compras_anual(p_limit integer DEFAULT 10) RETURNS TABLE(id_cliente integer, cliente character varying, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT
+        cl.id_cliente,
+        TRIM(cl.nombres || ' ' || cl.apellidos) AS cliente,
+        COALESCE(cl.telefono, '') AS telefono,
+        cl.tipo_cliente,
+        COUNT(f.id_factura) AS cantidad_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado
+    FROM Cliente cl
+    LEFT JOIN Factura f ON f.id_cliente = cl.id_cliente
+        AND f.fecha >= date_trunc('year', CURRENT_DATE)
+        AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year'
+        AND f.estado_produccion != 'Cancelada'
+    WHERE cl.tipo_cliente = 'Mayorista'
+    GROUP BY cl.id_cliente, cl.nombres, cl.apellidos, cl.telefono, cl.tipo_cliente
+    ORDER BY total_comprado ASC, cantidad_facturas ASC
+    LIMIT p_limit;
+$$;
+
+
+--
+-- Name: obtener_clientes_menos_compras_mensual(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_clientes_menos_compras_mensual(p_limit integer DEFAULT 10) RETURNS TABLE(id_cliente integer, cliente character varying, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT
+        cl.id_cliente,
+        TRIM(cl.nombres || ' ' || cl.apellidos) AS cliente,
+        COALESCE(cl.telefono, '') AS telefono,
+        cl.tipo_cliente,
+        COUNT(f.id_factura) AS cantidad_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado
+    FROM Cliente cl
+    LEFT JOIN Factura f ON f.id_cliente = cl.id_cliente
+        AND f.fecha >= date_trunc('month', CURRENT_DATE)
+        AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+        AND f.estado_produccion != 'Cancelada'
+    WHERE cl.tipo_cliente = 'Mayorista'
+    GROUP BY cl.id_cliente, cl.nombres, cl.apellidos, cl.telefono, cl.tipo_cliente
+    ORDER BY total_comprado ASC, cantidad_facturas ASC
+    LIMIT p_limit;
+$$;
+
+
+--
+-- Name: obtener_clientes_menos_compras_semanal(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_clientes_menos_compras_semanal(p_limit integer DEFAULT 10) RETURNS TABLE(id_cliente integer, cliente character varying, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT
+        cl.id_cliente,
+        TRIM(cl.nombres || ' ' || cl.apellidos) AS cliente,
+        COALESCE(cl.telefono, '') AS telefono,
+        cl.tipo_cliente,
+        COUNT(f.id_factura) AS cantidad_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado
+    FROM Cliente cl
+    LEFT JOIN Factura f ON f.id_cliente = cl.id_cliente
+        AND f.fecha >= date_trunc('week', CURRENT_DATE)
+        AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week'
+        AND f.estado_produccion != 'Cancelada'
+    WHERE cl.tipo_cliente = 'Mayorista'
+    GROUP BY cl.id_cliente, cl.nombres, cl.apellidos, cl.telefono, cl.tipo_cliente
+    ORDER BY total_comprado ASC, cantidad_facturas ASC
+    LIMIT p_limit;
+$$;
+
+
+--
 -- Name: obtener_clientes_recientes_dashboard(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1949,10 +2359,10 @@ $$;
 
 
 --
--- Name: obtener_clientes_reporte(timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: -
+-- Name: obtener_clientes_reporte(timestamp without time zone, timestamp without time zone, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.obtener_clientes_reporte(p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(id_cliente integer, cliente text, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
+CREATE FUNCTION public.obtener_clientes_reporte(p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_cliente integer, cliente text, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -1970,8 +2380,83 @@ BEGIN
       AND (p_fecha_hasta IS NULL OR f.fecha IS NULL OR f.fecha <= p_fecha_hasta)
     GROUP BY c.id_cliente, c.nombres, c.apellidos, c.telefono, c.tipo_cliente
     ORDER BY total_comprado DESC, cantidad_facturas DESC, cliente ASC
-    LIMIT 50;
+    LIMIT p_limit OFFSET p_offset;
 END;
+$$;
+
+
+--
+-- Name: obtener_clientes_top_compras_anual(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_clientes_top_compras_anual(p_limit integer DEFAULT 10) RETURNS TABLE(id_cliente integer, cliente character varying, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT
+        cl.id_cliente,
+        TRIM(cl.nombres || ' ' || cl.apellidos) AS cliente,
+        COALESCE(cl.telefono, '') AS telefono,
+        cl.tipo_cliente,
+        COUNT(f.id_factura) AS cantidad_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado
+    FROM Cliente cl
+    INNER JOIN Factura f ON f.id_cliente = cl.id_cliente
+    WHERE f.fecha >= date_trunc('year', CURRENT_DATE)
+      AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year'
+      AND f.estado_produccion != 'Cancelada'
+    GROUP BY cl.id_cliente, cl.nombres, cl.apellidos, cl.telefono, cl.tipo_cliente
+    ORDER BY total_comprado DESC
+    LIMIT p_limit;
+$$;
+
+
+--
+-- Name: obtener_clientes_top_compras_mensual(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_clientes_top_compras_mensual(p_limit integer DEFAULT 10) RETURNS TABLE(id_cliente integer, cliente character varying, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT
+        cl.id_cliente,
+        TRIM(cl.nombres || ' ' || cl.apellidos) AS cliente,
+        COALESCE(cl.telefono, '') AS telefono,
+        cl.tipo_cliente,
+        COUNT(f.id_factura) AS cantidad_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado
+    FROM Cliente cl
+    INNER JOIN Factura f ON f.id_cliente = cl.id_cliente
+    WHERE f.fecha >= date_trunc('month', CURRENT_DATE)
+      AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+      AND f.estado_produccion != 'Cancelada'
+    GROUP BY cl.id_cliente, cl.nombres, cl.apellidos, cl.telefono, cl.tipo_cliente
+    ORDER BY total_comprado DESC
+    LIMIT p_limit;
+$$;
+
+
+--
+-- Name: obtener_clientes_top_compras_semanal(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_clientes_top_compras_semanal(p_limit integer DEFAULT 10) RETURNS TABLE(id_cliente integer, cliente character varying, telefono character varying, tipo_cliente character varying, cantidad_facturas bigint, total_comprado numeric)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT
+        cl.id_cliente,
+        TRIM(cl.nombres || ' ' || cl.apellidos) AS cliente,
+        COALESCE(cl.telefono, '') AS telefono,
+        cl.tipo_cliente,
+        COUNT(f.id_factura) AS cantidad_facturas,
+        COALESCE(SUM(f.total), 0) AS total_comprado
+    FROM Cliente cl
+    INNER JOIN Factura f ON f.id_cliente = cl.id_cliente
+    WHERE f.fecha >= date_trunc('week', CURRENT_DATE)
+      AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week'
+      AND f.estado_produccion != 'Cancelada'
+    GROUP BY cl.id_cliente, cl.nombres, cl.apellidos, cl.telefono, cl.tipo_cliente
+    ORDER BY total_comprado DESC
+    LIMIT p_limit;
 $$;
 
 
@@ -2338,6 +2823,30 @@ $$;
 
 
 --
+-- Name: obtener_productos_mas_vendidos_anio(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_productos_mas_vendidos_anio(p_limit integer DEFAULT 10) RETURNS TABLE(id_producto integer, producto character varying, codigo character varying, cantidad_vendida bigint, total_vendido numeric)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id_producto, p.nombre::VARCHAR, p.codigo,
+           COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+           COALESCE(SUM(df.total_linea), 0)::NUMERIC AS total_vendido
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('year', CURRENT_DATE)
+        AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year'
+    GROUP BY p.id_producto, p.nombre, p.codigo
+    ORDER BY cantidad_vendida DESC
+    LIMIT p_limit;
+END;
+$$;
+
+
+--
 -- Name: obtener_productos_mas_vendidos_dashboard(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2359,6 +2868,30 @@ BEGIN
     GROUP BY p.id_producto, p.nombre
     ORDER BY cantidad_vendida DESC
     LIMIT p_limite;
+END;
+$$;
+
+
+--
+-- Name: obtener_productos_mas_vendidos_mes(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_productos_mas_vendidos_mes(p_limit integer DEFAULT 10) RETURNS TABLE(id_producto integer, producto character varying, codigo character varying, cantidad_vendida bigint, total_vendido numeric)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id_producto, p.nombre::VARCHAR, p.codigo,
+           COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+           COALESCE(SUM(df.total_linea), 0)::NUMERIC AS total_vendido
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('month', CURRENT_DATE)
+        AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+    GROUP BY p.id_producto, p.nombre, p.codigo
+    ORDER BY cantidad_vendida DESC
+    LIMIT p_limit;
 END;
 $$;
 
@@ -2391,10 +2924,109 @@ $$;
 
 
 --
--- Name: obtener_productos_reporte(timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: -
+-- Name: obtener_productos_mas_vendidos_semana(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.obtener_productos_reporte(p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, stock integer, cantidad_vendida bigint, total_vendido numeric)
+CREATE FUNCTION public.obtener_productos_mas_vendidos_semana(p_limit integer DEFAULT 10) RETURNS TABLE(id_producto integer, producto character varying, codigo character varying, cantidad_vendida bigint, total_vendido numeric)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id_producto, p.nombre::VARCHAR, p.codigo,
+           COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+           COALESCE(SUM(df.total_linea), 0)::NUMERIC AS total_vendido
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('week', CURRENT_DATE)
+        AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week'
+    GROUP BY p.id_producto, p.nombre, p.codigo
+    ORDER BY cantidad_vendida DESC
+    LIMIT p_limit;
+END;
+$$;
+
+
+--
+-- Name: obtener_productos_menos_vendidos_anio(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_productos_menos_vendidos_anio(p_limit integer DEFAULT 5) RETURNS TABLE(id_producto integer, producto character varying, codigo character varying, cantidad_vendida bigint, stock_actual integer)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id_producto, p.nombre::VARCHAR, p.codigo,
+           COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+           p.stock AS stock_actual
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('year', CURRENT_DATE)
+        AND f.fecha < date_trunc('year', CURRENT_DATE) + INTERVAL '1 year'
+    WHERE p.stock > 0
+    GROUP BY p.id_producto, p.nombre, p.codigo, p.stock
+    ORDER BY cantidad_vendida ASC
+    LIMIT p_limit;
+END;
+$$;
+
+
+--
+-- Name: obtener_productos_menos_vendidos_mes(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_productos_menos_vendidos_mes(p_limit integer DEFAULT 5) RETURNS TABLE(id_producto integer, producto character varying, codigo character varying, cantidad_vendida bigint, stock_actual integer)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id_producto, p.nombre::VARCHAR, p.codigo,
+           COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+           p.stock AS stock_actual
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('month', CURRENT_DATE)
+        AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+    WHERE p.stock > 0
+    GROUP BY p.id_producto, p.nombre, p.codigo, p.stock
+    ORDER BY cantidad_vendida ASC
+    LIMIT p_limit;
+END;
+$$;
+
+
+--
+-- Name: obtener_productos_menos_vendidos_semana(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_productos_menos_vendidos_semana(p_limit integer DEFAULT 5) RETURNS TABLE(id_producto integer, producto character varying, codigo character varying, cantidad_vendida bigint, stock_actual integer)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id_producto, p.nombre::VARCHAR, p.codigo,
+           COALESCE(SUM(df.cantidad), 0)::BIGINT AS cantidad_vendida,
+           p.stock AS stock_actual
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('week', CURRENT_DATE)
+        AND f.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week'
+    WHERE p.stock > 0
+    GROUP BY p.id_producto, p.nombre, p.codigo, p.stock
+    ORDER BY cantidad_vendida ASC
+    LIMIT p_limit;
+END;
+$$;
+
+
+--
+-- Name: obtener_productos_reporte(timestamp without time zone, timestamp without time zone, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_productos_reporte(p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, stock integer, cantidad_vendida bigint, total_vendido numeric)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -2413,7 +3045,25 @@ BEGIN
       AND (p_fecha_hasta IS NULL OR f.fecha IS NULL OR f.fecha <= p_fecha_hasta)
     GROUP BY p.id_producto, p.codigo, p.nombre, p.stock
     ORDER BY cantidad_vendida DESC, total_vendido DESC, p.nombre ASC
-    LIMIT 50;
+    LIMIT p_limit OFFSET p_offset;
+END;
+$$;
+
+
+--
+-- Name: obtener_productos_stock_bajo(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.obtener_productos_stock_bajo() RETURNS TABLE(id_producto integer, producto character varying, codigo character varying, stock_actual integer, nombre_categoria character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id_producto, p.nombre::VARCHAR, p.codigo, p.stock, c.nombre::VARCHAR
+    FROM Producto p
+    LEFT JOIN Categoria c ON c.id_categoria = p.id_categoria
+    WHERE p.stock <= 5
+    ORDER BY p.stock ASC;
 END;
 $$;
 
@@ -2762,10 +3412,10 @@ $$;
 
 
 --
--- Name: obtener_ventas_detalladas_reportes(timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: -
+-- Name: obtener_ventas_detalladas_reportes(timestamp without time zone, timestamp without time zone, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.obtener_ventas_detalladas_reportes(p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(id_factura integer, fecha timestamp without time zone, subtotal numeric, descuento numeric, impuesto numeric, total numeric, cliente text, usuario character varying, seccion character varying)
+CREATE FUNCTION public.obtener_ventas_detalladas_reportes(p_fecha_desde timestamp without time zone DEFAULT NULL::timestamp without time zone, p_fecha_hasta timestamp without time zone DEFAULT NULL::timestamp without time zone, p_limit integer DEFAULT 15, p_offset integer DEFAULT 0) RETURNS TABLE(id_factura integer, fecha timestamp without time zone, subtotal numeric, descuento numeric, impuesto numeric, total numeric, cliente text, usuario character varying, seccion character varying)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -2787,7 +3437,7 @@ BEGIN
     WHERE (p_fecha_desde IS NULL OR f.fecha >= p_fecha_desde)
       AND (p_fecha_hasta IS NULL OR f.fecha <= p_fecha_hasta)
     ORDER BY f.fecha DESC, f.id_factura DESC
-    LIMIT 50;
+    LIMIT p_limit OFFSET p_offset;
 END;
 $$;
 
@@ -2811,6 +3461,37 @@ BEGIN
     GROUP BY f.fecha::date
     ORDER BY f.fecha::date ASC
     LIMIT 30;
+END;
+$$;
+
+
+--
+-- Name: productos_mas_vendidos_catalogo(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.productos_mas_vendidos_catalogo(p_limite integer DEFAULT 12) RETURNS TABLE(id_producto integer, codigo character varying, nombre character varying, imagen character varying, precio_venta numeric, stock integer, total_vendido bigint)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_producto,
+        p.codigo,
+        p.nombre,
+        p.imagen,
+        p.precio_venta,
+        p.stock,
+        COALESCE(SUM(df.cantidad), 0)::BIGINT AS total_vendido
+    FROM Producto p
+    LEFT JOIN DetalleFactura df ON df.id_producto = p.id_producto
+    LEFT JOIN Factura f ON f.id_factura = df.id_factura
+        AND f.fecha >= date_trunc('month', CURRENT_DATE)
+        AND f.fecha < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+    JOIN Categoria c ON p.id_categoria = c.id_categoria
+    WHERE c.nombre <> 'Categoria Temporal'
+    GROUP BY p.id_producto, p.codigo, p.nombre, p.imagen, p.precio_venta, p.stock
+    ORDER BY total_vendido DESC, p.nombre ASC
+    LIMIT p_limite;
 END;
 $$;
 
@@ -3571,6 +4252,7 @@ CREATE TABLE public.factura (
     fecha_orden_produccion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     fecha_entrega_estimada date,
     fecha_entrega_real date,
+    CONSTRAINT chk_factura_entregada_requiere_pago CHECK ((((estado_produccion)::text <> 'Entregada'::text) OR (((estado_pago)::text = 'Pagado'::text) AND (saldo_pendiente = (0)::numeric) AND (monto_pagado >= total)))),
     CONSTRAINT chk_factura_estado_pago_valido CHECK (((estado_pago)::text = ANY (ARRAY[('Pendiente'::character varying)::text, ('Parcial'::character varying)::text, ('Pagado'::character varying)::text]))),
     CONSTRAINT chk_factura_estado_produccion_valido CHECK (((estado_produccion)::text = ANY (ARRAY[('Pendiente'::character varying)::text, ('En producción'::character varying)::text, ('Lista para entregar'::character varying)::text, ('Entregada'::character varying)::text, ('Cancelada'::character varying)::text]))),
     CONSTRAINT chk_factura_monto_pagado_no_negativo CHECK ((monto_pagado >= (0)::numeric)),
@@ -3642,6 +4324,80 @@ CREATE SEQUENCE public.factura_id_factura_seq
 --
 
 ALTER SEQUENCE public.factura_id_factura_seq OWNED BY public.factura.id_factura;
+
+
+--
+-- Name: plazo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plazo (
+    id_plazo integer NOT NULL,
+    id_factura integer NOT NULL,
+    total_original numeric(10,2) NOT NULL,
+    fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
+    fecha_limite date NOT NULL,
+    estado character varying(20) DEFAULT 'Activo'::character varying NOT NULL,
+    CONSTRAINT chk_plazo_estado CHECK (((estado)::text = ANY ((ARRAY['Activo'::character varying, 'Completado'::character varying, 'Cancelado'::character varying])::text[])))
+);
+
+
+--
+-- Name: plazo_cuota; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plazo_cuota (
+    id_cuota integer NOT NULL,
+    id_plazo integer NOT NULL,
+    numero integer NOT NULL,
+    porcentaje numeric(5,2) NOT NULL,
+    monto numeric(10,2) NOT NULL,
+    fecha_pago date NOT NULL,
+    estado character varying(20) DEFAULT 'Pendiente'::character varying NOT NULL,
+    fecha_pago_real timestamp without time zone,
+    monto_pagado numeric(10,2) DEFAULT 0,
+    observaciones text DEFAULT ''::text,
+    CONSTRAINT chk_cuota_estado CHECK (((estado)::text = ANY ((ARRAY['Pendiente'::character varying, 'Pagado'::character varying, 'Vencido'::character varying])::text[])))
+);
+
+
+--
+-- Name: plazo_cuota_id_cuota_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.plazo_cuota_id_cuota_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: plazo_cuota_id_cuota_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.plazo_cuota_id_cuota_seq OWNED BY public.plazo_cuota.id_cuota;
+
+
+--
+-- Name: plazo_id_plazo_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.plazo_id_plazo_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: plazo_id_plazo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.plazo_id_plazo_seq OWNED BY public.plazo.id_plazo;
 
 
 --
@@ -3869,6 +4625,20 @@ ALTER TABLE ONLY public.factura_estado_historial ALTER COLUMN id_historial SET D
 
 
 --
+-- Name: plazo id_plazo; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plazo ALTER COLUMN id_plazo SET DEFAULT nextval('public.plazo_id_plazo_seq'::regclass);
+
+
+--
+-- Name: plazo_cuota id_cuota; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plazo_cuota ALTER COLUMN id_cuota SET DEFAULT nextval('public.plazo_cuota_id_cuota_seq'::regclass);
+
+
+--
 -- Name: producto id_producto; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -4053,26 +4823,22 @@ COPY public.detallefactura (id_detalle, id_factura, id_producto, cantidad, preci
 --
 
 COPY public.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subtotal, descuento, impuesto, total, tipo_cliente_venta, nombre_cliente_fugaz, monto_pagado, saldo_pendiente, porcentaje_pagado, estado_pago, estado_produccion, fecha_orden_produccion, fecha_entrega_estimada, fecha_entrega_real) FROM stdin;
-1	2026-02-27 14:15:00	6	26	2	2046.50	0.00	305.48	2341.98	Habitual	\N	1756.49	585.49	75.00	Parcial	En producción	2026-02-27 14:45:00	2026-03-02	\N
-2	2026-02-28 15:15:00	7	27	1	1266.75	0.00	188.51	1445.26	Habitual	\N	1083.95	361.31	75.00	Parcial	En producción	2026-02-28 15:45:00	2026-03-04	\N
-3	2026-03-01 09:15:00	8	28	2	2162.00	0.00	324.30	2486.30	Habitual	\N	1864.73	621.57	75.00	Parcial	En producción	2026-03-01 09:45:00	2026-03-06	\N
-4	2026-03-02 10:15:00	9	29	1	3099.25	0.00	464.89	3564.14	Habitual	\N	1782.07	1782.07	50.00	Parcial	Lista para entregar	2026-03-02 10:45:00	2026-03-08	\N
-5	2026-03-03 11:15:00	10	30	2	2256.50	25.00	334.73	2566.23	Fugaz	José Ramírez	1283.12	1283.11	50.00	Parcial	Lista para entregar	2026-03-03 11:45:00	2026-03-05	\N
-6	2026-03-04 12:15:00	1	1	1	1392.75	0.00	208.91	1601.66	Habitual	\N	800.83	800.83	50.00	Parcial	Lista para entregar	2026-03-04 12:45:00	2026-03-07	\N
-7	2026-03-05 13:15:00	2	2	2	2372.00	0.00	355.80	2727.80	Habitual	\N	1363.90	1363.90	50.00	Parcial	Lista para entregar	2026-03-05 13:45:00	2026-03-09	\N
-8	2026-03-06 14:15:00	3	3	1	3393.25	0.00	507.49	3890.74	Habitual	\N	1945.37	1945.37	50.00	Parcial	Lista para entregar	2026-03-06 14:45:00	2026-03-11	\N
-9	2026-03-07 15:15:00	4	4	2	2466.50	0.00	368.48	2824.98	Habitual	\N	1412.49	1412.49	50.00	Parcial	Lista para entregar	2026-03-07 15:45:00	2026-03-13	\N
-10	2026-03-08 09:15:00	5	5	1	1518.75	25.00	224.06	1717.81	Habitual	\N	858.91	858.90	50.00	Parcial	Lista para entregar	2026-03-08 09:45:00	2026-03-10	\N
-11	2026-03-09 10:15:00	6	6	2	2582.00	0.00	387.30	2969.30	Fugaz	Carlos Mendoza	1484.65	1484.65	50.00	Parcial	Lista para entregar	2026-03-09 10:45:00	2026-03-12	\N
-12	2026-03-10 11:15:00	7	7	1	3687.25	0.00	553.09	4240.34	Habitual	\N	2120.17	2120.17	50.00	Parcial	Lista para entregar	2026-03-10 11:45:00	2026-03-14	\N
-13	2026-03-11 12:15:00	8	8	2	2676.50	0.00	401.48	3077.98	Habitual	\N	1538.99	1538.99	50.00	Parcial	Lista para entregar	2026-03-11 12:45:00	2026-03-16	\N
-14	2026-03-12 13:15:00	9	9	1	1644.75	0.00	246.71	1891.46	Habitual	\N	0.00	1891.46	0.00	Pendiente	En producción	2026-03-12 13:45:00	2026-03-18	\N
-15	2026-03-13 14:15:00	10	10	2	2792.00	25.00	413.55	3170.55	Habitual	\N	0.00	3170.55	0.00	Pendiente	En producción	2026-03-13 14:45:00	2026-03-15	\N
-16	2026-03-14 15:15:00	11	11	1	3981.25	0.00	595.69	4566.94	Habitual	\N	0.00	4566.94	0.00	Pendiente	En producción	2026-03-14 15:45:00	2026-03-17	\N
-17	2026-03-15 09:15:00	12	12	2	2886.50	0.00	432.98	3319.48	Fugaz	José Ramírez	0.00	3319.48	0.00	Pendiente	En producción	2026-03-15 09:45:00	2026-03-19	\N
-18	2026-03-16 10:15:00	13	13	1	1770.75	0.00	265.61	2036.36	Habitual	\N	0.00	2036.36	0.00	Pendiente	En producción	2026-03-16 10:45:00	2026-03-21	\N
-19	2026-03-17 11:15:00	14	14	2	3002.00	0.00	450.30	3452.30	Habitual	\N	0.00	3452.30	0.00	Pendiente	En producción	2026-03-17 11:45:00	2026-03-23	\N
-20	2026-03-18 12:15:00	15	15	1	4275.25	25.00	637.54	4887.79	Habitual	\N	0.00	4887.79	0.00	Pendiente	En producción	2026-03-18 12:45:00	2026-03-20	\N
+1	2026-06-03 14:15:00	6	26	2	1504.50	0.00	225.68	1730.18	Habitual	\N	865.09	865.09	50.00	Parcial	Lista para entregar	2026-06-03 14:45:00	2026-06-06	\N
+2	2026-06-04 15:15:00	7	27	1	1465.00	0.00	219.75	1684.75	Habitual	\N	0.00	1684.75	0.00	Pendiente	En producción	2026-06-04 15:45:00	2026-06-08	\N
+3	2026-06-05 09:15:00	8	28	2	543.50	0.00	81.53	625.03	Habitual	\N	625.03	0.00	100.00	Pagado	Pendiente	2026-06-05 09:45:00	2026-06-10	\N
+7	2026-06-09 13:15:00	2	2	2	208.75	0.00	31.31	240.06	Habitual	\N	120.03	120.03	50.00	Parcial	En producción	2026-06-09 13:45:00	2026-06-13	\N
+8	2026-06-10 14:15:00	3	3	1	438.50	0.00	65.78	504.28	Habitual	\N	0.00	504.28	0.00	Pendiente	Pendiente	2026-06-10 14:45:00	2026-06-15	\N
+9	2026-06-11 15:15:00	4	4	2	689.25	0.00	103.39	792.64	Habitual	\N	792.64	0.00	100.00	Pagado	Pendiente	2026-06-11 15:45:00	2026-06-17	\N
+11	2026-06-13 10:15:00	6	6	2	250.75	0.00	37.61	288.36	Fugaz	Carlos Mendoza	0.00	288.36	0.00	Pendiente	Lista para entregar	2026-06-13 10:45:00	2026-06-16	\N
+4	2026-06-06 10:15:00	9	29	1	1129.00	0.00	169.35	1298.35	Habitual	\N	649.18	649.17	50.00	Parcial	Pendiente	2026-06-06 10:45:00	2026-06-12	\N
+5	2026-06-07 11:15:00	10	30	2	1756.50	25.00	263.48	1994.98	Fugaz	José Ramírez	0.00	1994.98	0.00	Pendiente	Lista para entregar	2026-06-07 11:45:00	2026-06-09	\N
+12	2026-06-14 11:15:00	7	7	1	522.50	0.00	78.38	600.88	Habitual	\N	600.88	0.00	100.00	Pagado	En producción	2026-06-14 11:45:00	2026-06-18	\N
+13	2026-06-15 12:15:00	8	8	2	805.25	0.00	120.79	926.04	Habitual	\N	463.02	463.02	50.00	Parcial	Pendiente	2026-06-15 12:45:00	2026-06-20	\N
+16	2026-06-18 15:15:00	11	11	1	606.50	0.00	90.98	697.48	Habitual	\N	348.74	348.74	50.00	Parcial	Lista para entregar	2026-06-18 15:45:00	2026-06-21	\N
+17	2026-06-19 09:15:00	12	12	2	941.25	0.00	141.19	1082.44	Fugaz	José Ramírez	0.00	1082.44	0.00	Pendiente	En producción	2026-06-19 09:45:00	2026-06-23	\N
+19	2026-06-21 11:15:00	14	14	2	334.75	0.00	50.21	384.96	Habitual	\N	192.48	192.48	50.00	Parcial	Pendiente	2026-06-21 11:45:00	2026-06-27	\N
+15	2026-06-17 14:15:00	10	10	2	292.75	25.00	43.91	311.66	Habitual	\N	311.66	0.00	100.00	Pagado	Entregada	2026-06-17 14:45:00	2026-06-19	\N
+20	2026-06-22 12:15:00	15	15	1	680.50	25.00	102.08	757.58	Habitual	\N	0.00	757.58	0.00	Pendiente	Lista para entregar	2026-06-22 12:45:00	2026-06-24	\N
 \.
 
 
@@ -4080,7 +4846,47 @@ COPY public.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subt
 -- Data for Name: factura_estado_historial; Type: TABLE DATA; Schema: public; Owner: -
 --
 
+COPY public.factura_estado_historial (id_historial, id_factura, tipo_evento, estado_pago_anterior, estado_pago_nuevo, estado_produccion_anterior, estado_produccion_nuevo, monto_pagado_anterior, monto_pagado_nuevo, monto_abonado, saldo_anterior, saldo_nuevo, fecha_entrega_estimada_anterior, fecha_entrega_estimada_nueva, comentario, fecha_evento) FROM stdin;
+2	1	Factura actualizada	Parcial	Parcial	Lista para entregar	Lista para entregar	865.09	865.09	865.09	865.09	865.09	2026-06-06	2026-09-10	Factura parcialmente pagada. Monto pagado acumulado: C$ 865.09. Saldo actual: C$ 865.09.	2026-09-28 22:51:43.993655
+3	2	Factura actualizada	Pendiente	Pendiente	En producción	En producción	0.00	0.00	0.00	1684.75	1684.75	2026-06-08	2026-09-12	Factura pendiente de pago. Saldo actual: C$ 1684.75.	2026-09-28 22:51:43.993655
+4	3	Factura actualizada	Pagado	Pagado	Pendiente	Pendiente	625.03	625.03	625.03	0.00	0.00	2026-06-10	2026-09-14	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-09-28 22:51:43.993655
+5	4	Factura actualizada	Parcial	Parcial	Pendiente	Pendiente	649.18	649.18	649.18	649.18	649.17	2026-06-12	2026-09-16	Factura parcialmente pagada. Monto pagado acumulado: C$ 649.18. Saldo actual: C$ 649.17.	2026-09-28 22:51:43.993655
+6	5	Factura actualizada	Pendiente	Pendiente	Entregada	Entregada	0.00	0.00	0.00	2019.98	2019.98	2026-06-09	2026-09-13	Factura pendiente de pago. Saldo actual: C$ 2019.98.	2026-09-28 22:51:43.993655
+8	7	Factura actualizada	Parcial	Parcial	En producción	En producción	120.03	120.03	120.03	120.03	120.03	2026-06-13	2026-09-17	Factura parcialmente pagada. Monto pagado acumulado: C$ 120.03. Saldo actual: C$ 120.03.	2026-09-28 22:51:43.993655
+9	8	Factura actualizada	Pendiente	Pendiente	Pendiente	Pendiente	0.00	0.00	0.00	504.28	504.28	2026-06-15	2026-09-19	Factura pendiente de pago. Saldo actual: C$ 504.28.	2026-09-28 22:51:43.993655
+10	9	Factura actualizada	Pagado	Pagado	Pendiente	Pendiente	792.64	792.64	792.64	0.00	0.00	2026-06-17	2026-09-21	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-09-28 22:51:43.993655
+12	11	Factura actualizada	Pendiente	Pendiente	Lista para entregar	Lista para entregar	0.00	0.00	0.00	288.36	288.36	2026-06-16	2026-09-20	Factura pendiente de pago. Saldo actual: C$ 288.36.	2026-09-28 22:51:43.993655
+13	12	Factura actualizada	Pagado	Pagado	En producción	En producción	600.88	600.88	600.88	0.00	0.00	2026-06-18	2026-09-22	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-09-28 22:51:43.993655
+14	13	Factura actualizada	Parcial	Parcial	Pendiente	Pendiente	463.02	463.02	463.02	463.02	463.02	2026-06-20	2026-09-24	Factura parcialmente pagada. Monto pagado acumulado: C$ 463.02. Saldo actual: C$ 463.02.	2026-09-28 22:51:43.993655
+16	15	Factura actualizada	Pagado	Pagado	Entregada	Entregada	336.66	336.66	336.66	0.00	0.00	2026-06-19	2026-09-23	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-09-28 22:51:43.993655
+17	16	Factura actualizada	Parcial	Parcial	Lista para entregar	Lista para entregar	348.74	348.74	348.74	348.74	348.74	2026-06-21	2026-09-25	Factura parcialmente pagada. Monto pagado acumulado: C$ 348.74. Saldo actual: C$ 348.74.	2026-09-28 22:51:43.993655
+18	17	Factura actualizada	Pendiente	Pendiente	En producción	En producción	0.00	0.00	0.00	1082.44	1082.44	2026-06-23	2026-09-27	Factura pendiente de pago. Saldo actual: C$ 1082.44.	2026-09-28 22:51:43.993655
+20	19	Factura actualizada	Parcial	Parcial	Pendiente	Pendiente	192.48	192.48	192.48	192.48	192.48	2026-06-27	2026-10-01	Factura parcialmente pagada. Monto pagado acumulado: C$ 192.48. Saldo actual: C$ 192.48.	2026-09-28 22:51:43.993655
+21	20	Factura actualizada	Pendiente	Pendiente	Entregada	Entregada	0.00	0.00	0.00	782.58	782.58	2026-06-24	2026-09-28	Factura pendiente de pago. Saldo actual: C$ 782.58.	2026-09-28 22:51:43.993655
+22	4	Factura actualizada	Parcial	Parcial	Pendiente	Pendiente	649.18	649.18	649.18	649.18	649.17	2026-06-12	2026-06-12	Factura parcialmente pagada. Monto pagado acumulado: C$ 649.18. Saldo actual: C$ 649.17.	2026-06-24 22:53:38.738573
+25	5	Factura actualizada	Pendiente	Pendiente	Entregada	Entregada	0.00	0.00	0.00	2019.98	1994.98	2026-06-09	2026-06-09	Cambio registrado automáticamente por el sistema.	2026-06-24 23:03:43.383651
+26	20	Factura actualizada	Pendiente	Pendiente	Entregada	Entregada	0.00	0.00	0.00	782.58	757.58	2026-06-24	2026-06-24	Cambio registrado automáticamente por el sistema.	2026-06-24 23:03:43.383651
+27	15	Pago actualizado	Pagado	Pagado	Entregada	Entregada	336.66	311.66	0.00	0.00	0.00	2026-06-19	2026-06-19	Cambio registrado automáticamente por el sistema.	2026-06-24 23:04:50.721299
+28	5	Corrección de consistencia	Pendiente	Pendiente	Entregada	Lista para entregar	0.00	0.00	0.00	1994.98	1994.98	2026-06-09	2026-06-09	Corrección automática: no se puede marcar como Entregada una factura con saldo pendiente. Estado de producción ajustado a Lista para entregar. Saldo actual: C$ 1994.98.	2026-06-24 23:12:16.747371
+29	20	Corrección de consistencia	Pendiente	Pendiente	Entregada	Lista para entregar	0.00	0.00	0.00	757.58	757.58	2026-06-24	2026-06-24	Corrección automática: no se puede marcar como Entregada una factura con saldo pendiente. Estado de producción ajustado a Lista para entregar. Saldo actual: C$ 757.58.	2026-06-24 23:12:16.747371
+\.
+
+
 --
+-- Data for Name: plazo; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.plazo (id_plazo, id_factura, total_original, fecha_creacion, fecha_limite, estado) FROM stdin;
+\.
+
+
+--
+-- Data for Name: plazo_cuota; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.plazo_cuota (id_cuota, id_plazo, numero, porcentaje, monto, fecha_pago, estado, fecha_pago_real, monto_pagado, observaciones) FROM stdin;
+\.
+
 
 --
 -- Data for Name: producto; Type: TABLE DATA; Schema: public; Owner: -
@@ -4234,7 +5040,7 @@ SELECT pg_catalog.setval('public.detallefactura_id_detalle_seq', 20, true);
 -- Name: factura_estado_historial_id_historial_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.factura_estado_historial_id_historial_seq', 20, true);
+SELECT pg_catalog.setval('public.factura_estado_historial_id_historial_seq', 29, true);
 
 
 --
@@ -4242,6 +5048,20 @@ SELECT pg_catalog.setval('public.factura_estado_historial_id_historial_seq', 20,
 --
 
 SELECT pg_catalog.setval('public.factura_id_factura_seq', 20, true);
+
+
+--
+-- Name: plazo_cuota_id_cuota_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.plazo_cuota_id_cuota_seq', 1, false);
+
+
+--
+-- Name: plazo_id_plazo_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.plazo_id_plazo_seq', 1, false);
 
 
 --
@@ -4269,14 +5089,14 @@ SELECT pg_catalog.setval('public.rol_id_rol_seq', 9, true);
 -- Name: seccion_id_seccion_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.seccion_id_seccion_seq', 8, true);
+SELECT pg_catalog.setval('public.seccion_id_seccion_seq', 2, true);
 
 
 --
 -- Name: usuario_id_usuario_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.usuario_id_usuario_seq', 36, true);
+SELECT pg_catalog.setval('public.usuario_id_usuario_seq', 30, true);
 
 
 --
@@ -4349,6 +5169,22 @@ ALTER TABLE ONLY public.factura_estado_historial
 
 ALTER TABLE ONLY public.factura
     ADD CONSTRAINT factura_pkey PRIMARY KEY (id_factura);
+
+
+--
+-- Name: plazo_cuota plazo_cuota_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plazo_cuota
+    ADD CONSTRAINT plazo_cuota_pkey PRIMARY KEY (id_cuota);
+
+
+--
+-- Name: plazo plazo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plazo
+    ADD CONSTRAINT plazo_pkey PRIMARY KEY (id_plazo);
 
 
 --
@@ -4459,6 +5295,27 @@ CREATE INDEX idx_factura_estado_historial_factura ON public.factura_estado_histo
 
 
 --
+-- Name: idx_plazo_cuota_estado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_plazo_cuota_estado ON public.plazo_cuota USING btree (estado);
+
+
+--
+-- Name: idx_plazo_cuota_plazo; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_plazo_cuota_plazo ON public.plazo_cuota USING btree (id_plazo);
+
+
+--
+-- Name: idx_plazo_factura; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_plazo_factura ON public.plazo USING btree (id_factura);
+
+
+--
 -- Name: categoria trg_auditar_delete_categoria; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -4491,6 +5348,13 @@ CREATE TRIGGER trg_auditar_delete_proveedor AFTER DELETE ON public.proveedor FOR
 --
 
 CREATE TRIGGER trg_factura_estado_historial AFTER INSERT OR UPDATE ON public.factura FOR EACH ROW EXECUTE FUNCTION public.registrar_historial_estado_factura();
+
+
+--
+-- Name: factura trg_factura_normalizar_pago_y_entrega; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_factura_normalizar_pago_y_entrega BEFORE INSERT OR UPDATE ON public.factura FOR EACH ROW EXECUTE FUNCTION public.fn_factura_normalizar_pago_y_entrega();
 
 
 --
@@ -4614,209 +5478,16 @@ ALTER TABLE ONLY public.usuario
 
 
 --
+-- Name: plazo_cuota plazo_cuota_id_plazo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plazo_cuota
+    ADD CONSTRAINT plazo_cuota_id_plazo_fkey FOREIGN KEY (id_plazo) REFERENCES public.plazo(id_plazo) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
--- =========================================================
--- SEED DATA: Datos completos para dashboard y pruebas
--- Solo inserta si las tablas estan vacias
--- =========================================================
-SET search_path TO public;
-
-BEGIN;
-
--- Secciones
-INSERT INTO seccion (id_seccion, nombre)
-SELECT 1, 'Panda Estampados' WHERE NOT EXISTS (SELECT 1 FROM seccion);
-INSERT INTO seccion (id_seccion, nombre)
-SELECT 2, 'Kitsune' WHERE NOT EXISTS (SELECT 1 FROM seccion WHERE id_seccion = 2);
-SELECT setval('seccion_id_seccion_seq', (SELECT COALESCE(MAX(id_seccion), 2) FROM seccion));
-
--- Categorias
-INSERT INTO categoria (nombre)
-SELECT v.nombre FROM (VALUES
-    ('Camisetas'), ('Hoodies'), ('Stickers'), ('Tazas'), ('Gorras'),
-    ('Llaveros'), ('Posters'), ('Bolsos'), ('Mousepads'), ('Accesorios personalizados')
-) AS v(nombre)
-WHERE NOT EXISTS (SELECT 1 FROM categoria LIMIT 1);
-
--- Proveedores
-INSERT INTO proveedor (nombre, telefono, direccion, email)
-SELECT v.nombre, v.telefono, v.direccion, v.email FROM (VALUES
-    ('Distribuidora Norte', '2255-1001', 'Managua, Barrio Martha Quezada', 'norte@proveedor.com'),
-    ('Importadora Central', '2255-1002', 'Managua, Villa Libertad', 'central@proveedor.com'),
-    ('Suministros del Sur', '2255-1003', 'Masaya, 2da Calle', 'sur@proveedor.com')
-) AS v(nombre, telefono, direccion, email)
-WHERE NOT EXISTS (SELECT 1 FROM proveedor LIMIT 1);
-
--- Productos (precios en C$)
-INSERT INTO producto (codigo, nombre, descripcion, precio_compra, precio_venta, stock, id_categoria, id_proveedor)
-SELECT v.codigo, v.nombre, v.descripcion, v.pc, v.pv, v.stock, v.cat, v.prov FROM (VALUES
-    ('PAN-CAM-001', 'Camiseta Panda Basica', 'Camiseta 100% algodon estampa panda', 120.00, 250.00, 50, 1, 1),
-    ('PAN-CAM-002', 'Camiseta Kitsune Edition', 'Camiseta premium estampa zorro', 150.00, 320.00, 35, 1, 1),
-    ('PAN-HOO-001', 'Hoodie Panda Negro', 'Hoodie negro con logo panda bordado', 280.00, 550.00, 20, 2, 2),
-    ('PAN-HOO-002', 'Hoodie Kitsune Rojo', 'Hoodie rojo con logo kitsune', 300.00, 600.00, 15, 2, 2),
-    ('PAN-STI-001', 'Sticker Panda Pack x10', 'Pack de 10 stickers panda variados', 30.00, 80.00, 100, 3, 3),
-    ('PAN-STI-002', 'Sticker Kitsune Pack x10', 'Pack de 10 stickers kitsune variados', 30.00, 80.00, 80, 3, 3),
-    ('PAN-TAZ-001', 'Taza Panda Ceramic', 'Taza ceramica 350ml estampa panda', 60.00, 150.00, 40, 4, 1),
-    ('PAN-TAZ-002', 'Taza Kitsune Ceramic', 'Taza ceramica 350ml estampa kitsune', 60.00, 150.00, 35, 4, 1),
-    ('PAN-GOR-001', 'Gorra Panda Trucker', 'Gorra trucker bordado panda', 80.00, 180.00, 25, 5, 2),
-    ('PAN-GOR-002', 'Gorra Kitsune Snapback', 'Gorra snapbacklogo kitsune', 85.00, 190.00, 20, 5, 2),
-    ('PAN-LLA-001', 'Llavero Panda Metal', 'Llavero metalico panda 4cm', 25.00, 65.00, 60, 6, 3),
-    ('PAN-LLA-002', 'Llavero Kitsune Metal', 'Llavero metalico kitsune 4cm', 25.00, 65.00, 55, 6, 3),
-    ('PAN-POS-001', 'Poster Panda A3', 'Poster arte digital panda A3', 35.00, 90.00, 30, 7, 1),
-    ('PAN-POS-002', 'Poster Kitsune A3', 'Poster arte digital kitsune A3', 35.00, 90.00, 28, 7, 1),
-    ('PAN-BOL-001', 'Bolso Panda Canvas', 'Bolso canvas estampa panda', 90.00, 200.00, 18, 8, 2),
-    ('PAN-MOU-001', 'Mousepad Panda XL', 'Mousepad XXL estampa panda 900x400mm', 70.00, 160.00, 22, 9, 3),
-    ('PAN-MOU-002', 'Mousepad Kitsune XL', 'Mousepad XXL estampa kitsune 900x400mm', 70.00, 160.00, 20, 9, 3),
-    ('PAN-PIN-001', 'Pin Panda Durosedoso', 'Pin acrilico panda 3cm', 15.00, 45.00, 70, 10, 1),
-    ('PAN-PIN-002', 'Pin Kitsune Durosedoso', 'Pin acrilico kitsune 3cm', 15.00, 45.00, 65, 10, 1),
-    ('PAN-CAM-003', 'Camiseta Personalizada', 'Camiseta personalizada impresion DTG', 180.00, 400.00, 10, 1, 1)
-) AS v(codigo, nombre, descripcion, pc, pv, stock, cat, prov)
-WHERE NOT EXISTS (SELECT 1 FROM producto LIMIT 1);
-
--- Clientes
-INSERT INTO cliente (nombres, apellidos, telefono, direccion, identificacion, tipo_cliente)
-SELECT v.n, v.a, v.t, v.d, v.i, v.tipo FROM (VALUES
-    ('Carlos', 'Mendoza', '8888-1001', 'Managua, Bello Horizonte', '001-010185-0001A', 'Mayorista'),
-    ('Maria', 'Gonzalez', '8888-1002', 'Managua, Los Vanegas', '001-020290-0002B', 'Detallista'),
-    ('Jose', 'Ramirez', '8888-1003', 'Masaya, Centro', '001-030388-0003C', 'Detallista'),
-    ('Lucia', 'Perez', '8888-1004', 'Granada, Parque Central', '001-040492-0004D', 'Mayorista'),
-    ('Pedro', 'Martinez', '8888-1005', 'Leon, Universidad', '001-050587-0005E', 'Detallista'),
-    ('Ana', 'Lopez', '8888-1006', 'Managua, Reparto San Juan', '001-060695-0006F', 'Detallista'),
-    ('Roberto', 'Hernandez', '8888-1007', 'Matagalpa, Centro', '001-070783-0007G', 'Mayorista'),
-    ('Laura', 'Castillo', '8888-1008', 'Chinandega, 1a Calle', '001-080891-0008H', 'Detallista'),
-    ('Miguel', 'Ortega', '8888-1009', 'Juigalpa, Principal', '001-090986-0009I', 'Detallista'),
-    ('Sofia', 'Ramirez', '8888-1010', 'Bluefields, Costera', '001-101094-0010J', 'Mayorista')
-) AS v(n, a, t, d, i, tipo)
-WHERE NOT EXISTS (SELECT 1 FROM cliente LIMIT 1);
-
--- Usuarios (admin ya existe, crear solo si la tabla esta vacia)
-INSERT INTO usuario (nombre, email, password, id_rol, id_seccion)
-SELECT v.nombre, v.email, v.pass, v.rol, v.sec FROM (VALUES
-    ('Leonel Messi', 'leonel.messi@admin.pandakitsune.com', '$2y$12$x3m7SHevHbXLXNX2100ER.NRfv3QXFtUIu3GxcaRt7DfF3UkrOp9O', 1, NULL),
-    ('Supervisor Panda', 'supervisor@pandakitsune.com', '$2y$12$x3m7SHevHbXLXNX2100ER.NRfv3QXFtUIu3GxcaRt7DfF3UkrOp9O', 2, 1),
-    ('Facturador Uno', 'facturador@pandakitsune.com', '$2y$12$x3m7SHevHbXLXNX2100ER.NRfv3QXFtUIu3GxcaRt7DfF3UkrOp9O', 3, 1)
-) AS v(nombre, email, pass, rol, sec)
-WHERE NOT EXISTS (SELECT 1 FROM usuario LIMIT 1);
-
--- Disable trigger during seed updates to avoid extra historial entries
-ALTER TABLE factura DISABLE TRIGGER trg_factura_estado_historial;
-
--- Recalcular totales de facturas desde detallefactura
-UPDATE factura f
-SET
-    subtotal = COALESCE((
-        SELECT SUM(df.total_linea)
-        FROM detallefactura df
-        WHERE df.id_factura = f.id_factura
-    ), 0),
-    impuesto = ROUND(COALESCE((
-        SELECT SUM(df.total_linea)
-        FROM detallefactura df
-        WHERE df.id_factura = f.id_factura
-    ), 0) * 0.15, 2),
-    total = ROUND(COALESCE((
-        SELECT SUM(df.total_linea)
-        FROM detallefactura df
-        WHERE df.id_factura = f.id_factura
-    ), 0) * 1.15, 2);
-
--- Calcular pagos y estados
-UPDATE factura f
-SET
-    monto_pagado = CASE
-        WHEN f.id_factura % 3 = 0 THEN f.total
-        WHEN f.id_factura % 3 = 1 THEN ROUND(f.total * 0.5, 2)
-        ELSE 0
-    END,
-    saldo_pendiente = CASE
-        WHEN f.id_factura % 3 = 0 THEN 0
-        WHEN f.id_factura % 3 = 1 THEN ROUND(f.total * 0.5, 2)
-        ELSE f.total
-    END,
-    porcentaje_pagado = CASE
-        WHEN f.total = 0 THEN 0
-        WHEN f.id_factura % 3 = 0 THEN 100.00
-        WHEN f.id_factura % 3 = 1 THEN 50.00
-        ELSE 0.00
-    END,
-    estado_pago = CASE
-        WHEN f.id_factura % 3 = 0 THEN 'Pagado'
-        WHEN f.id_factura % 3 = 1 THEN 'Parcial'
-        ELSE 'Pendiente'
-    END,
-    estado_produccion = CASE
-        WHEN f.id_factura % 5 = 0 THEN 'Entregada'
-        WHEN f.id_factura % 5 = 1 THEN 'Lista para entregar'
-        WHEN f.id_factura % 5 = 2 THEN 'En producción'
-        ELSE 'Pendiente'
-    END;
-
-COMMIT;
-
--- Re-enable triggers
-ALTER TABLE factura ENABLE TRIGGER trg_factura_estado_historial;
-
--- Reset sequences to correct values after seed
-SELECT setval('public.factura_id_factura_seq', (SELECT COALESCE(MAX(id_factura), 1) FROM factura));
-SELECT setval('public.detallefactura_id_detalle_seq', (SELECT COALESCE(MAX(id_detalle), 1) FROM detallefactura));
-SELECT setval('public.factura_estado_historial_id_historial_seq', (SELECT COALESCE(MAX(id_historial), 1) FROM factura_estado_historial));
-SELECT setval('public.producto_id_producto_seq', (SELECT COALESCE(MAX(id_producto), 1) FROM producto));
-SELECT setval('public.categoria_id_categoria_seq', (SELECT COALESCE(MAX(id_categoria), 1) FROM categoria));
-SELECT setval('public.proveedor_id_proveedor_seq', (SELECT COALESCE(MAX(id_proveedor), 1) FROM proveedor));
-SELECT setval('public.cliente_id_cliente_seq', (SELECT COALESCE(MAX(id_cliente), 1) FROM cliente));
-SELECT setval('public.usuario_id_usuario_seq', (SELECT COALESCE(MAX(id_usuario), 1) FROM usuario));
-SELECT setval('public.compra_id_compra_seq', (SELECT COALESCE(MAX(id_compra), 1) FROM compra));
-SELECT setval('public.detallecompra_id_detalle_seq', (SELECT COALESCE(MAX(id_detalle), 1) FROM detallecompra));
-
--- ============================================================================
--- Recalcular fechas de facturas para que estén dentro de los últimos 30 días
--- Esto asegura que la gráfica del dashboard muestre datos actualizados
--- cada vez que se ejecuta setup.sh
--- ============================================================================
-DO $$
-DECLARE
-    max_fecha DATE;
-    offset_dias INTEGER;
-BEGIN
-    -- Encontrar la fecha más reciente de las facturas seed
-    SELECT MAX(fecha::date) INTO max_fecha FROM factura;
-
-    -- Calcular cuántos días hay que retroceder para que la más reciente sea hoy - 2
-    offset_dias := (CURRENT_DATE - interval '2 days')::date - max_fecha;
-
-    -- Solo ajustar si el offset es positivo (las fechas están en el pasado)
-    IF offset_dias > 0 THEN
-        -- Actualizar fechas de facturas
-        UPDATE factura SET
-            fecha = fecha + make_interval(days => offset_dias),
-            fecha_orden_produccion = fecha_orden_produccion + make_interval(days => offset_dias),
-            fecha_entrega_estimada = fecha_entrega_estimada + make_interval(days => offset_dias),
-            fecha_entrega_real = CASE
-                WHEN fecha_entrega_real IS NOT NULL
-                THEN fecha_entrega_real + make_interval(days => offset_dias)
-                ELSE NULL
-            END;
-
-        -- Actualizar fechas en el historial de estados
-        UPDATE factura_estado_historial SET
-            fecha_evento = fecha_evento + make_interval(days => offset_dias),
-            fecha_entrega_estimada_anterior = CASE
-                WHEN fecha_entrega_estimada_anterior IS NOT NULL
-                THEN fecha_entrega_estimada_anterior + make_interval(days => offset_dias)
-                ELSE NULL
-            END,
-            fecha_entrega_estimada_nueva = CASE
-                WHEN fecha_entrega_estimada_nueva IS NOT NULL
-                THEN fecha_entrega_estimada_nueva + make_interval(days => offset_dias)
-                ELSE NULL
-            END;
-
-        RAISE NOTICE 'Fechas de facturas ajustadas en % días para mostrar datos recientes.', offset_dias;
-    END IF;
-END
-$$;
-
-\unrestrict V5NevU0EBVHxMwc8Gie6sxI6SNUjy50UZHb49fCN6zZwXSZW0RMbbgEd4tR1cgg
+\unrestrict RabYncbGLRo3H7WnIYhqH7Bqk7ljHLu6qztZk1DkOd6Qx3JK8kSBrpORFMkSIgU
 

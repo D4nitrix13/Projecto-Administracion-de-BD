@@ -2,7 +2,7 @@
     <section class="catalog-explorer">
         <div class="catalog-section-header">
             <h2 class="catalog-section-title">Explorar por Categoría</h2>
-            <a href="index.php?disponibilidad=disponible" class="catalog-section-link">
+            <a href="catalogo.php?disponibilidad=disponible" class="catalog-section-link">
                 Ver todos los productos &rarr;
             </a>
         </div>
@@ -17,7 +17,7 @@
                 ?>
 
                 <a
-                    href="index.php?categoria=<?= (int)$categoria["id_categoria"] ?>"
+                    href="catalogo.php?categoria=<?= (int)$categoria["id_categoria"] ?>"
                     class="catalog-explorer-card"
                     title="<?= htmlspecialchars($categoria["nombre"]) ?> (<?= $totalProd ?> productos)">
                     <div class="catalog-explorer-image">

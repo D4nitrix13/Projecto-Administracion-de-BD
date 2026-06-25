@@ -258,7 +258,7 @@
 
     .dashboard-main {
         margin-left: var(--sidebar-width);
-        padding: 32px 36px;
+        padding: 20px 24px;
         transition: margin-left 0.25s ease;
     }
 

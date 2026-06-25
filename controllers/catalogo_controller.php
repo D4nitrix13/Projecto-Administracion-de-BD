@@ -44,7 +44,7 @@ function obtenerDatosCatalogo(): array
 
     $masVendidos = $hayFiltros
         ? []
-        : $catalogoRepo->obtenerMasVendidos(12);
+        : $catalogoRepo->obtenerMasVendidos(6);
 
     $offset = ($pagina - 1) * PRODUCTOS_POR_PAGINA;
 

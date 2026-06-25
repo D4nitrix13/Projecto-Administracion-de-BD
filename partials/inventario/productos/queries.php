@@ -52,6 +52,50 @@ $stmtProv = $connection->query("
 
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
+$stmtCount = $connection->prepare("
+    SELECT COUNT(*) FROM Producto prod
+    WHERE (
+        COALESCE(TRIM(:busqueda), '') = ''
+        OR prod.codigo ILIKE '%' || TRIM(:busqueda) || '%'
+        OR prod.nombre ILIKE '%' || TRIM(:busqueda) || '%'
+    )
+    AND (:id_categoria::int IS NULL OR prod.id_categoria = :id_categoria)
+    AND (:id_proveedor::int IS NULL OR prod.id_proveedor = :id_proveedor)
+    AND (:id_producto::int IS NULL OR prod.id_producto = :id_producto)
+    AND (:stock_bajo = FALSE OR prod.stock <= 5)
+");
+
+$stmtCount->bindValue(":busqueda", $busquedaTexto, PDO::PARAM_STR);
+
+if ($filtroCategoria !== null) {
+    $stmtCount->bindValue(":id_categoria", $filtroCategoria, PDO::PARAM_INT);
+} else {
+    $stmtCount->bindValue(":id_categoria", null, PDO::PARAM_NULL);
+}
+
+if ($filtroProveedor !== null) {
+    $stmtCount->bindValue(":id_proveedor", $filtroProveedor, PDO::PARAM_INT);
+} else {
+    $stmtCount->bindValue(":id_proveedor", null, PDO::PARAM_NULL);
+}
+
+if ($filtroIdProducto !== null) {
+    $stmtCount->bindValue(":id_producto", $filtroIdProducto, PDO::PARAM_INT);
+} else {
+    $stmtCount->bindValue(":id_producto", null, PDO::PARAM_NULL);
+}
+
+$stmtCount->bindValue(":stock_bajo", $filtroStockBajo, PDO::PARAM_BOOL);
+$stmtCount->execute();
+
+$totalProductos = (int) $stmtCount->fetchColumn();
+$paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
+$porPagina = 15;
+$paginacionProductosList = calcularPaginacion($totalProductos, $paginaActual, $porPagina);
+
+$offset = $paginacionProductosList["offset"];
+$limit = $paginacionProductosList["porPagina"];
+
 $stmt = $connection->prepare("
     SELECT
         id_producto,
@@ -71,7 +115,9 @@ $stmt = $connection->prepare("
         :id_proveedor,
         :id_producto,
         :stock_bajo,
-        :orden
+        :orden,
+        :limite,
+        :offset
     )
 ");
 
@@ -97,16 +143,11 @@ if ($filtroIdProducto !== null) {
 
 $stmt->bindValue(":stock_bajo", $filtroStockBajo, PDO::PARAM_BOOL);
 $stmt->bindValue(":orden", $filtroOrden, PDO::PARAM_STR);
-
+$stmt->bindValue(":limite", $limit, PDO::PARAM_INT);
+$stmt->bindValue(":offset", $offset, PDO::PARAM_INT);
 $stmt->execute();
 
-$allProductos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$totalProductos = count($allProductos);
-$paginaActual = max(1, (int) ($_GET["pagina"] ?? 1));
-$porPagina = 15;
-$paginacionProductosList = calcularPaginacion($totalProductos, $paginaActual, $porPagina);
-$productos = array_slice($allProductos, $paginacionProductosList["offset"], $porPagina);
+$productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($idRol === 1) {
     $textoSubtitulo = "Consulte, edite, compre stock o elimine productos del inventario.";

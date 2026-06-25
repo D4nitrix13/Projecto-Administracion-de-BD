@@ -784,6 +784,12 @@ BEGIN
         RAISE EXCEPTION 'Producto no válido';
     END IF;
 
+    DELETE FROM detallefactura
+    WHERE id_producto = p_id_producto;
+
+    DELETE FROM detallecompra
+    WHERE id_producto = p_id_producto;
+
     DELETE FROM Producto
     WHERE id_producto = p_id_producto;
 
@@ -2124,8 +2130,11 @@ BEGIN
         RAISE EXCEPTION 'ID de proveedor no válido';
     END IF;
 
-    DELETE FROM Proveedor
-    WHERE Proveedor.id_proveedor = p_id_proveedor;
+    DELETE FROM detallecompra WHERE id_compra IN (SELECT id_compra FROM Compra WHERE id_proveedor = p_id_proveedor);
+    DELETE FROM detallefactura WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_proveedor = p_id_proveedor);
+    DELETE FROM Compra WHERE id_proveedor = p_id_proveedor;
+    DELETE FROM Producto WHERE id_proveedor = p_id_proveedor;
+    DELETE FROM Proveedor WHERE id_proveedor = p_id_proveedor;
 
     RETURN FOUND;
 END;
@@ -3080,8 +3089,11 @@ BEGIN
         RAISE EXCEPTION 'ID de proveedor no válido';
     END IF;
 
-    DELETE FROM Proveedor
-    WHERE Proveedor.id_proveedor = p_id_proveedor;
+    DELETE FROM detallecompra WHERE id_compra IN (SELECT id_compra FROM Compra WHERE id_proveedor = p_id_proveedor);
+    DELETE FROM detallefactura WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_proveedor = p_id_proveedor);
+    DELETE FROM Compra WHERE id_proveedor = p_id_proveedor;
+    DELETE FROM Producto WHERE id_proveedor = p_id_proveedor;
+    DELETE FROM Proveedor WHERE id_proveedor = p_id_proveedor;
 
     RETURN FOUND;
 END;
@@ -3102,8 +3114,10 @@ BEGIN
         RAISE EXCEPTION 'ID de categoría no válido';
     END IF;
 
-    DELETE FROM Categoria
-    WHERE Categoria.id_categoria = p_id_categoria;
+    DELETE FROM detallefactura WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_categoria = p_id_categoria);
+    DELETE FROM detallecompra WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_categoria = p_id_categoria);
+    DELETE FROM Producto WHERE id_categoria = p_id_categoria;
+    DELETE FROM Categoria WHERE id_categoria = p_id_categoria;
 
     RETURN FOUND;
 END;
