@@ -13,6 +13,11 @@ $factura = $datos["factura"];
 $detalles = $datos["detalles"];
 $historialEstados = $datos["historialEstados"] ?? [];
 $resumenHistorial = $datos["resumenHistorial"] ?? [];
+
+$flashSuccess = $_SESSION["flash_success"] ?? null;
+$flashError = $_SESSION["flash_error"] ?? null;
+
+unset($_SESSION["flash_success"], $_SESSION["flash_error"]);
 ?>
 
 <!DOCTYPE html>
@@ -34,6 +39,7 @@ $resumenHistorial = $datos["resumenHistorial"] ?? [];
         <?php require __DIR__ . "/partials/inicio-publico/dashboard/topbar.php"; ?>
 
         <?php require __DIR__ . "/partials/facturacion/facturas/detalle/header.php"; ?>
+        <?php require __DIR__ . "/partials/facturacion/facturas/alerts.php"; ?>
 
         <section class="invoice-detail-card">
             <?php require __DIR__ . "/partials/facturacion/facturas/detalle/summary.php"; ?>

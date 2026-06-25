@@ -26,5 +26,115 @@
         "id_seccion": null,
         "rol_origen": "Administrador",
         "metadata": []
+    },
+    {
+        "id": "7237acf6b19ed3de38a909acecdd2cc4",
+        "tipo": "factura_creada",
+        "titulo": "Factura creada",
+        "mensaje": "Nueva factura #21 — $264.21",
+        "leida": false,
+        "fecha": "2026-06-24T23:20:26",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": 1,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "factura_id": 21,
+            "total": 264.21
+        }
+    },
+    {
+        "id": "42fc6a29237427866dccc6fab526c6a4",
+        "tipo": "producto_eliminado",
+        "titulo": "Producto eliminado",
+        "mensaje": "Se eliminó el producto ID #7",
+        "leida": false,
+        "fecha": "2026-06-24T23:22:31",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "6401018e8a611cc05425b75467ec67c7",
+        "tipo": "categoria_eliminada",
+        "titulo": "Categoría eliminada",
+        "mensaje": "Se eliminó la categoría ID #10",
+        "leida": false,
+        "fecha": "2026-06-24T23:22:35",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "a1b9bcda9c9ed1ac7ac26d10c442bfc2",
+        "tipo": "cliente_eliminado",
+        "titulo": "Cliente eliminado",
+        "mensaje": "Se eliminó el cliente ID #13",
+        "leida": false,
+        "fecha": "2026-06-24T23:22:55",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "4a7228e5c265c4d0f7bac3800021db17",
+        "tipo": "factura_creada",
+        "titulo": "Factura creada",
+        "mensaje": "Nueva factura #22 — $313.09",
+        "leida": false,
+        "fecha": "2026-06-24T23:23:46",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": 1,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "factura_id": 22,
+            "total": 313.09
+        }
+    },
+    {
+        "id": "d3080b4c54b2eb6f275f0e5eb54378b7",
+        "tipo": "producto_creado",
+        "titulo": "Nuevo producto",
+        "mensaje": "Se registró el producto: asdfsaf (sadfsdf)",
+        "leida": false,
+        "fecha": "2026-06-24T23:30:55",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "nombre": "asdfsaf",
+            "codigo": "sadfsdf"
+        }
+    },
+    {
+        "id": "58c0403c338821eb15b8021591bf4686",
+        "tipo": "pago_recibido",
+        "titulo": "Pago recibido",
+        "mensaje": "Abono de C$ 156.55 en factura #22",
+        "leida": false,
+        "fecha": "2026-06-24T23:38:09",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "",
+        "metadata": {
+            "factura_id": 22,
+            "monto": 156.55
+        }
     }
 ]

@@ -416,7 +416,10 @@ class FacturaService
                 UPDATE plazo_cuota
                 SET monto_pagado = :monto_pagado,
                     estado = :estado,
-                    fecha_pago_real = CASE WHEN :estado = 'Pagado' THEN CURRENT_TIMESTAMP ELSE fecha_pago_real END
+                    fecha_pago_real = CASE
+                        WHEN CAST(:estado AS varchar) = 'Pagado'::varchar THEN CURRENT_TIMESTAMP
+                        ELSE fecha_pago_real
+                    END
                 WHERE id_cuota = :id_cuota
             ")->execute([
                 ":monto_pagado" => $nuevoPagadoCuota,

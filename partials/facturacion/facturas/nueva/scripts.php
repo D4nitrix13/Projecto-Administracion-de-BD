@@ -336,7 +336,7 @@ foreach ($rutasConfiguracionSistema as $rutaConfiguracionSistema) {
             const valorNormalizado = normalizarTexto(valor);
 
             const cliente = clientes.find(c => {
-                const nombre = trim(c.nombres || "") + " " + trim(c.apellidos || "");
+                const nombre = `${String(c.nombres || "").trim()} ${String(c.apellidos || "").trim()}`.trim();
                 let texto = nombre.trim();
                 if (c.telefono) texto += " - " + c.telefono;
                 if (c.identificacion) texto += " - " + c.identificacion;
