@@ -136,5 +136,73 @@
             "factura_id": 22,
             "monto": 156.55
         }
+    },
+    {
+        "id": "896bb371c1acf1c1e3ef257ccd3f64ba",
+        "tipo": "factura_creada",
+        "titulo": "Factura creada",
+        "mensaje": "Nueva factura #23 — $186.59",
+        "leida": false,
+        "fecha": "2026-06-24T23:40:19",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": 1,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "factura_id": 23,
+            "total": 186.59
+        }
+    },
+    {
+        "id": "36525afeb682cedb15eb4666ee7bbd78",
+        "tipo": "pago_recibido",
+        "titulo": "Pago recibido",
+        "mensaje": "Abono de C$ 130.00 en factura #23",
+        "leida": false,
+        "fecha": "2026-06-24T23:40:41",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "",
+        "metadata": {
+            "factura_id": 23,
+            "monto": 130
+        }
+    },
+    {
+        "id": "9dc32a1e565cdff58cdceff66dd4fc21",
+        "tipo": "factura_pagada",
+        "titulo": "Factura pagada",
+        "mensaje": "La factura #23 ha sido pagada completamente.",
+        "leida": false,
+        "fecha": "2026-06-24T23:41:35",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "",
+        "metadata": {
+            "factura_id": 23,
+            "monto": 186.59
+        }
+    },
+    {
+        "id": "8df04e42db0c9bccc782872f150992dd",
+        "tipo": "factura_creada",
+        "titulo": "Factura creada",
+        "mensaje": "Nueva factura #24 — $298.14",
+        "leida": false,
+        "fecha": "2026-06-24T23:42:24",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": 1,
+        "rol_origen": "Administrador",
+        "metadata": {
+            "factura_id": 24,
+            "total": 298.14
+        }
     }
 ]
