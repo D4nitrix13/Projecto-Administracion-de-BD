@@ -204,5 +204,47 @@
             "factura_id": 24,
             "total": 298.14
         }
+    },
+    {
+        "id": "1e4fdb5db5e0f2589f26e6a686642e94",
+        "tipo": "proveedor_eliminado",
+        "titulo": "Proveedor eliminado",
+        "mensaje": "Se eliminó el proveedor ID #8",
+        "leida": false,
+        "fecha": "2026-06-24T23:46:13",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "74431090c2a6d818e0c8b1d0b9c5dedf",
+        "tipo": "backup_manual",
+        "titulo": "Backup manual",
+        "mensaje": "Respaldo generado: backup_manual_tercer_backup_2026-06-24_23-52-23.sql",
+        "leida": false,
+        "fecha": "2026-06-24T23:52:23",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
+    },
+    {
+        "id": "4dfc53ac73b89d38c931e7a5d6c169e6",
+        "tipo": "backup_manual",
+        "titulo": "Backup manual",
+        "mensaje": "Respaldo generado: backup_manual_cuarto_backup_2026-06-24_23-54-12.sql",
+        "leida": false,
+        "fecha": "2026-06-24T23:54:12",
+        "fecha_lectura": null,
+        "id_usuario_origen": 1,
+        "id_usuario_destino": 1,
+        "id_seccion": null,
+        "rol_origen": "Administrador",
+        "metadata": []
     }
 ]

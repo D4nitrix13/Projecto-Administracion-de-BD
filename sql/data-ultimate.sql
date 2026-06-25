@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict RabYncbGLRo3H7WnIYhqH7Bqk7ljHLu6qztZk1DkOd6Qx3JK8kSBrpORFMkSIgU
+\restrict 4MyP5M4dZ76JvBV7aaHRNvS5vunwvr46mbxb04HLq0QrP7y85YeHI4KqsdSSZUz
 
 -- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
 -- Dumped by pg_dump version 18.4 (Debian 18.4-1.pgdg12+1)
@@ -114,6 +114,21 @@ DROP SEQUENCE IF EXISTS public.categoria_id_categoria_seq;
 DROP TABLE IF EXISTS public.categoria;
 DROP SEQUENCE IF EXISTS public.auditoria_id_auditoria_seq;
 DROP TABLE IF EXISTS public.auditoria;
+DROP TABLE IF EXISTS backup_limpieza_demo.usuario;
+DROP TABLE IF EXISTS backup_limpieza_demo.seccion;
+DROP TABLE IF EXISTS backup_limpieza_demo.rol;
+DROP TABLE IF EXISTS backup_limpieza_demo.proveedor;
+DROP TABLE IF EXISTS backup_limpieza_demo.producto;
+DROP TABLE IF EXISTS backup_limpieza_demo.plazo_cuota;
+DROP TABLE IF EXISTS backup_limpieza_demo.plazo;
+DROP TABLE IF EXISTS backup_limpieza_demo.factura_estado_historial;
+DROP TABLE IF EXISTS backup_limpieza_demo.factura;
+DROP TABLE IF EXISTS backup_limpieza_demo.detallefactura;
+DROP TABLE IF EXISTS backup_limpieza_demo.detallecompra;
+DROP TABLE IF EXISTS backup_limpieza_demo.compra;
+DROP TABLE IF EXISTS backup_limpieza_demo.cliente;
+DROP TABLE IF EXISTS backup_limpieza_demo.categoria;
+DROP TABLE IF EXISTS backup_limpieza_demo.auditoria;
 DROP FUNCTION IF EXISTS public.validar_factura_existe(p_id_factura integer);
 DROP FUNCTION IF EXISTS public.registrar_producto_formulario(p_codigo character varying, p_nombre character varying, p_descripcion text, p_imagen character varying, p_id_categoria integer, p_id_proveedor integer, p_precio_compra numeric, p_precio_venta numeric, p_stock integer);
 DROP PROCEDURE IF EXISTS public.registrar_producto(IN p_codigo character varying, IN p_nombre character varying, IN p_descripcion text, IN p_imagen character varying, IN p_id_categoria integer, IN p_id_proveedor integer, IN p_precio_compra numeric, IN p_precio_venta numeric, IN p_stock integer);
@@ -226,6 +241,14 @@ DROP FUNCTION IF EXISTS public.actualizar_producto_edicion(p_id_producto integer
 DROP FUNCTION IF EXISTS public.actualizar_password_usuario_login(p_id_usuario integer, p_password_hash text);
 DROP FUNCTION IF EXISTS public.actualizar_cliente_sistema(p_id_cliente integer, p_nombres character varying, p_apellidos character varying, p_telefono character varying, p_direccion character varying, p_identificacion character varying, p_tipo_cliente character varying);
 DROP FUNCTION IF EXISTS public.actualizar_categoria(p_id_categoria integer, p_nombre character varying);
+DROP SCHEMA IF EXISTS backup_limpieza_demo;
+--
+-- Name: backup_limpieza_demo; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA backup_limpieza_demo;
+
+
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
@@ -1706,18 +1729,36 @@ $$;
 CREATE FUNCTION public.eliminar_proveedor_sistema(p_id_proveedor integer) RETURNS boolean
     LANGUAGE plpgsql
     AS $$
+DECLARE
+    v_existe boolean;
 BEGIN
     IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
         RAISE EXCEPTION 'ID de proveedor no válido';
     END IF;
 
-    DELETE FROM detallecompra WHERE id_compra IN (SELECT id_compra FROM Compra WHERE id_proveedor = p_id_proveedor);
-    DELETE FROM detallefactura WHERE id_producto IN (SELECT id_producto FROM Producto WHERE id_proveedor = p_id_proveedor);
-    DELETE FROM Compra WHERE id_proveedor = p_id_proveedor;
-    DELETE FROM Producto WHERE id_proveedor = p_id_proveedor;
-    DELETE FROM Proveedor WHERE id_proveedor = p_id_proveedor;
+    SELECT EXISTS (
+        SELECT 1
+        FROM proveedor
+        WHERE id_proveedor = p_id_proveedor
+    )
+    INTO v_existe;
 
-    RETURN FOUND;
+    IF NOT v_existe THEN
+        RETURN false;
+    END IF;
+
+    UPDATE producto
+    SET id_proveedor = NULL
+    WHERE id_proveedor = p_id_proveedor;
+
+    UPDATE compra
+    SET id_proveedor = NULL
+    WHERE id_proveedor = p_id_proveedor;
+
+    DELETE FROM proveedor
+    WHERE id_proveedor = p_id_proveedor;
+
+    RETURN true;
 END;
 $$;
 
@@ -4018,6 +4059,240 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: auditoria; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.auditoria (
+    id_auditoria integer,
+    usuario character varying(100),
+    accion character varying(50),
+    tabla_afectada character varying(100),
+    descripcion text,
+    fecha_registro timestamp without time zone,
+    fecha timestamp without time zone,
+    id_usuario integer,
+    registro_id text,
+    datos_anteriores jsonb
+);
+
+
+--
+-- Name: categoria; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.categoria (
+    id_categoria integer,
+    nombre character varying(80)
+);
+
+
+--
+-- Name: cliente; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.cliente (
+    id_cliente integer,
+    nombres character varying(80),
+    apellidos character varying(80),
+    telefono character varying(30),
+    direccion character varying(200),
+    identificacion character varying(40),
+    tipo_cliente character varying(12),
+    fecha_registro date
+);
+
+
+--
+-- Name: compra; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.compra (
+    id_compra integer,
+    fecha timestamp without time zone,
+    id_proveedor integer,
+    id_usuario integer,
+    total numeric(10,2)
+);
+
+
+--
+-- Name: detallecompra; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.detallecompra (
+    id_detalle integer,
+    id_compra integer,
+    id_producto integer,
+    cantidad integer,
+    costo_unitario numeric(10,2),
+    total_linea numeric(10,2)
+);
+
+
+--
+-- Name: detallefactura; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.detallefactura (
+    id_detalle integer,
+    id_factura integer,
+    id_producto integer,
+    cantidad integer,
+    precio_unitario numeric(10,2),
+    descuento_linea numeric(10,2),
+    total_linea numeric(10,2)
+);
+
+
+--
+-- Name: factura; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.factura (
+    id_factura integer,
+    fecha timestamp without time zone,
+    id_cliente integer,
+    id_usuario integer,
+    id_seccion integer,
+    subtotal numeric(10,2),
+    descuento numeric(10,2),
+    impuesto numeric(10,2),
+    total numeric(10,2),
+    tipo_cliente_venta character varying(10),
+    nombre_cliente_fugaz character varying(150),
+    monto_pagado numeric(10,2),
+    saldo_pendiente numeric(10,2),
+    porcentaje_pagado numeric(5,2),
+    estado_pago character varying(30),
+    estado_produccion character varying(30),
+    fecha_orden_produccion timestamp without time zone,
+    fecha_entrega_estimada date,
+    fecha_entrega_real date
+);
+
+
+--
+-- Name: factura_estado_historial; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.factura_estado_historial (
+    id_historial integer,
+    id_factura integer,
+    tipo_evento character varying(80),
+    estado_pago_anterior character varying(50),
+    estado_pago_nuevo character varying(50),
+    estado_produccion_anterior character varying(80),
+    estado_produccion_nuevo character varying(80),
+    monto_pagado_anterior numeric(12,2),
+    monto_pagado_nuevo numeric(12,2),
+    monto_abonado numeric(12,2),
+    saldo_anterior numeric(12,2),
+    saldo_nuevo numeric(12,2),
+    fecha_entrega_estimada_anterior date,
+    fecha_entrega_estimada_nueva date,
+    comentario text,
+    fecha_evento timestamp without time zone
+);
+
+
+--
+-- Name: plazo; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.plazo (
+    id_plazo integer,
+    id_factura integer,
+    total_original numeric(10,2),
+    fecha_creacion timestamp without time zone,
+    fecha_limite date,
+    estado character varying(20)
+);
+
+
+--
+-- Name: plazo_cuota; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.plazo_cuota (
+    id_cuota integer,
+    id_plazo integer,
+    numero integer,
+    porcentaje numeric(5,2),
+    monto numeric(10,2),
+    fecha_pago date,
+    estado character varying(20),
+    fecha_pago_real timestamp without time zone,
+    monto_pagado numeric(10,2),
+    observaciones text
+);
+
+
+--
+-- Name: producto; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.producto (
+    id_producto integer,
+    codigo character varying(50),
+    nombre character varying(120),
+    descripcion text,
+    imagen character varying(200),
+    id_categoria integer,
+    id_proveedor integer,
+    precio_compra numeric(10,2),
+    precio_venta numeric(10,2),
+    stock integer
+);
+
+
+--
+-- Name: proveedor; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.proveedor (
+    id_proveedor integer,
+    nombre character varying(120),
+    telefono character varying(30),
+    email character varying(120),
+    direccion character varying(200)
+);
+
+
+--
+-- Name: rol; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.rol (
+    id_rol integer,
+    nombre character varying(30)
+);
+
+
+--
+-- Name: seccion; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.seccion (
+    id_seccion integer,
+    nombre character varying(30)
+);
+
+
+--
+-- Name: usuario; Type: TABLE; Schema: backup_limpieza_demo; Owner: -
+--
+
+CREATE TABLE backup_limpieza_demo.usuario (
+    id_usuario integer,
+    nombre character varying(100),
+    email character varying(120),
+    password text,
+    id_rol integer,
+    id_seccion integer
+);
+
+
+--
 -- Name: auditoria; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4129,7 +4404,7 @@ ALTER SEQUENCE public.cliente_id_cliente_seq OWNED BY public.cliente.id_cliente;
 CREATE TABLE public.compra (
     id_compra integer NOT NULL,
     fecha timestamp without time zone DEFAULT now() NOT NULL,
-    id_proveedor integer NOT NULL,
+    id_proveedor integer,
     id_usuario integer NOT NULL,
     total numeric(10,2) DEFAULT 0 NOT NULL
 );
@@ -4674,24 +4949,29 @@ ALTER TABLE ONLY public.usuario ALTER COLUMN id_usuario SET DEFAULT nextval('pub
 
 
 --
--- Data for Name: auditoria; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: auditoria; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.auditoria (id_auditoria, usuario, accion, tabla_afectada, descripcion, fecha_registro, fecha, id_usuario, registro_id, datos_anteriores) FROM stdin;
+COPY backup_limpieza_demo.auditoria (id_auditoria, usuario, accion, tabla_afectada, descripcion, fecha_registro, fecha, id_usuario, registro_id, datos_anteriores) FROM stdin;
 41	Sistema	DELETE	cliente	\N	2026-05-12 21:58:41.700417	2026-05-12 21:58:41.700417	\N	358	{"nombres": "Carlos Prueba", "telefono": "7777-1010", "apellidos": "Restauración", "direccion": "Managua, Nicaragua", "id_cliente": 358, "tipo_cliente": "Detallista", "fecha_registro": "2026-05-12", "identificacion": "PAP-CLI-001"}
 42	Sistema	DELETE	cliente	\N	2026-05-12 21:58:41.700417	2026-05-12 21:58:41.700417	\N	359	{"nombres": "María Papelera", "telefono": "7777-2020", "apellidos": "Temporal", "direccion": "León, Nicaragua", "id_cliente": 359, "tipo_cliente": "Mayorista", "fecha_registro": "2026-05-12", "identificacion": "PAP-CLI-002"}
 43	Sistema	DELETE	proveedor	\N	2026-05-12 21:58:41.703555	2026-05-12 21:58:41.703555	\N	11	{"email": "proveedor.papelera@test.com", "nombre": "Proveedor Prueba Papelera", "telefono": "8888-9090", "direccion": "Managua, Nicaragua", "id_proveedor": 11}
 44	Sistema	DELETE	categoria	\N	2026-05-12 21:58:41.704884	2026-05-12 21:58:41.704884	\N	11	{"nombre": "Prueba Papelera Categoría", "id_categoria": 11}
 45	Sistema	RESTAURADO	producto	 | Registro restaurado desde papelera administrativa.	2026-05-12 22:04:26.858734	2026-05-12 22:04:26.858734	\N	122	{"stock": 7, "codigo": "TEMP-PROD-001", "imagen": null, "nombre": "Producto temporal auditoria", "descripcion": "Producto creado para probar restauración.", "id_producto": 122, "id_categoria": 12, "id_proveedor": 12, "precio_venta": 240.00, "precio_compra": 120.00}
 46	Sistema	DELETE	producto	\N	2026-05-12 22:39:13.128318	2026-05-12 22:39:13.128318	\N	121	{"stock": 12, "codigo": "PAP-PROD-004", "imagen": "prod_6a04006d25c598.81799647.png", "nombre": "Bolso prueba papelera", "descripcion": "Producto temporal adicional para probar registros eliminados.", "id_producto": 121, "id_categoria": 10, "id_proveedor": 10, "precio_venta": 295.00, "precio_compra": 160.00}
+47	Sistema	DELETE	producto	\N	2026-06-24 23:22:31.723183	2026-06-24 23:22:31.723183	\N	7	{"stock": 2, "codigo": "P019", "imagen": "prod_692e2130300f13.79885065.jpg", "nombre": "Bolso Tote Personalizado #19", "descripcion": "Producto generado para inventario académico de Panda Estampados y Kitsune.", "id_producto": 7, "id_categoria": 9, "id_proveedor": 9, "precio_venta": 229.75, "precio_compra": 151.25}
+48	Sistema	DELETE	producto	\N	2026-06-24 23:22:35.850389	2026-06-24 23:22:35.850389	\N	8	{"stock": 40, "codigo": "P020", "imagen": "prod_69f56fdd0d4ab5.98973422.jpg", "nombre": "Mousepad Gamer Estampado #20", "descripcion": "Producto generado para inventario académico de Panda Estampados y Kitsune.", "id_producto": 8, "id_categoria": 10, "id_proveedor": 10, "precio_venta": 235.00, "precio_compra": 155.00}
+49	Sistema	DELETE	producto	\N	2026-06-24 23:22:35.850389	2026-06-24 23:22:35.850389	\N	18	{"stock": 50, "codigo": "P030", "imagen": "prod_ee0704d79c323b08c7071c3e.jpg", "nombre": "Mousepad Gamer Estampado #30", "descripcion": "Producto generado para inventario académico de Panda Estampados y Kitsune.", "id_producto": 18, "id_categoria": 10, "id_proveedor": 10, "precio_venta": 287.50, "precio_compra": 192.50}
+50	Sistema	DELETE	categoria	\N	2026-06-24 23:22:35.850389	2026-06-24 23:22:35.850389	\N	10	{"nombre": "Accesorios personalizados", "id_categoria": 10}
+52	Sistema	DELETE	proveedor	\N	2026-06-24 23:46:13.759723	2026-06-24 23:46:13.759723	\N	8	{"email": "contacto@artesgranada.com", "nombre": "Artes Gráficas Granada", "telefono": "2552-8820", "direccion": "Calle La Calzada, Granada", "id_proveedor": 8}
 \.
 
 
 --
--- Data for Name: categoria; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: categoria; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.categoria (id_categoria, nombre) FROM stdin;
+COPY backup_limpieza_demo.categoria (id_categoria, nombre) FROM stdin;
 1	Camisetas
 2	Hoodies
 3	Stickers
@@ -4701,16 +4981,16 @@ COPY public.categoria (id_categoria, nombre) FROM stdin;
 7	Posters
 8	Bolsos
 9	Mousepads
-10	Accesorios personalizados
 12	Categoria Temporal Producto
+13	asdasdf
 \.
 
 
 --
--- Data for Name: cliente; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: cliente; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.cliente (id_cliente, nombres, apellidos, telefono, direccion, identificacion, tipo_cliente, fecha_registro) FROM stdin;
+COPY backup_limpieza_demo.cliente (id_cliente, nombres, apellidos, telefono, direccion, identificacion, tipo_cliente, fecha_registro) FROM stdin;
 1	Héctor	Molina	88100015	Carazo	AUTO-0015	Mayorista	2026-01-14
 2	Adriana	Chávez	88100016	Estelí	AUTO-0016	Detallista	2026-01-18
 3	Samuel	Cruz	88100017	Chinandega	AUTO-0017	Detallista	2026-01-22
@@ -4723,7 +5003,6 @@ COPY public.cliente (id_cliente, nombres, apellidos, telefono, direccion, identi
 10	Daniela	Rivas	88100024	Granada	AUTO-0024	Detallista	2026-02-19
 11	Fernando	Aguilar	88100025	Carazo	AUTO-0025	Mayorista	2026-02-23
 12	Valeria	Vargas	88100026	Estelí	AUTO-0026	Detallista	2026-02-27
-13	Miguel	Pineda	88100027	Chinandega	AUTO-0027	Detallista	2026-03-03
 14	Andrea	Reyes	88100028	Rivas	AUTO-0028	Detallista	2026-03-07
 15	Sergio	Campos	88100029	Matagalpa	AUTO-0029	Detallista	2026-03-11
 16	Camila	Duarte	88100030	Jinotepe	AUTO-0030	Mayorista	2026-03-15
@@ -4735,10 +5014,10 @@ COPY public.cliente (id_cliente, nombres, apellidos, telefono, direccion, identi
 
 
 --
--- Data for Name: compra; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: compra; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.compra (id_compra, fecha, id_proveedor, id_usuario, total) FROM stdin;
+COPY backup_limpieza_demo.compra (id_compra, fecha, id_proveedor, id_usuario, total) FROM stdin;
 1	2026-01-07 09:30:00	1	1	2377.50
 2	2026-01-09 10:30:00	2	2	2977.50
 3	2026-01-11 11:30:00	3	3	3645.00
@@ -4746,7 +5025,6 @@ COPY public.compra (id_compra, fecha, id_proveedor, id_usuario, total) FROM stdi
 5	2026-01-15 13:30:00	5	5	5182.50
 6	2026-01-17 14:30:00	6	6	6052.50
 7	2026-01-19 15:30:00	7	7	6990.00
-8	2026-01-21 08:30:00	8	8	7995.00
 9	2026-01-23 09:30:00	9	9	6757.50
 10	2026-01-25 10:30:00	10	10	5362.50
 11	2026-01-27 11:30:00	1	11	3810.00
@@ -4756,23 +5034,22 @@ COPY public.compra (id_compra, fecha, id_proveedor, id_usuario, total) FROM stdi
 15	2026-02-04 15:30:00	5	15	7695.00
 16	2026-02-06 08:30:00	6	16	8835.00
 17	2026-02-08 09:30:00	7	17	10042.50
-18	2026-02-10 10:30:00	8	18	11317.50
 19	2026-02-12 11:30:00	9	19	12660.00
 20	2026-02-14 12:30:00	10	20	14070.00
+8	2026-01-21 08:30:00	\N	8	7995.00
+18	2026-02-10 10:30:00	\N	18	11317.50
 \.
 
 
 --
--- Data for Name: detallecompra; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: detallecompra; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.detallecompra (id_detalle, id_compra, id_producto, cantidad, costo_unitario, total_linea) FROM stdin;
+COPY backup_limpieza_demo.detallecompra (id_detalle, id_compra, id_producto, cantidad, costo_unitario, total_linea) FROM stdin;
 1	1	4	7	95.00	665.00
-2	2	7	8	106.25	850.00
 3	3	10	9	117.50	1057.50
 4	4	1	10	128.75	1287.50
 5	5	4	11	140.00	1540.00
-6	6	7	12	151.25	1815.00
 7	7	10	13	162.50	2112.50
 8	8	13	14	173.75	2432.50
 9	9	16	15	185.00	2775.00
@@ -4785,23 +5062,20 @@ COPY public.detallecompra (id_detalle, id_compra, id_producto, cantidad, costo_u
 16	16	9	10	263.75	2637.50
 17	17	12	11	275.00	3025.00
 18	18	15	12	286.25	3435.00
-19	19	18	13	297.50	3867.50
 20	20	1	14	308.75	4322.50
 \.
 
 
 --
--- Data for Name: detallefactura; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: detallefactura; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.detallefactura (id_detalle, id_factura, id_producto, cantidad, precio_unitario, descuento_linea, total_linea) FROM stdin;
+COPY backup_limpieza_demo.detallefactura (id_detalle, id_factura, id_producto, cantidad, precio_unitario, descuento_linea, total_linea) FROM stdin;
 1	1	3	3	145.75	0.00	437.25
-2	3	7	1	166.75	0.00	166.75
 3	4	9	2	177.25	0.00	354.50
 4	5	11	3	187.75	0.00	563.25
 5	7	3	1	208.75	0.00	208.75
 6	8	5	2	219.25	0.00	438.50
-7	9	7	3	229.75	0.00	689.25
 8	11	11	1	250.75	0.00	250.75
 9	12	13	2	261.25	0.00	522.50
 10	13	15	3	271.75	10.00	805.25
@@ -4812,17 +5086,20 @@ COPY public.detallefactura (id_detalle, id_factura, id_producto, cantidad, preci
 15	20	1	2	345.25	10.00	680.50
 16	1	3	3	355.75	0.00	1067.25
 17	2	5	4	366.25	0.00	1465.00
-18	3	7	1	376.75	0.00	376.75
 19	4	9	2	387.25	0.00	774.50
 20	5	11	3	397.75	0.00	1193.25
+22	22	17	1	282.25	0.00	282.25
+23	23	17	1	282.25	0.00	282.25
+24	24	17	1	282.25	0.00	282.25
 \.
 
 
 --
--- Data for Name: factura; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: factura; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subtotal, descuento, impuesto, total, tipo_cliente_venta, nombre_cliente_fugaz, monto_pagado, saldo_pendiente, porcentaje_pagado, estado_pago, estado_produccion, fecha_orden_produccion, fecha_entrega_estimada, fecha_entrega_real) FROM stdin;
+COPY backup_limpieza_demo.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subtotal, descuento, impuesto, total, tipo_cliente_venta, nombre_cliente_fugaz, monto_pagado, saldo_pendiente, porcentaje_pagado, estado_pago, estado_produccion, fecha_orden_produccion, fecha_entrega_estimada, fecha_entrega_real) FROM stdin;
+23	2026-06-24 23:40:19.781929	2	1	1	282.25	120.00	24.34	186.59	Habitual	\N	186.59	0.00	100.00	Pagado	Entregada	2026-06-24 23:40:19.781929	\N	2026-06-24
 1	2026-06-03 14:15:00	6	26	2	1504.50	0.00	225.68	1730.18	Habitual	\N	865.09	865.09	50.00	Parcial	Lista para entregar	2026-06-03 14:45:00	2026-06-06	\N
 2	2026-06-04 15:15:00	7	27	1	1465.00	0.00	219.75	1684.75	Habitual	\N	0.00	1684.75	0.00	Pendiente	En producción	2026-06-04 15:45:00	2026-06-08	\N
 3	2026-06-05 09:15:00	8	28	2	543.50	0.00	81.53	625.03	Habitual	\N	625.03	0.00	100.00	Pagado	Pendiente	2026-06-05 09:45:00	2026-06-10	\N
@@ -4836,17 +5113,20 @@ COPY public.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subt
 13	2026-06-15 12:15:00	8	8	2	805.25	0.00	120.79	926.04	Habitual	\N	463.02	463.02	50.00	Parcial	Pendiente	2026-06-15 12:45:00	2026-06-20	\N
 16	2026-06-18 15:15:00	11	11	1	606.50	0.00	90.98	697.48	Habitual	\N	348.74	348.74	50.00	Parcial	Lista para entregar	2026-06-18 15:45:00	2026-06-21	\N
 17	2026-06-19 09:15:00	12	12	2	941.25	0.00	141.19	1082.44	Fugaz	José Ramírez	0.00	1082.44	0.00	Pendiente	En producción	2026-06-19 09:45:00	2026-06-23	\N
+22	2026-06-24 23:23:46.989663	16	1	1	282.25	10.00	40.84	313.09	Habitual	\N	156.55	156.54	50.00	Parcial	Cancelada	2026-06-24 23:23:46.989663	\N	\N
 19	2026-06-21 11:15:00	14	14	2	334.75	0.00	50.21	384.96	Habitual	\N	192.48	192.48	50.00	Parcial	Pendiente	2026-06-21 11:45:00	2026-06-27	\N
+24	2026-06-24 23:42:24.165215	17	1	1	282.25	23.00	38.89	298.14	Habitual	\N	0.00	298.14	0.00	Pendiente	Pendiente	2026-06-24 23:42:24.165215	\N	\N
 15	2026-06-17 14:15:00	10	10	2	292.75	25.00	43.91	311.66	Habitual	\N	311.66	0.00	100.00	Pagado	Entregada	2026-06-17 14:45:00	2026-06-19	\N
 20	2026-06-22 12:15:00	15	15	1	680.50	25.00	102.08	757.58	Habitual	\N	0.00	757.58	0.00	Pendiente	Lista para entregar	2026-06-22 12:45:00	2026-06-24	\N
+21	2026-06-24 23:20:26.916357	14	1	1	229.75	0.00	34.46	264.21	Habitual	\N	0.00	264.21	0.00	Pendiente	Pendiente	2026-06-24 23:20:26.916357	\N	\N
 \.
 
 
 --
--- Data for Name: factura_estado_historial; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: factura_estado_historial; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.factura_estado_historial (id_historial, id_factura, tipo_evento, estado_pago_anterior, estado_pago_nuevo, estado_produccion_anterior, estado_produccion_nuevo, monto_pagado_anterior, monto_pagado_nuevo, monto_abonado, saldo_anterior, saldo_nuevo, fecha_entrega_estimada_anterior, fecha_entrega_estimada_nueva, comentario, fecha_evento) FROM stdin;
+COPY backup_limpieza_demo.factura_estado_historial (id_historial, id_factura, tipo_evento, estado_pago_anterior, estado_pago_nuevo, estado_produccion_anterior, estado_produccion_nuevo, monto_pagado_anterior, monto_pagado_nuevo, monto_abonado, saldo_anterior, saldo_nuevo, fecha_entrega_estimada_anterior, fecha_entrega_estimada_nueva, comentario, fecha_evento) FROM stdin;
 2	1	Factura actualizada	Parcial	Parcial	Lista para entregar	Lista para entregar	865.09	865.09	865.09	865.09	865.09	2026-06-06	2026-09-10	Factura parcialmente pagada. Monto pagado acumulado: C$ 865.09. Saldo actual: C$ 865.09.	2026-09-28 22:51:43.993655
 3	2	Factura actualizada	Pendiente	Pendiente	En producción	En producción	0.00	0.00	0.00	1684.75	1684.75	2026-06-08	2026-09-12	Factura pendiente de pago. Saldo actual: C$ 1684.75.	2026-09-28 22:51:43.993655
 4	3	Factura actualizada	Pagado	Pagado	Pendiente	Pendiente	625.03	625.03	625.03	0.00	0.00	2026-06-10	2026-09-14	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-09-28 22:51:43.993655
@@ -4869,38 +5149,56 @@ COPY public.factura_estado_historial (id_historial, id_factura, tipo_evento, est
 27	15	Pago actualizado	Pagado	Pagado	Entregada	Entregada	336.66	311.66	0.00	0.00	0.00	2026-06-19	2026-06-19	Cambio registrado automáticamente por el sistema.	2026-06-24 23:04:50.721299
 28	5	Corrección de consistencia	Pendiente	Pendiente	Entregada	Lista para entregar	0.00	0.00	0.00	1994.98	1994.98	2026-06-09	2026-06-09	Corrección automática: no se puede marcar como Entregada una factura con saldo pendiente. Estado de producción ajustado a Lista para entregar. Saldo actual: C$ 1994.98.	2026-06-24 23:12:16.747371
 29	20	Corrección de consistencia	Pendiente	Pendiente	Entregada	Lista para entregar	0.00	0.00	0.00	757.58	757.58	2026-06-24	2026-06-24	Corrección automática: no se puede marcar como Entregada una factura con saldo pendiente. Estado de producción ajustado a Lista para entregar. Saldo actual: C$ 757.58.	2026-06-24 23:12:16.747371
+30	21	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	264.21	\N	\N	La factura fue registrada en el sistema.	2026-06-24 23:20:26.916357
+35	22	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	313.09	\N	\N	La factura fue registrada en el sistema.	2026-06-24 23:23:46.989663
+40	22	Estado de producción actualizado	Pendiente	Parcial	Pendiente	En producción	0.00	156.55	156.55	313.09	156.54	\N	\N	Cambio registrado automáticamente por el sistema.	2026-06-24 23:38:09.038463
+41	22	Factura cancelada	Parcial	Parcial	En producción	Cancelada	156.55	156.55	0.00	156.54	156.54	\N	\N	El cliente canceló después de la fecha estimada de entrega.	2026-06-24 23:38:25.124489
+42	23	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	186.59	\N	\N	La factura fue registrada en el sistema.	2026-06-24 23:40:19.781929
+43	23	Estado de producción actualizado	Pendiente	Parcial	Pendiente	En producción	0.00	130.00	130.00	186.59	56.59	\N	\N	Cambio registrado automáticamente por el sistema.	2026-06-24 23:40:41.487893
+44	23	Pago actualizado	Parcial	Pagado	En producción	En producción	130.00	186.59	56.59	56.59	0.00	\N	\N	Cambio registrado automáticamente por el sistema.	2026-06-24 23:41:35.897219
+45	23	Estado de producción actualizado	Pagado	Pagado	En producción	Lista para entregar	186.59	186.59	0.00	0.00	0.00	\N	\N	Cambio registrado automáticamente por el sistema.	2026-06-24 23:41:40.322577
+46	23	Estado de producción actualizado	Pagado	Pagado	Lista para entregar	Entregada	186.59	186.59	0.00	0.00	0.00	\N	\N	Cambio registrado automáticamente por el sistema.	2026-06-24 23:41:48.18018
+47	24	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	298.14	\N	\N	La factura fue registrada en el sistema.	2026-06-24 23:42:24.165215
 \.
 
 
 --
--- Data for Name: plazo; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: plazo; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.plazo (id_plazo, id_factura, total_original, fecha_creacion, fecha_limite, estado) FROM stdin;
+COPY backup_limpieza_demo.plazo (id_plazo, id_factura, total_original, fecha_creacion, fecha_limite, estado) FROM stdin;
+1	21	264.21	2026-06-24 23:20:26.925986	2026-07-10	Activo
+2	22	313.09	2026-06-24 23:23:46.996005	2026-07-10	Activo
+3	23	186.59	2026-06-24 23:40:19.788535	2026-07-10	Completado
+4	24	298.14	2026-06-24 23:42:24.171873	2026-07-09	Activo
 \.
 
 
 --
--- Data for Name: plazo_cuota; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: plazo_cuota; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.plazo_cuota (id_cuota, id_plazo, numero, porcentaje, monto, fecha_pago, estado, fecha_pago_real, monto_pagado, observaciones) FROM stdin;
+COPY backup_limpieza_demo.plazo_cuota (id_cuota, id_plazo, numero, porcentaje, monto, fecha_pago, estado, fecha_pago_real, monto_pagado, observaciones) FROM stdin;
+1	1	1	100.00	264.21	2026-07-09	Pendiente	\N	0.00	asdfasdfsadfsda
+2	2	1	100.00	313.09	2026-07-09	Pendiente	\N	156.55	
+3	3	1	33.33	62.19	2026-06-29	Pagado	2026-06-24 23:40:41.487893	62.19	
+4	3	2	33.33	62.19	2026-06-29	Pagado	2026-06-24 23:40:41.487893	62.19	
+5	3	3	33.34	62.21	2026-06-29	Pagado	2026-06-24 23:41:35.897219	62.21	
+6	4	1	50.00	149.07	2026-07-01	Pendiente	\N	0.00	
+7	4	2	50.00	149.07	2026-07-01	Pendiente	\N	0.00	
 \.
 
 
 --
--- Data for Name: producto; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: producto; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.producto (id_producto, codigo, nombre, descripcion, imagen, id_categoria, id_proveedor, precio_compra, precio_venta, stock) FROM stdin;
+COPY backup_limpieza_demo.producto (id_producto, codigo, nombre, descripcion, imagen, id_categoria, id_proveedor, precio_compra, precio_venta, stock) FROM stdin;
 1	P013	Hoodie Oversize Negro #13	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_67817b473371f51443a44144.jpg	3	3	128.75	198.25	33
 2	P014	Sticker Holográfico Kitsune #14	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56fc4a61b44.25791177.jpg	4	4	132.50	203.50	4
 3	P015	Taza Sublimada Panda #15	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_977042d6b3d3bdc28500a0b5.jpg	5	5	136.25	208.75	1
 4	P016	Gorra Bordada Negra #16	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_692cba3e06cd65.71101317.png	6	6	140.00	214.00	36
 5	P017	Llavero Acrílico Anime #17	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56fd3dbc463.93497112.png	7	7	143.75	219.25	37
-6	P018	Poster Ilustrado A3 #18	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_bbf90800dd3fd1f24deb27b4.webp	8	8	147.50	224.50	38
-7	P019	Bolso Tote Personalizado #19	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_692e2130300f13.79885065.jpg	9	9	151.25	229.75	3
-8	P020	Mousepad Gamer Estampado #20	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56fdd0d4ab5.98973422.jpg	10	10	155.00	235.00	40
 9	P021	Camiseta Oversize Negra #21	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_bd9ae845c714f7f64699fb75.jpg	1	1	158.75	240.25	41
 10	P022	Camiseta Blanca Personalizada #22	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_692eb95bbb2083.00268187.gif	2	2	162.50	245.50	1
 11	P023	Hoodie Oversize Negro #23	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56fe7efb784.38860716.jpg	3	3	166.25	250.75	43
@@ -4908,19 +5206,20 @@ COPY public.producto (id_producto, codigo, nombre, descripcion, imagen, id_categ
 13	P025	Taza Sublimada Panda #25	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69ab914e50de9c2ab70f17e2.jpg	5	5	173.75	261.25	45
 14	P026	Gorra Bordada Negra #26	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f570ce0de300.86936150.jpg	6	6	177.50	266.50	46
 15	P027	Llavero Acrílico Anime #27	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_e155b0fa66e83067205236e4.jpg	7	7	181.25	271.75	2
-16	P028	Poster Ilustrado A3 #28	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56f68b99380.15585436.jpg	8	8	185.00	277.00	48
-17	P029	Bolso Tote Personalizado #29	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f57104731e04.45231154.jpg	9	9	188.75	282.25	49
-18	P030	Mousepad Gamer Estampado #30	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_ee0704d79c323b08c7071c3e.jpg	10	10	192.50	287.50	50
 19	P031	Camiseta Oversize Negra #31	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56f74936e35.57858233.jpg	1	1	196.25	292.75	1
 20	P032	Camiseta Blanca Personalizada #32	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f57111237e59.08360337.jpg	2	2	200.00	298.00	52
+21	sadfsdf	asdfsaf	asdfsfd	prod_6a3cbd0f595c58.39854335.jpg	12	6	2323.00	2332.00	123
+17	P0292	Bolso Tote Personalizado #29	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f57104731e04.45231154.jpg	9	9	188.75	282.25	46
+6	P018	Poster Ilustrado A3 #18	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_bbf90800dd3fd1f24deb27b4.webp	8	\N	147.50	224.50	38
+16	P028	Poster Ilustrado A3 #28	Producto generado para inventario académico de Panda Estampados y Kitsune.	prod_69f56f68b99380.15585436.jpg	8	\N	185.00	277.00	48
 \.
 
 
 --
--- Data for Name: proveedor; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: proveedor; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.proveedor (id_proveedor, nombre, telefono, email, direccion) FROM stdin;
+COPY backup_limpieza_demo.proveedor (id_proveedor, nombre, telefono, email, direccion) FROM stdin;
 1	Textiles Managua S.A.	2255-1101	ventas@textilesmanagua.com	Carretera Norte, Managua
 2	Serigrafía Central	2266-2304	contacto@serigrafiacentral.com	Altamira, Managua
 3	Distribuidora Kitsune	2277-4512	proveedores@kitsunedist.com	Linda Vista, Managua
@@ -4928,18 +5227,18 @@ COPY public.proveedor (id_proveedor, nombre, telefono, email, direccion) FROM st
 5	Importadora El Sol	2299-3344	info@importadoraelsol.com	Mercado Oriental, Managua
 6	Creativa Nicaragua	2233-9021	creativa@ni.com	Los Robles, Managua
 7	Sublimados León	2311-4400	ventas@sublimadosleon.com	Centro, León
-8	Artes Gráficas Granada	2552-8820	contacto@artesgranada.com	Calle La Calzada, Granada
 9	Materiales Omega	2244-9910	omega@materiales.com	Bolonia, Managua
 10	Print House Nicaragua	2270-6543	ventas@printhouseni.com	Villa Fontana, Managua
 12	Proveedor Temporal Producto	8888-3030	proveedor.temporal@test.com	Managua
+13	asdfsadf	123213123	\N	asdsdafsfd
 \.
 
 
 --
--- Data for Name: rol; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: rol; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.rol (id_rol, nombre) FROM stdin;
+COPY backup_limpieza_demo.rol (id_rol, nombre) FROM stdin;
 1	Administrador
 2	Supervisor
 3	Facturador
@@ -4947,20 +5246,20 @@ COPY public.rol (id_rol, nombre) FROM stdin;
 
 
 --
--- Data for Name: seccion; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: seccion; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.seccion (id_seccion, nombre) FROM stdin;
+COPY backup_limpieza_demo.seccion (id_seccion, nombre) FROM stdin;
 1	Panda Estampados
 2	Kitsune
 \.
 
 
 --
--- Data for Name: usuario; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: usuario; Type: TABLE DATA; Schema: backup_limpieza_demo; Owner: -
 --
 
-COPY public.usuario (id_usuario, nombre, email, password, id_rol, id_seccion) FROM stdin;
+COPY backup_limpieza_demo.usuario (id_usuario, nombre, email, password, id_rol, id_seccion) FROM stdin;
 2	Daniel Pérez	daniel.perez@kitsune.com	$2y$12$q/FLcSnscgAJx5KLw6ZfkeKmqVNjVgsid.NzF1vIA7bFvwqZvrtEm	2	2
 3	Jeremy Pérez	jeremy.perez@kitsune.com	$2y$12$9cCSd.m5eccghVDHnx1hZOM1KYPHUzQZsJP3Wx4rVYA6L.zbRLuiK	2	2
 4	Jhossep Ramos	jhossep.ramos@kitsune.com	$2y$12$6iu4FfS3vWAN3g0dCpaJH./pq4u2fsOQmujzvPxtcoxX1/VhgmV8W	2	2
@@ -4991,6 +5290,189 @@ COPY public.usuario (id_usuario, nombre, email, password, id_rol, id_seccion) FR
 29	Carmen Rojas	carmen.rojas@panda.com	$2y$12$PsrYOcMFI9eBZlOJzV9RQOMx7uI9cm.3qqPk1tQYz6jxr2fIqhIjO	3	2
 30	Nidia Solís	nidia.solis@kitsune.com	$2y$12$a9PzdMLz8ZNtGEDl6tPxnuMRq2qoYHCh55RlpcCDgC7nGvRxl2D7C	3	2
 1	Leonel Messi	leonel.messi@admin.pandakitsune.com	$2y$10$oCDDt/YuxYESRT8888zim.7Mn1AsfYVBXbVOgesp.1CLQuhuBxo2m	1	\N
+31	12123123	a@a.com	$2y$10$Q1iMf.m2rGrmeHfKil9YL.tCDQxRyIHZR48NM74I.N0wRpC0Xq41S	2	2
+\.
+
+
+--
+-- Data for Name: auditoria; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.auditoria (id_auditoria, usuario, accion, tabla_afectada, descripcion, fecha_registro, fecha, id_usuario, registro_id, datos_anteriores) FROM stdin;
+\.
+
+
+--
+-- Data for Name: categoria; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.categoria (id_categoria, nombre) FROM stdin;
+1	Camisetas
+2	Hoodies
+3	Stickers
+4	Tazas
+5	Gorras
+6	Llaveros
+7	Posters
+8	Bolsos
+9	Mousepads
+\.
+
+
+--
+-- Data for Name: cliente; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.cliente (id_cliente, nombres, apellidos, telefono, direccion, identificacion, tipo_cliente, fecha_registro) FROM stdin;
+2	Adriana	Chávez	88100016	Estelí	AUTO-0016	Detallista	2026-01-18
+16	Camila	Duarte	88100030	Jinotepe	AUTO-0030	Mayorista	2026-03-15
+17	Eduardo	Flores	88100031	Managua	AUTO-0031	Detallista	2026-03-19
+\.
+
+
+--
+-- Data for Name: compra; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.compra (id_compra, fecha, id_proveedor, id_usuario, total) FROM stdin;
+\.
+
+
+--
+-- Data for Name: detallecompra; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.detallecompra (id_detalle, id_compra, id_producto, cantidad, costo_unitario, total_linea) FROM stdin;
+\.
+
+
+--
+-- Data for Name: detallefactura; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.detallefactura (id_detalle, id_factura, id_producto, cantidad, precio_unitario, descuento_linea, total_linea) FROM stdin;
+22	22	17	1	282.25	0.00	282.25
+23	23	17	1	282.25	0.00	282.25
+24	24	17	1	282.25	0.00	282.25
+\.
+
+
+--
+-- Data for Name: factura; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.factura (id_factura, fecha, id_cliente, id_usuario, id_seccion, subtotal, descuento, impuesto, total, tipo_cliente_venta, nombre_cliente_fugaz, monto_pagado, saldo_pendiente, porcentaje_pagado, estado_pago, estado_produccion, fecha_orden_produccion, fecha_entrega_estimada, fecha_entrega_real) FROM stdin;
+23	2026-06-24 23:40:19.781929	2	1	1	282.25	120.00	24.34	186.59	Habitual	\N	186.59	0.00	100.00	Pagado	Entregada	2026-06-24 23:40:19.781929	\N	2026-06-24
+22	2026-06-24 23:23:46.989663	16	1	1	282.25	10.00	40.84	313.09	Habitual	\N	156.55	156.54	50.00	Parcial	Cancelada	2026-06-24 23:23:46.989663	\N	\N
+24	2026-06-24 23:42:24.165215	17	1	1	282.25	23.00	38.89	298.14	Habitual	\N	0.00	298.14	0.00	Pendiente	Pendiente	2026-06-24 23:42:24.165215	\N	\N
+\.
+
+
+--
+-- Data for Name: factura_estado_historial; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.factura_estado_historial (id_historial, id_factura, tipo_evento, estado_pago_anterior, estado_pago_nuevo, estado_produccion_anterior, estado_produccion_nuevo, monto_pagado_anterior, monto_pagado_nuevo, monto_abonado, saldo_anterior, saldo_nuevo, fecha_entrega_estimada_anterior, fecha_entrega_estimada_nueva, comentario, fecha_evento) FROM stdin;
+35	22	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	313.09	\N	\N	Factura registrada con plan de pago pendiente.	2026-06-24 23:23:46.989663
+40	22	Estado de producción actualizado	Pendiente	Parcial	Pendiente	En producción	0.00	156.55	156.55	313.09	156.54	\N	\N	Se registró un abono de C$ 156.55. Saldo actual: C$ 156.54.	2026-06-24 23:38:09.038463
+41	22	Factura cancelada	Parcial	Parcial	En producción	Cancelada	156.55	156.55	0.00	156.54	156.54	\N	\N	Factura cancelada después de registrar un abono parcial.	2026-06-24 23:38:25.124489
+42	23	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	186.59	\N	\N	Factura registrada correctamente.	2026-06-24 23:40:19.781929
+43	23	Estado de producción actualizado	Pendiente	Parcial	Pendiente	En producción	0.00	130.00	130.00	186.59	56.59	\N	\N	Se registró un abono parcial de C$ 130.00. Saldo actual: C$ 56.59.	2026-06-24 23:40:41.487893
+44	23	Pago actualizado	Parcial	Pagado	En producción	En producción	130.00	186.59	56.59	56.59	0.00	\N	\N	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-06-24 23:41:35.897219
+45	23	Estado de producción actualizado	Pagado	Pagado	En producción	Lista para entregar	186.59	186.59	0.00	0.00	0.00	\N	\N	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-06-24 23:41:40.322577
+46	23	Estado de producción actualizado	Pagado	Pagado	Lista para entregar	Entregada	186.59	186.59	0.00	0.00	0.00	\N	\N	Factura marcada como pagada. Saldo actual: C$ 0.00.	2026-06-24 23:41:48.18018
+47	24	Factura creada	\N	Pendiente	\N	Pendiente	\N	0.00	0.00	\N	298.14	\N	\N	Factura registrada pendiente de abono inicial.	2026-06-24 23:42:24.165215
+\.
+
+
+--
+-- Data for Name: plazo; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.plazo (id_plazo, id_factura, total_original, fecha_creacion, fecha_limite, estado) FROM stdin;
+2	22	313.09	2026-06-24 23:23:46.996005	2026-07-10	Cancelado
+3	23	186.59	2026-06-24 23:40:19.788535	2026-07-10	Completado
+4	24	298.14	2026-06-24 23:42:24.171873	2026-07-09	Activo
+\.
+
+
+--
+-- Data for Name: plazo_cuota; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.plazo_cuota (id_cuota, id_plazo, numero, porcentaje, monto, fecha_pago, estado, fecha_pago_real, monto_pagado, observaciones) FROM stdin;
+3	3	1	33.33	62.19	2026-06-29	Pagado	2026-06-24 23:40:41.487893	62.19	
+4	3	2	33.33	62.19	2026-06-29	Pagado	2026-06-24 23:40:41.487893	62.19	
+5	3	3	33.34	62.21	2026-06-29	Pagado	2026-06-24 23:41:35.897219	62.21	
+6	4	1	50.00	149.07	2026-07-01	Pendiente	\N	0.00	
+7	4	2	50.00	149.07	2026-07-01	Pendiente	\N	0.00	
+2	2	1	100.00	313.09	2026-07-09	Pendiente	\N	156.55	Factura cancelada con abono parcial registrado.
+\.
+
+
+--
+-- Data for Name: producto; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.producto (id_producto, codigo, nombre, descripcion, imagen, id_categoria, id_proveedor, precio_compra, precio_venta, stock) FROM stdin;
+9	CAM-001	Camiseta Oversize Negra	Camiseta personalizada de algodón para estampado.	prod_bd9ae845c714f7f64699fb75.jpg	1	1	158.75	240.25	41
+10	CAM-002	Camiseta Blanca Personalizada	Camiseta blanca lista para sublimación o serigrafía.	prod_692eb95bbb2083.00268187.gif	1	1	162.50	245.50	1
+11	HOD-001	Hoodie Oversize Negro	Hoodie oversize para estampados personalizados.	prod_69f56fe7efb784.38860716.jpg	2	2	166.25	250.75	43
+12	STK-001	Sticker Holográfico Kitsune	Sticker decorativo holográfico con diseño Kitsune.	prod_d67e3785273607d89e61a401.png	3	3	170.00	256.00	4
+13	TAZ-001	Taza Sublimada Panda	Taza personalizada para sublimación.	prod_69ab914e50de9c2ab70f17e2.jpg	4	4	173.75	261.25	45
+14	GOR-001	Gorra Bordada Negra	Gorra negra personalizable con bordado.	prod_69f570ce0de300.86936150.jpg	5	5	177.50	266.50	46
+15	LLA-001	Llavero Acrílico Anime	Llavero acrílico personalizado con diseño anime.	prod_e155b0fa66e83067205236e4.jpg	6	6	181.25	271.75	2
+16	POS-001	Poster Ilustrado A3	Poster ilustrado en formato A3.	prod_69f56f68b99380.15585436.jpg	7	7	185.00	277.00	48
+17	BOL-001	Bolso Tote Personalizado	Bolso tote personalizado para estampado.	prod_69f57104731e04.45231154.jpg	8	9	188.75	282.25	46
+\.
+
+
+--
+-- Data for Name: proveedor; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.proveedor (id_proveedor, nombre, telefono, email, direccion) FROM stdin;
+1	Textiles Managua S.A.	2255-1101	ventas@textilesmanagua.com	Carretera Norte, Managua
+2	Serigrafía Central	2266-2304	contacto@serigrafiacentral.com	Altamira, Managua
+3	Distribuidora Kitsune	2277-4512	proveedores@kitsunedist.com	Linda Vista, Managua
+4	Panda Print Supplies	2288-7821	ventas@pandaprintsupplies.com	Ciudad Jardín, Managua
+5	Importadora El Sol	2299-3344	info@importadoraelsol.com	Mercado Oriental, Managua
+6	Creativa Nicaragua	2233-9021	creativa@ni.com	Los Robles, Managua
+7	Sublimados León	2311-4400	ventas@sublimadosleon.com	Centro, León
+9	Materiales Omega	2244-9910	omega@materiales.com	Bolonia, Managua
+10	Print House Nicaragua	2270-6543	ventas@printhouseni.com	Villa Fontana, Managua
+\.
+
+
+--
+-- Data for Name: rol; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.rol (id_rol, nombre) FROM stdin;
+1	Administrador
+2	Supervisor
+3	Facturador
+\.
+
+
+--
+-- Data for Name: seccion; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.seccion (id_seccion, nombre) FROM stdin;
+1	Panda Estampados
+2	Kitsune
+\.
+
+
+--
+-- Data for Name: usuario; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.usuario (id_usuario, nombre, email, password, id_rol, id_seccion) FROM stdin;
+1	Administrador Panda Kitsune	admin@pandakitsune.local	$2y$10$oCDDt/YuxYESRT8888zim.7Mn1AsfYVBXbVOgesp.1CLQuhuBxo2m	1	\N
+2	Supervisor Kitsune	supervisor@pandakitsune.local	$2y$12$q/FLcSnscgAJx5KLw6ZfkeKmqVNjVgsid.NzF1vIA7bFvwqZvrtEm	2	2
+10	Facturador Panda	facturador@pandakitsune.local	$2y$12$h/WagOY4zymqWqcyccvi7.ikKYZxbFknFzm6bqlEfySGINOBxM5US	3	1
 \.
 
 
@@ -4998,84 +5480,84 @@ COPY public.usuario (id_usuario, nombre, email, password, id_rol, id_seccion) FR
 -- Name: auditoria_id_auditoria_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_auditoria_seq', 46, true);
+SELECT pg_catalog.setval('public.auditoria_id_auditoria_seq', 1, false);
 
 
 --
 -- Name: categoria_id_categoria_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.categoria_id_categoria_seq', 12, true);
+SELECT pg_catalog.setval('public.categoria_id_categoria_seq', 10, false);
 
 
 --
 -- Name: cliente_id_cliente_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.cliente_id_cliente_seq', 20, true);
+SELECT pg_catalog.setval('public.cliente_id_cliente_seq', 18, false);
 
 
 --
 -- Name: compra_id_compra_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.compra_id_compra_seq', 20, true);
+SELECT pg_catalog.setval('public.compra_id_compra_seq', 1, false);
 
 
 --
 -- Name: detallecompra_id_detalle_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.detallecompra_id_detalle_seq', 20, true);
+SELECT pg_catalog.setval('public.detallecompra_id_detalle_seq', 1, false);
 
 
 --
 -- Name: detallefactura_id_detalle_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.detallefactura_id_detalle_seq', 20, true);
+SELECT pg_catalog.setval('public.detallefactura_id_detalle_seq', 25, false);
 
 
 --
 -- Name: factura_estado_historial_id_historial_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.factura_estado_historial_id_historial_seq', 29, true);
+SELECT pg_catalog.setval('public.factura_estado_historial_id_historial_seq', 48, false);
 
 
 --
 -- Name: factura_id_factura_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.factura_id_factura_seq', 20, true);
+SELECT pg_catalog.setval('public.factura_id_factura_seq', 25, false);
 
 
 --
 -- Name: plazo_cuota_id_cuota_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.plazo_cuota_id_cuota_seq', 1, false);
+SELECT pg_catalog.setval('public.plazo_cuota_id_cuota_seq', 8, false);
 
 
 --
 -- Name: plazo_id_plazo_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.plazo_id_plazo_seq', 1, false);
+SELECT pg_catalog.setval('public.plazo_id_plazo_seq', 5, false);
 
 
 --
 -- Name: producto_id_producto_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.producto_id_producto_seq', 20, true);
+SELECT pg_catalog.setval('public.producto_id_producto_seq', 18, false);
 
 
 --
 -- Name: proveedor_id_proveedor_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.proveedor_id_proveedor_seq', 12, true);
+SELECT pg_catalog.setval('public.proveedor_id_proveedor_seq', 11, false);
 
 
 --
@@ -5096,7 +5578,7 @@ SELECT pg_catalog.setval('public.seccion_id_seccion_seq', 2, true);
 -- Name: usuario_id_usuario_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.usuario_id_usuario_seq', 30, true);
+SELECT pg_catalog.setval('public.usuario_id_usuario_seq', 11, false);
 
 
 --
@@ -5378,7 +5860,7 @@ ALTER TABLE ONLY public.auditoria
 --
 
 ALTER TABLE ONLY public.compra
-    ADD CONSTRAINT fk_compra_proveedor FOREIGN KEY (id_proveedor) REFERENCES public.proveedor(id_proveedor);
+    ADD CONSTRAINT fk_compra_proveedor FOREIGN KEY (id_proveedor) REFERENCES public.proveedor(id_proveedor) ON DELETE SET NULL;
 
 
 --
@@ -5458,7 +5940,7 @@ ALTER TABLE ONLY public.producto
 --
 
 ALTER TABLE ONLY public.producto
-    ADD CONSTRAINT fk_producto_proveedor FOREIGN KEY (id_proveedor) REFERENCES public.proveedor(id_proveedor);
+    ADD CONSTRAINT fk_producto_proveedor FOREIGN KEY (id_proveedor) REFERENCES public.proveedor(id_proveedor) ON DELETE SET NULL;
 
 
 --
@@ -5489,5 +5971,5 @@ ALTER TABLE ONLY public.plazo_cuota
 -- PostgreSQL database dump complete
 --
 
-\unrestrict RabYncbGLRo3H7WnIYhqH7Bqk7ljHLu6qztZk1DkOd6Qx3JK8kSBrpORFMkSIgU
+\unrestrict 4MyP5M4dZ76JvBV7aaHRNvS5vunwvr46mbxb04HLq0QrP7y85YeHI4KqsdSSZUz
 
